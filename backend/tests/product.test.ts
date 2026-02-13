@@ -49,6 +49,7 @@ describe('Product Endpoints', () => {
     // Register a test user
     await request(app).post('/api/auth/register').send({
       name: 'Product Test User',
+      username: 'producttestuser',
       email: 'productuser@example.com',
       password: 'password123',
     });

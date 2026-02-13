@@ -6,6 +6,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const users: Array<{
   id: string;
   name: string;
+  username: string;
   email: string;
   password: string;
   isVerified: boolean;
@@ -212,16 +213,19 @@ export const handlers = [
   http.post(`${API_BASE}/auth/register`, async ({ request }) => {
     const body = (await request.json()) as {
       name: string;
+      username: string;
       email: string;
       password: string;
     };
 
-    if (!body.name || !body.email || !body.password) {
+    if (!body.name || !body.username || !body.email || !body.password) {
       return HttpResponse.json(
         { success: false, message: 'All fields are required' },
         { status: 400 },
       );
     }
+
+    const usernameLower = body.username.toLowerCase();
 
     if (users.some((u) => u.email === body.email)) {
       return HttpResponse.json(
@@ -230,9 +234,17 @@ export const handlers = [
       );
     }
 
+    if (users.some((u) => u.username === usernameLower)) {
+      return HttpResponse.json(
+        { success: false, message: 'Username is already taken' },
+        { status: 400 },
+      );
+    }
+
     const user = {
       id: String(users.length + 1),
       name: body.name,
+      username: usernameLower,
       email: body.email,
       password: body.password,
       isVerified: false,
@@ -245,7 +257,7 @@ export const handlers = [
         success: true,
         message:
           'Registration successful. Please check your email to verify your account.',
-        data: { id: user.id, name: user.name, email: user.email },
+        data: { id: user.id, name: user.name, username: user.username, email: user.email },
       },
       { status: 201 },
     );
@@ -281,6 +293,7 @@ export const handlers = [
       data: {
         id: user.id,
         name: user.name,
+        username: user.username,
         email: user.email,
         isVerified: user.isVerified,
         token: 'mock-jwt-token',
@@ -327,6 +340,7 @@ export const handlers = [
           data: {
             id: user.id,
             name: user.name,
+            username: user.username,
             email: user.email,
             isVerified: user.isVerified,
           },

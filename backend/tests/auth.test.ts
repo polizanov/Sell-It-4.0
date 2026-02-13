@@ -43,6 +43,7 @@ describe('Auth Endpoints', () => {
     it('should register a new user with valid data', async () => {
       const res = await request(app).post('/api/auth/register').send({
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         password: 'password123',
       });
@@ -52,6 +53,7 @@ describe('Auth Endpoints', () => {
       expect(res.body.message).toContain('Registration successful');
       expect(res.body.data).toHaveProperty('id');
       expect(res.body.data.name).toBe('Test User');
+      expect(res.body.data.username).toBe('testuser');
       expect(res.body.data.email).toBe('test@example.com');
     });
 
@@ -65,6 +67,7 @@ describe('Auth Endpoints', () => {
     it('should return 400 for invalid email format', async () => {
       const res = await request(app).post('/api/auth/register').send({
         name: 'Bad Email',
+        username: 'bademail',
         email: 'not-an-email',
         password: 'password123',
       });
@@ -76,6 +79,7 @@ describe('Auth Endpoints', () => {
     it('should return 400 for password shorter than 6 characters', async () => {
       const res = await request(app).post('/api/auth/register').send({
         name: 'Short Pass',
+        username: 'shortpass',
         email: 'short@example.com',
         password: '12345',
       });
@@ -87,6 +91,7 @@ describe('Auth Endpoints', () => {
     it('should return 400 for name shorter than 2 characters', async () => {
       const res = await request(app).post('/api/auth/register').send({
         name: 'A',
+        username: 'shortname',
         email: 'shortname@example.com',
         password: 'password123',
       });
@@ -98,6 +103,7 @@ describe('Auth Endpoints', () => {
     it('should return 400 when registering with a duplicate email', async () => {
       const res = await request(app).post('/api/auth/register').send({
         name: 'Test User Dupe',
+        username: 'testuserdupe',
         email: 'test@example.com',
         password: 'password123',
       });
@@ -105,6 +111,43 @@ describe('Auth Endpoints', () => {
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toMatch(/already exists/i);
+    });
+
+    it('should return 400 for username shorter than 3 characters', async () => {
+      const res = await request(app).post('/api/auth/register').send({
+        name: 'Short Username',
+        username: 'ab',
+        email: 'shortusername@example.com',
+        password: 'password123',
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 for username with invalid characters', async () => {
+      const res = await request(app).post('/api/auth/register').send({
+        name: 'Invalid Username',
+        username: 'test-user',
+        email: 'invalidusername@example.com',
+        password: 'password123',
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when registering with a duplicate username', async () => {
+      const res = await request(app).post('/api/auth/register').send({
+        name: 'Duplicate Username',
+        username: 'testuser',
+        email: 'dupeusername@example.com',
+        password: 'password123',
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/already exists|username/i);
     });
   });
 
@@ -152,6 +195,7 @@ describe('Auth Endpoints', () => {
       expect(res.body.data).toHaveProperty('token');
       expect(res.body.data.isVerified).toBe(true);
       expect(res.body.data.name).toBe('Test User');
+      expect(res.body.data.username).toBe('testuser');
       expect(res.body.data.email).toBe('test@example.com');
 
       // Save the token for the GET /me tests
@@ -182,6 +226,7 @@ describe('Auth Endpoints', () => {
       // Register a new user (unverified by default)
       await request(app).post('/api/auth/register').send({
         name: 'Unverified User',
+        username: 'unverifieduser',
         email: 'unverified@example.com',
         password: 'password123',
       });
@@ -227,6 +272,7 @@ describe('Auth Endpoints', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data).toHaveProperty('id');
       expect(res.body.data).toHaveProperty('name', 'Test User');
+      expect(res.body.data).toHaveProperty('username', 'testuser');
       expect(res.body.data).toHaveProperty('email', 'test@example.com');
       expect(res.body.data).toHaveProperty('isVerified', true);
     });

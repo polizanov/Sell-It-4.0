@@ -21,6 +21,7 @@ describe('authStore', () => {
       const mockUser = {
         id: '1',
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
       };
@@ -38,6 +39,7 @@ describe('authStore', () => {
       const mockUser = {
         id: '1',
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
       };
@@ -54,6 +56,7 @@ describe('authStore', () => {
       const mockUser = {
         id: '1',
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
       };
@@ -83,6 +86,7 @@ describe('authStore', () => {
       const mockUser = {
         id: '1',
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
       };
@@ -113,6 +117,7 @@ describe('authStore', () => {
               data: {
                 id: '1',
                 name: 'Test User',
+                username: 'testuser',
                 email: 'test@example.com',
                 isVerified: true,
               },
@@ -131,6 +136,7 @@ describe('authStore', () => {
       expect(state.user).toEqual({
         id: '1',
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
       });

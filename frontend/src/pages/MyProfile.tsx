@@ -47,9 +47,12 @@ const MyProfile = () => {
 
             {/* User Details */}
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-text-primary mb-2">
+              <h2 className="text-2xl font-bold text-text-primary mb-1">
                 {user.name}
               </h2>
+              <p className="text-text-secondary mb-1">
+                @{user.username}
+              </p>
               <p className="text-text-secondary mb-4">
                 {user.email}
               </p>

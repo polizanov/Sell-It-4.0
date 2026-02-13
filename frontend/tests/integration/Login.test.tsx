@@ -144,6 +144,7 @@ describe('Login Page', () => {
           data: {
             id: '1',
             name: 'Test User',
+            username: 'testuser',
             email: 'test@example.com',
             isVerified: true,
             token: 'mock-jwt-token',
@@ -186,6 +187,7 @@ describe('Login Page', () => {
           data: {
             id: '1',
             name: 'Test User',
+            username: 'testuser',
             email: 'test@example.com',
             isVerified: true,
             token: 'mock-jwt-token',

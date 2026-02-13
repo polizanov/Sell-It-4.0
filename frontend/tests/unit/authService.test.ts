@@ -16,6 +16,7 @@ describe('authService', () => {
         http.post(`${API_BASE}/auth/register`, async ({ request }) => {
           const body = (await request.json()) as {
             name: string;
+            username: string;
             email: string;
             password: string;
           };
@@ -26,6 +27,7 @@ describe('authService', () => {
               data: {
                 id: '1',
                 name: body.name,
+                username: body.username,
                 email: body.email,
               },
             },
@@ -36,12 +38,14 @@ describe('authService', () => {
 
       const response = await authService.register({
         name: 'Test User',
+        username: 'testuser',
         email: 'test@example.com',
         password: 'password123',
       });
 
       expect(response.data.success).toBe(true);
       expect(response.data.data?.name).toBe('Test User');
+      expect(response.data.data?.username).toBe('testuser');
       expect(response.data.data?.email).toBe('test@example.com');
     });
 
@@ -61,6 +65,7 @@ describe('authService', () => {
       try {
         await authService.register({
           name: 'Test User',
+          username: 'testuser',
           email: 'existing@example.com',
           password: 'password123',
         });
@@ -88,6 +93,7 @@ describe('authService', () => {
             data: {
               id: '1',
               name: 'Test User',
+              username: 'testuser',
               email: 'test@example.com',
               isVerified: true,
               token: 'mock-jwt-token',
@@ -196,6 +202,7 @@ describe('authService', () => {
               data: {
                 id: '1',
                 name: 'Test User',
+                username: 'testuser',
                 email: 'test@example.com',
                 isVerified: true,
               },
@@ -212,6 +219,7 @@ describe('authService', () => {
 
       expect(response.data.success).toBe(true);
       expect(response.data.data?.name).toBe('Test User');
+      expect(response.data.data?.username).toBe('testuser');
       expect(response.data.data?.email).toBe('test@example.com');
     });
 

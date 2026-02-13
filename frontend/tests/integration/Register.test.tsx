@@ -32,10 +32,11 @@ describe('Register Page', () => {
     localStorage.clear();
   });
 
-  it('renders register form with name, email, password, and confirm password fields', () => {
+  it('renders register form with name, username, email, password, and confirm password fields', () => {
     renderRegister();
 
     expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     // Use getByPlaceholderText to distinguish between Password and Confirm Password
     expect(
@@ -75,6 +76,7 @@ describe('Register Page', () => {
     submitForm();
 
     expect(screen.getByText('Name is required')).toBeInTheDocument();
+    expect(screen.getByText('Username is required')).toBeInTheDocument();
     expect(screen.getByText('Email is required')).toBeInTheDocument();
     expect(screen.getByText('Password is required')).toBeInTheDocument();
     expect(
@@ -86,6 +88,7 @@ describe('Register Page', () => {
     const user = userEvent.setup();
     renderRegister();
 
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(
       screen.getByLabelText(/email address/i),
       'test@example.com',
@@ -110,6 +113,7 @@ describe('Register Page', () => {
     renderRegister();
 
     await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/email address/i), 'invalid-email');
     await user.type(
       screen.getByPlaceholderText('At least 6 characters'),
@@ -132,6 +136,7 @@ describe('Register Page', () => {
     renderRegister();
 
     await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(
       screen.getByLabelText(/email address/i),
       'test@example.com',
@@ -157,6 +162,7 @@ describe('Register Page', () => {
     renderRegister();
 
     await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(
       screen.getByLabelText(/email address/i),
       'test@example.com',
@@ -175,6 +181,55 @@ describe('Register Page', () => {
     expect(screen.getByText('Passwords do not match')).toBeInTheDocument();
   });
 
+  it('shows "Username is required" when username is empty', async () => {
+    const user = userEvent.setup();
+    renderRegister();
+
+    await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(
+      screen.getByLabelText(/email address/i),
+      'test@example.com',
+    );
+    await user.type(
+      screen.getByPlaceholderText('At least 6 characters'),
+      'password123',
+    );
+    await user.type(
+      screen.getByPlaceholderText('Re-enter your password'),
+      'password123',
+    );
+
+    submitForm();
+
+    expect(screen.getByText('Username is required')).toBeInTheDocument();
+  });
+
+  it('shows validation error for username with invalid characters', async () => {
+    const user = userEvent.setup();
+    renderRegister();
+
+    await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(screen.getByLabelText(/username/i), 'test-user');
+    await user.type(
+      screen.getByLabelText(/email address/i),
+      'test@example.com',
+    );
+    await user.type(
+      screen.getByPlaceholderText('At least 6 characters'),
+      'password123',
+    );
+    await user.type(
+      screen.getByPlaceholderText('Re-enter your password'),
+      'password123',
+    );
+
+    submitForm();
+
+    expect(
+      screen.getByText('Username can only contain letters, numbers, and underscores'),
+    ).toBeInTheDocument();
+  });
+
   it('successful registration shows Check Your Email screen with Go to Login link', async () => {
     const user = userEvent.setup();
 
@@ -187,6 +242,7 @@ describe('Register Page', () => {
             data: {
               id: '1',
               name: 'Test User',
+              username: 'testuser',
               email: 'newuser@example.com',
             },
           },
@@ -198,6 +254,7 @@ describe('Register Page', () => {
     renderRegister();
 
     await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(
       screen.getByLabelText(/email address/i),
       'newuser@example.com',
@@ -241,7 +298,7 @@ describe('Register Page', () => {
           {
             success: true,
             message: 'Registration successful.',
-            data: { id: '1', name: 'Test User', email: 'test@example.com' },
+            data: { id: '1', name: 'Test User', username: 'testuser', email: 'test@example.com' },
           },
           { status: 201 },
         );
@@ -251,6 +308,7 @@ describe('Register Page', () => {
     renderRegister();
 
     await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(
       screen.getByLabelText(/email address/i),
       'test@example.com',
@@ -296,6 +354,7 @@ describe('Register Page', () => {
     renderRegister();
 
     await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(
       screen.getByLabelText(/email address/i),
       'existing@example.com',

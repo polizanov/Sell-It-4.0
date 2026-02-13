@@ -11,12 +11,14 @@ import type { ApiError } from '../types';
 const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
   const [errors, setErrors] = useState({
     name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -34,14 +36,28 @@ const Register = () => {
     e.preventDefault();
 
     // Reset errors
-    setErrors({ name: '', email: '', password: '', confirmPassword: '', general: '' });
+    setErrors({ name: '', username: '', email: '', password: '', confirmPassword: '', general: '' });
 
     // Validation
     let hasErrors = false;
-    const newErrors = { name: '', email: '', password: '', confirmPassword: '', general: '' };
+    const newErrors = { name: '', username: '', email: '', password: '', confirmPassword: '', general: '' };
 
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
+      hasErrors = true;
+    }
+
+    if (!formData.username.trim()) {
+      newErrors.username = 'Username is required';
+      hasErrors = true;
+    } else if (formData.username.trim().length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+      hasErrors = true;
+    } else if (formData.username.trim().length > 30) {
+      newErrors.username = 'Username must be at most 30 characters';
+      hasErrors = true;
+    } else if (!/^[a-zA-Z0-9_]+$/.test(formData.username.trim())) {
+      newErrors.username = 'Username can only contain letters, numbers, and underscores';
       hasErrors = true;
     }
 
@@ -79,6 +95,7 @@ const Register = () => {
     try {
       await authService.register({
         name: formData.name,
+        username: formData.username,
         email: formData.email,
         password: formData.password,
       });
@@ -146,6 +163,16 @@ const Register = () => {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               error={errors.name}
+              required
+            />
+
+            <Input
+              type="text"
+              label="Username"
+              placeholder="your_username"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              error={errors.username}
               required
             />
 

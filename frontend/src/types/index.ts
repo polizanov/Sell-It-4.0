@@ -1,6 +1,7 @@
 export interface User {
   id: string;
   name: string;
+  username: string;
   email: string;
   isVerified?: boolean;
 }
@@ -11,6 +12,7 @@ export interface AuthResponse {
   data?: {
     id: string;
     name: string;
+    username: string;
     email: string;
     isVerified?: boolean;
     token?: string;

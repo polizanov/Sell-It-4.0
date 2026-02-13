@@ -15,17 +15,23 @@ const generateToken = (userId: string, email: string): string => {
 };
 
 export const register = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-  const { name, email, password } = req.body;
+  const { name, username, email, password } = req.body;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new AppError('User already exists with this email', 400);
   }
 
+  const existingUsername = await User.findOne({ username: username.toLowerCase() });
+  if (existingUsername) {
+    throw new AppError('Username is already taken', 400);
+  }
+
   const verificationToken = crypto.randomBytes(32).toString('hex');
 
   const user = await User.create({
     name,
+    username,
     email,
     password,
     verificationToken,
@@ -39,6 +45,7 @@ export const register = asyncHandler(async (req: AuthRequest, res: Response): Pr
     data: {
       id: user._id,
       name: user.name,
+      username: user.username,
       email: user.email,
     },
   });
@@ -69,6 +76,7 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response): Promi
     data: {
       id: user._id,
       name: user.name,
+      username: user.username,
       email: user.email,
       isVerified: user.isVerified,
       token,
@@ -88,6 +96,7 @@ export const getMe = asyncHandler(async (req: AuthRequest, res: Response): Promi
     data: {
       id: user._id,
       name: user.name,
+      username: user.username,
       email: user.email,
       isVerified: user.isVerified,
     },

@@ -3,6 +3,7 @@ import type { AuthResponse } from '../types';
 
 interface RegisterData {
   name: string;
+  username: string;
   email: string;
   password: string;
 }
