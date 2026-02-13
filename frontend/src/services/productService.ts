@@ -1,5 +1,5 @@
 import api from './api';
-import type { Product } from '../types';
+import type { Product, PaginationInfo, ProductListParams } from '../types';
 
 interface CreateProductData {
   title: string;
@@ -28,6 +28,17 @@ interface ProductResponse {
   data?: ProductResponseData;
 }
 
+interface ProductListResponseData {
+  products: ProductResponseData[];
+  pagination: PaginationInfo;
+}
+
+interface ProductListResponse {
+  success: boolean;
+  message: string;
+  data: ProductListResponseData;
+}
+
 interface CategoriesResponse {
   success: boolean;
   message: string;
@@ -51,6 +62,25 @@ function mapProductResponse(data: ProductResponseData): Product {
 }
 
 export const productService = {
+  getAll: async (
+    params: ProductListParams = {},
+  ): Promise<{ products: Product[]; pagination: PaginationInfo }> => {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set('page', String(params.page));
+    if (params.limit) searchParams.set('limit', String(params.limit));
+    if (params.category) searchParams.set('category', params.category);
+    if (params.search) searchParams.set('search', params.search);
+    if (params.sort) searchParams.set('sort', params.sort);
+
+    const query = searchParams.toString();
+    const url = `/products${query ? `?${query}` : ''}`;
+    const res = await api.get<ProductListResponse>(url);
+    return {
+      products: res.data.data.products.map(mapProductResponse),
+      pagination: res.data.data.pagination,
+    };
+  },
+
   create: (data: CreateProductData) => {
     const formData = new FormData();
     formData.append('title', data.title);

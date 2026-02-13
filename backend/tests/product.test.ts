@@ -429,6 +429,252 @@ describe('Product Endpoints', () => {
   });
 
   // --------------------------------------------------------------------------
+  // GET /api/products (listing with pagination, filters, sorting)
+  // --------------------------------------------------------------------------
+  describe('GET /api/products', () => {
+    beforeAll(async () => {
+      // Clear all products from previous tests and insert 15 test products
+      await Product.deleteMany({});
+
+      const user = await User.findOne({ email: 'productuser@example.com' });
+
+      const productData = [
+        { title: 'Alpha Phone', description: 'A great smartphone for everyone', price: 100, category: 'Electronics', condition: 'New' },
+        { title: 'Beta Laptop', description: 'Powerful laptop for work and play', price: 200, category: 'Electronics', condition: 'Like New' },
+        { title: 'Gamma Headphones', description: 'Wireless headphones with noise cancelling', price: 50, category: 'Electronics', condition: 'Good' },
+        { title: 'Delta Jacket', description: 'Warm winter jacket for cold weather', price: 120, category: 'Clothing', condition: 'New' },
+        { title: 'Epsilon Sneakers', description: 'Running shoes for daily training', price: 80, category: 'Clothing', condition: 'Like New' },
+        { title: 'Zeta Novel', description: 'Bestselling fiction novel of the year', price: 15, category: 'Books', condition: 'Good' },
+        { title: 'Eta Cookbook', description: 'Delicious recipes from around the world', price: 25, category: 'Books', condition: 'New' },
+        { title: 'Theta Yoga Mat', description: 'Premium non-slip yoga mat extra thick', price: 35, category: 'Sports', condition: 'New' },
+        { title: 'Iota Basketball', description: 'Official size basketball for outdoor courts', price: 30, category: 'Sports', condition: 'Good' },
+        { title: 'Kappa Desk Lamp', description: 'Adjustable LED desk lamp with brightness control', price: 45, category: 'Home & Garden', condition: 'Like New' },
+        { title: 'Lambda Bookshelf', description: 'Solid wood bookshelf with five shelves', price: 150, category: 'Home & Garden', condition: 'Fair' },
+        { title: 'Mu Guitar', description: 'Acoustic guitar with beautiful warm tone', price: 300, category: 'Musical Instruments', condition: 'Good' },
+        { title: 'Nu Keyboard', description: 'Mechanical keyboard with RGB backlight', price: 95, category: 'Electronics', condition: 'New' },
+        { title: 'Xi Board Game', description: 'Fun board game for the whole family', price: 40, category: 'Toys & Games', condition: 'Like New' },
+        { title: 'Omicron Camera', description: 'Professional DSLR camera body only', price: 500, category: 'Electronics', condition: 'Like New' },
+      ];
+
+      // Insert with sequential createdAt so sort order is deterministic
+      for (let i = 0; i < productData.length; i++) {
+        await Product.create({
+          ...productData[i],
+          images: ['https://res.cloudinary.com/test/image/upload/test-image.jpg'],
+          seller: user!._id,
+          createdAt: new Date(Date.now() - (productData.length - i) * 1000),
+        });
+      }
+    });
+
+    it('should return default pagination: 12 products, page 1, totalProducts=15, hasMore=true', async () => {
+      const res = await request(app).get('/api/products');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Products retrieved successfully');
+      expect(res.body.data.products).toHaveLength(12);
+      expect(res.body.data.pagination.currentPage).toBe(1);
+      expect(res.body.data.pagination.totalProducts).toBe(15);
+      expect(res.body.data.pagination.totalPages).toBe(2);
+      expect(res.body.data.pagination.limit).toBe(12);
+      expect(res.body.data.pagination.hasMore).toBe(true);
+    });
+
+    it('should return page 2 with remaining 3 products and hasMore=false', async () => {
+      const res = await request(app).get('/api/products?page=2');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products).toHaveLength(3);
+      expect(res.body.data.pagination.currentPage).toBe(2);
+      expect(res.body.data.pagination.hasMore).toBe(false);
+    });
+
+    it('should respect custom limit: ?limit=5 returns 5 products, totalPages=3', async () => {
+      const res = await request(app).get('/api/products?limit=5');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products).toHaveLength(5);
+      expect(res.body.data.pagination.limit).toBe(5);
+      expect(res.body.data.pagination.totalPages).toBe(3);
+    });
+
+    it('should filter by category: all returned products match the category', async () => {
+      const res = await request(app).get('/api/products?category=Electronics');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products.length).toBeGreaterThan(0);
+      for (const product of res.body.data.products) {
+        expect(product.category).toBe('Electronics');
+      }
+      expect(res.body.data.pagination.totalProducts).toBe(5);
+    });
+
+    it('should filter by search: case-insensitive match on title', async () => {
+      const res = await request(app).get('/api/products?search=alpha');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products).toHaveLength(1);
+      expect(res.body.data.products[0].title).toBe('Alpha Phone');
+    });
+
+    it('should filter by search: case-insensitive match on description', async () => {
+      const res = await request(app).get('/api/products?search=yoga');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products).toHaveLength(1);
+      expect(res.body.data.products[0].title).toBe('Theta Yoga Mat');
+    });
+
+    it('should combine search + category filters', async () => {
+      const res = await request(app).get('/api/products?search=keyboard&category=Electronics');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products).toHaveLength(1);
+      expect(res.body.data.products[0].title).toBe('Nu Keyboard');
+      expect(res.body.data.products[0].category).toBe('Electronics');
+    });
+
+    it('should sort newest by default: createdAt descending', async () => {
+      const res = await request(app).get('/api/products?limit=15');
+
+      expect(res.status).toBe(200);
+      const dates = res.body.data.products.map((p: { createdAt: string }) => new Date(p.createdAt).getTime());
+      for (let i = 1; i < dates.length; i++) {
+        expect(dates[i - 1]).toBeGreaterThanOrEqual(dates[i]);
+      }
+    });
+
+    it('should sort price_asc: prices ascending', async () => {
+      const res = await request(app).get('/api/products?sort=price_asc&limit=15');
+
+      expect(res.status).toBe(200);
+      const prices = res.body.data.products.map((p: { price: number }) => p.price);
+      for (let i = 1; i < prices.length; i++) {
+        expect(prices[i]).toBeGreaterThanOrEqual(prices[i - 1]);
+      }
+    });
+
+    it('should sort price_desc: prices descending', async () => {
+      const res = await request(app).get('/api/products?sort=price_desc&limit=15');
+
+      expect(res.status).toBe(200);
+      const prices = res.body.data.products.map((p: { price: number }) => p.price);
+      for (let i = 1; i < prices.length; i++) {
+        expect(prices[i]).toBeLessThanOrEqual(prices[i - 1]);
+      }
+    });
+
+    it('should sort oldest: createdAt ascending', async () => {
+      const res = await request(app).get('/api/products?sort=oldest&limit=15');
+
+      expect(res.status).toBe(200);
+      const dates = res.body.data.products.map((p: { createdAt: string }) => new Date(p.createdAt).getTime());
+      for (let i = 1; i < dates.length; i++) {
+        expect(dates[i]).toBeGreaterThanOrEqual(dates[i - 1]);
+      }
+    });
+
+    it('should return empty results for non-matching category with totalProducts=0', async () => {
+      const res = await request(app).get('/api/products?category=NonExistentCategory');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.products).toEqual([]);
+      expect(res.body.data.pagination.totalProducts).toBe(0);
+    });
+
+    it('should clamp limit to 50 when limit=100', async () => {
+      const res = await request(app).get('/api/products?limit=100');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.pagination.limit).toBe(50);
+    });
+
+    it('should default invalid page to 1: ?page=-1 returns currentPage=1', async () => {
+      const res = await request(app).get('/api/products?page=-1');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.pagination.currentPage).toBe(1);
+    });
+
+    it('should be a public endpoint: returns 200 without auth token', async () => {
+      const res = await request(app).get('/api/products');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it('should include populated seller name in products', async () => {
+      const res = await request(app).get('/api/products?limit=1');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products[0].seller).toHaveProperty('name', 'Product Test User');
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // GET /api/products — Performance Tests
+  // --------------------------------------------------------------------------
+  describe('GET /api/products (performance)', () => {
+    beforeAll(async () => {
+      await Product.deleteMany({});
+
+      const user = await User.findOne({ email: 'productuser@example.com' });
+      const categories = ['Electronics', 'Clothing', 'Books', 'Sports', 'Home & Garden'];
+      const conditions: Array<'New' | 'Like New' | 'Good' | 'Fair'> = ['New', 'Like New', 'Good', 'Fair'];
+
+      const bulkOps = [];
+      for (let i = 0; i < 200; i++) {
+        bulkOps.push({
+          title: `Performance Product ${i}`,
+          description: `This is the description for performance test product number ${i}`,
+          price: 10 + (i % 100),
+          images: ['https://res.cloudinary.com/test/image/upload/test-image.jpg'],
+          category: categories[i % categories.length],
+          condition: conditions[i % conditions.length],
+          seller: user!._id,
+          createdAt: new Date(Date.now() - (200 - i) * 1000),
+        });
+      }
+      await Product.insertMany(bulkOps);
+    });
+
+    it('should return paginated response within 200ms for 200 products', async () => {
+      const start = Date.now();
+      const res = await request(app).get('/api/products');
+      const elapsed = Date.now() - start;
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.pagination.totalProducts).toBe(200);
+      expect(elapsed).toBeLessThan(200);
+    });
+
+    it('should return filtered + searched response within 200ms', async () => {
+      const start = Date.now();
+      const res = await request(app).get('/api/products?category=Electronics&search=performance');
+      const elapsed = Date.now() - start;
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products.length).toBeGreaterThan(0);
+      expect(elapsed).toBeLessThan(200);
+    });
+
+    it('should return correct remainder count on last page', async () => {
+      // 200 products, default limit 12 => 200/12 = 16 full pages + 8 remaining = 17 pages
+      const res = await request(app).get('/api/products?page=17');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products).toHaveLength(8);
+      expect(res.body.data.pagination.hasMore).toBe(false);
+    });
+
+    afterAll(async () => {
+      await Product.deleteMany({});
+    });
+  });
+
+  // --------------------------------------------------------------------------
   // Security Tests
   // --------------------------------------------------------------------------
   describe('Security', () => {

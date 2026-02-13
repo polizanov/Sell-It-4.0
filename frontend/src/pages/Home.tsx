@@ -1,15 +1,59 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { useAuthStore } from '../store/authStore';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/common/Button';
 import { ProductGrid } from '../components/products/ProductGrid';
-import { mockProducts } from '../data/mockProducts';
+import { productService } from '../services/productService';
+import type { Product } from '../types';
+
+/** Skeleton for the 4-card featured products grid */
+const FeaturedSkeleton = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {Array.from({ length: 4 }).map((_, i) => (
+      <div
+        key={i}
+        className="bg-dark-surface border border-dark-border rounded-xl p-4 animate-pulse"
+      >
+        <div className="w-full h-48 bg-dark-elevated rounded-lg mb-4" />
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-2">
+            <div className="h-5 bg-dark-elevated rounded w-2/3" />
+            <div className="h-6 bg-dark-elevated rounded w-16" />
+          </div>
+          <div className="flex gap-2">
+            <div className="h-6 bg-dark-elevated rounded w-20" />
+            <div className="h-6 bg-dark-elevated rounded w-16" />
+          </div>
+          <div className="h-4 bg-dark-elevated rounded w-full" />
+          <div className="h-4 bg-dark-elevated rounded w-3/4" />
+          <div className="pt-4 border-t border-dark-border">
+            <div className="h-4 bg-dark-elevated rounded w-28" />
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 const Home = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(true);
 
-  // Show featured products (first 4)
-  const featuredProducts = mockProducts.slice(0, 4);
+  useEffect(() => {
+    productService
+      .getAll({ page: 1, limit: 4, sort: 'newest' })
+      .then((res) => {
+        setFeaturedProducts(res.products);
+      })
+      .catch(() => {
+        // Silently handle — featured section is non-critical
+      })
+      .finally(() => {
+        setIsLoadingFeatured(false);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -56,7 +100,7 @@ const Home = () => {
             </p>
           </div>
 
-          <ProductGrid products={featuredProducts} />
+          {isLoadingFeatured ? <FeaturedSkeleton /> : <ProductGrid products={featuredProducts} />}
 
           <div className="text-center mt-12">
             <Link to="/products">

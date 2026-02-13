@@ -41,3 +41,19 @@ export interface NavLink {
   requiresAuth?: boolean;
   hideWhenAuth?: boolean;
 }
+
+export interface PaginationInfo {
+  currentPage: number;
+  totalPages: number;
+  totalProducts: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export interface ProductListParams {
+  page?: number;
+  limit?: number;
+  category?: string;
+  search?: string;
+  sort?: 'newest' | 'oldest' | 'price_asc' | 'price_desc';
+}

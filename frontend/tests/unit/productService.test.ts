@@ -189,6 +189,142 @@ describe('productService', () => {
     });
   });
 
+  describe('getAll', () => {
+    it('returns mapped products with flat sellerId/sellerName and pagination metadata', async () => {
+      server.use(
+        http.get(`${API_BASE}/products`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'Products retrieved successfully',
+            data: {
+              products: [
+                {
+                  id: 'prod-1',
+                  title: 'Test Product',
+                  description: 'A test product description',
+                  price: 49.99,
+                  images: ['https://images.unsplash.com/photo-1.jpg'],
+                  category: 'Electronics',
+                  condition: 'New',
+                  seller: { _id: 'seller-1', name: 'John Smith' },
+                  createdAt: '2024-01-15T10:30:00.000Z',
+                },
+                {
+                  id: 'prod-2',
+                  title: 'Another Product',
+                  description: 'Another product for testing',
+                  price: 99.99,
+                  images: ['https://images.unsplash.com/photo-2.jpg'],
+                  category: 'Clothing',
+                  condition: 'Good',
+                  seller: { _id: 'seller-2', name: 'Jane Doe' },
+                  createdAt: '2024-02-20T10:30:00.000Z',
+                },
+              ],
+              pagination: {
+                currentPage: 1,
+                totalPages: 1,
+                totalProducts: 2,
+                limit: 12,
+                hasMore: false,
+              },
+            },
+          });
+        }),
+      );
+
+      const result = await productService.getAll();
+
+      // Check pagination metadata
+      expect(result.pagination.currentPage).toBe(1);
+      expect(result.pagination.totalPages).toBe(1);
+      expect(result.pagination.totalProducts).toBe(2);
+      expect(result.pagination.limit).toBe(12);
+      expect(result.pagination.hasMore).toBe(false);
+
+      // Check mapped products
+      expect(result.products).toHaveLength(2);
+
+      const first = result.products[0];
+      expect(first.id).toBe('prod-1');
+      expect(first.title).toBe('Test Product');
+      expect(first.sellerId).toBe('seller-1');
+      expect(first.sellerName).toBe('John Smith');
+      expect((first as unknown as Record<string, unknown>).seller).toBeUndefined();
+
+      const second = result.products[1];
+      expect(second.id).toBe('prod-2');
+      expect(second.sellerId).toBe('seller-2');
+      expect(second.sellerName).toBe('Jane Doe');
+    });
+
+    it('sends query parameters correctly', async () => {
+      let capturedUrl = '';
+
+      server.use(
+        http.get(`${API_BASE}/products`, ({ request }) => {
+          capturedUrl = request.url;
+          return HttpResponse.json({
+            success: true,
+            message: 'Products retrieved successfully',
+            data: {
+              products: [],
+              pagination: {
+                currentPage: 2,
+                totalPages: 5,
+                totalProducts: 50,
+                limit: 10,
+                hasMore: true,
+              },
+            },
+          });
+        }),
+      );
+
+      await productService.getAll({
+        page: 2,
+        limit: 10,
+        category: 'Electronics',
+        search: 'camera',
+        sort: 'price_asc',
+      });
+
+      const url = new URL(capturedUrl);
+      expect(url.searchParams.get('page')).toBe('2');
+      expect(url.searchParams.get('limit')).toBe('10');
+      expect(url.searchParams.get('category')).toBe('Electronics');
+      expect(url.searchParams.get('search')).toBe('camera');
+      expect(url.searchParams.get('sort')).toBe('price_asc');
+    });
+
+    it('returns empty products array when no results', async () => {
+      server.use(
+        http.get(`${API_BASE}/products`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'Products retrieved successfully',
+            data: {
+              products: [],
+              pagination: {
+                currentPage: 1,
+                totalPages: 1,
+                totalProducts: 0,
+                limit: 12,
+                hasMore: false,
+              },
+            },
+          });
+        }),
+      );
+
+      const result = await productService.getAll({ category: 'NonExistent' });
+
+      expect(result.products).toEqual([]);
+      expect(result.products).toHaveLength(0);
+      expect(result.pagination.totalProducts).toBe(0);
+    });
+  });
+
   describe('getById', () => {
     it('returns a mapped Product with flat sellerId and sellerName', async () => {
       server.use(

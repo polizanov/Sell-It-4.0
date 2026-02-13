@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { createProduct, getCategories, getProductById } from '../controllers/productController';
+import { createProduct, getAllProducts, getCategories, getProductById } from '../controllers/productController';
 import { validate } from '../middleware/validate';
 import { protect } from '../middleware/authMiddleware';
 import { upload } from '../middleware/upload';
@@ -19,6 +19,7 @@ const createProductSchema = z.object({
   }),
 });
 
+router.get('/', getAllProducts);
 router.post('/', protect, upload.array('images', 5), validate(createProductSchema), createProduct);
 router.get('/categories', getCategories);
 router.get('/:id', getProductById);

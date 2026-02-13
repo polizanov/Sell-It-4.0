@@ -11,6 +11,21 @@ console.error = (...args: unknown[]) => {
   originalConsoleError(...args);
 };
 
+// Mock IntersectionObserver which is not available in jsdom.
+// Required by components that use infinite scroll (e.g. AllProducts).
+class MockIntersectionObserver implements IntersectionObserver {
+  readonly root: Element | null = null;
+  readonly rootMargin: string = '';
+  readonly thresholds: ReadonlyArray<number> = [];
+  disconnect(): void {}
+  observe(): void {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+  unobserve(): void {}
+}
+global.IntersectionObserver = MockIntersectionObserver;
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());

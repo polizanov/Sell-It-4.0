@@ -1,0 +1,1 @@
+Integrate all products page(product listing) and 'Featured products' section in homepage as well . All mocked data should be changed with existing api data. Implement infinity scroll functionallity by 12 product per page (in All Products page) . Implement unit, integration, speed and e2e tests and execute them. 

@@ -25,6 +25,175 @@ const products: Array<{
   createdAt: string;
 }> = [];
 
+// Default mock products for listing / pagination tests
+const defaultProducts: typeof products = [
+  {
+    id: 'mock-1',
+    title: 'Vintage Camera',
+    description: 'Classic film camera in excellent condition.',
+    price: 249.99,
+    images: ['https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&h=600&fit=crop'],
+    category: 'Electronics',
+    condition: 'Good',
+    seller: { _id: 'seller-1', name: 'John Smith' },
+    createdAt: '2024-01-15T10:30:00.000Z',
+  },
+  {
+    id: 'mock-2',
+    title: 'Designer Leather Jacket',
+    description: 'Limited edition leather jacket. Genuine leather, size M.',
+    price: 399.99,
+    images: ['https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=600&fit=crop'],
+    category: 'Clothing',
+    condition: 'Like New',
+    seller: { _id: 'seller-2', name: 'Sarah Johnson' },
+    createdAt: '2024-01-20T10:30:00.000Z',
+  },
+  {
+    id: 'mock-3',
+    title: 'Mountain Bike',
+    description: 'Professional mountain bike with 21-speed gears.',
+    price: 550.0,
+    images: ['https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=800&h=600&fit=crop'],
+    category: 'Sports',
+    condition: 'Good',
+    seller: { _id: 'seller-1', name: 'John Smith' },
+    createdAt: '2024-01-22T10:30:00.000Z',
+  },
+  {
+    id: 'mock-4',
+    title: 'Acoustic Guitar',
+    description: 'Beautiful acoustic guitar with rich tone.',
+    price: 180.5,
+    images: ['https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=800&h=600&fit=crop'],
+    category: 'Musical Instruments',
+    condition: 'Good',
+    seller: { _id: 'seller-3', name: 'Mike Davis' },
+    createdAt: '2024-01-25T10:30:00.000Z',
+  },
+  {
+    id: 'mock-5',
+    title: 'Modern Desk Lamp',
+    description: 'Sleek LED desk lamp with adjustable brightness.',
+    price: 45.0,
+    images: ['https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&h=600&fit=crop'],
+    category: 'Home & Garden',
+    condition: 'Like New',
+    seller: { _id: 'seller-2', name: 'Sarah Johnson' },
+    createdAt: '2024-02-01T10:30:00.000Z',
+  },
+  {
+    id: 'mock-6',
+    title: 'Gaming Headset',
+    description: 'Professional gaming headset with surround sound.',
+    price: 89.99,
+    images: ['https://images.unsplash.com/photo-1599669454699-248893623440?w=800&h=600&fit=crop'],
+    category: 'Electronics',
+    condition: 'New',
+    seller: { _id: 'seller-1', name: 'John Smith' },
+    createdAt: '2024-02-03T10:30:00.000Z',
+  },
+  {
+    id: 'mock-7',
+    title: 'Running Shoes',
+    description: 'High-performance running shoes, size 10.',
+    price: 75.0,
+    images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=600&fit=crop'],
+    category: 'Sports',
+    condition: 'Like New',
+    seller: { _id: 'seller-3', name: 'Mike Davis' },
+    createdAt: '2024-02-05T10:30:00.000Z',
+  },
+  {
+    id: 'mock-8',
+    title: 'Coffee Maker',
+    description: 'Programmable coffee maker with thermal carafe.',
+    price: 65.0,
+    images: ['https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=800&h=600&fit=crop'],
+    category: 'Home & Garden',
+    condition: 'Good',
+    seller: { _id: 'seller-2', name: 'Sarah Johnson' },
+    createdAt: '2024-02-08T10:30:00.000Z',
+  },
+  {
+    id: 'mock-9',
+    title: 'Skateboard Deck',
+    description: 'Professional skateboard deck with custom artwork.',
+    price: 120.0,
+    images: ['https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800&h=600&fit=crop'],
+    category: 'Sports',
+    condition: 'Fair',
+    seller: { _id: 'seller-1', name: 'John Smith' },
+    createdAt: '2024-02-10T10:30:00.000Z',
+  },
+  {
+    id: 'mock-10',
+    title: 'Wireless Keyboard',
+    description: 'Mechanical wireless keyboard with RGB backlight.',
+    price: 95.0,
+    images: ['https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&h=600&fit=crop'],
+    category: 'Electronics',
+    condition: 'New',
+    seller: { _id: 'seller-3', name: 'Mike Davis' },
+    createdAt: '2024-02-12T10:30:00.000Z',
+  },
+  {
+    id: 'mock-11',
+    title: 'Yoga Mat',
+    description: 'Premium non-slip yoga mat, extra thick.',
+    price: 35.0,
+    images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=600&fit=crop'],
+    category: 'Sports',
+    condition: 'New',
+    seller: { _id: 'seller-2', name: 'Sarah Johnson' },
+    createdAt: '2024-02-14T10:30:00.000Z',
+  },
+  {
+    id: 'mock-12',
+    title: 'Bookshelf',
+    description: 'Solid wood bookshelf with five shelves.',
+    price: 150.0,
+    images: ['https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800&h=600&fit=crop'],
+    category: 'Home & Garden',
+    condition: 'Good',
+    seller: { _id: 'seller-1', name: 'John Smith' },
+    createdAt: '2024-02-16T10:30:00.000Z',
+  },
+  {
+    id: 'mock-13',
+    title: 'Smartwatch',
+    description: 'Fitness smartwatch with heart rate monitor.',
+    price: 199.99,
+    images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=600&fit=crop'],
+    category: 'Electronics',
+    condition: 'Like New',
+    seller: { _id: 'seller-3', name: 'Mike Davis' },
+    createdAt: '2024-02-18T10:30:00.000Z',
+  },
+  {
+    id: 'mock-14',
+    title: 'Winter Jacket',
+    description: 'Warm waterproof winter jacket, size L.',
+    price: 220.0,
+    images: ['https://images.unsplash.com/photo-1544923246-77307dd270c3?w=800&h=600&fit=crop'],
+    category: 'Clothing',
+    condition: 'Good',
+    seller: { _id: 'seller-2', name: 'Sarah Johnson' },
+    createdAt: '2024-02-20T10:30:00.000Z',
+  },
+  {
+    id: 'mock-15',
+    title: 'Board Game Collection',
+    description: 'Collection of 5 popular board games.',
+    price: 85.0,
+    images: ['https://images.unsplash.com/photo-1611371805429-8b5c1b2c34ba?w=800&h=600&fit=crop'],
+    category: 'Toys & Games',
+    condition: 'Good',
+    seller: { _id: 'seller-1', name: 'John Smith' },
+    createdAt: '2024-02-22T10:30:00.000Z',
+  },
+];
+
 const defaultCategories = [
   'Books',
   'Clothing',
@@ -169,6 +338,51 @@ export const handlers = [
       { success: false, message: 'Not authorized' },
       { status: 401 },
     );
+  }),
+
+  http.get(`${API_BASE}/products`, ({ request }) => {
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '12', 10);
+    const category = url.searchParams.get('category') || '';
+    const search = url.searchParams.get('search') || '';
+
+    // Combine user-created products with default mock products
+    const allProducts = [...products, ...defaultProducts];
+
+    // Filter
+    let filtered = allProducts;
+    if (category) {
+      filtered = filtered.filter((p) => p.category === category);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q),
+      );
+    }
+
+    // Paginate
+    const totalProducts = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(totalProducts / limit));
+    const start = (page - 1) * limit;
+    const paged = filtered.slice(start, start + limit);
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Products retrieved successfully',
+      data: {
+        products: paged,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalProducts,
+          limit,
+          hasMore: page < totalPages,
+        },
+      },
+    });
   }),
 
   http.post(`${API_BASE}/products`, async ({ request }) => {
