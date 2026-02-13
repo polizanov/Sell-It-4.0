@@ -1,10 +1,13 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { AxiosError } from 'axios';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
 import { useAuthStore } from '../store/authStore';
+import { authService } from '../services/authService';
+import type { ApiError } from '../types';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -19,13 +22,14 @@ const Login = () => {
     password: '',
     general: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     // Reset errors
@@ -53,21 +57,35 @@ const Login = () => {
       return;
     }
 
-    // For now, just log the form data (API integration later)
-    console.log('Login form submitted:', formData);
+    setIsSubmitting(true);
 
-    // Simulate successful login (for demo purposes)
-    login(
-      {
-        id: '1',
-        name: 'Demo User',
+    try {
+      const response = await authService.login({
         email: formData.email,
-      },
-      'demo-token-12345'
-    );
+        password: formData.password,
+      });
 
-    // Redirect to home page
-    navigate('/');
+      const { data } = response.data;
+      if (data && data.token) {
+        login(
+          {
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            isVerified: data.isVerified,
+          },
+          data.token
+        );
+        navigate('/');
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiError>;
+      const message =
+        axiosError.response?.data?.message || 'An unexpected error occurred. Please try again.';
+      setErrors((prev) => ({ ...prev, general: message }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -110,8 +128,8 @@ const Login = () => {
               required
             />
 
-            <Button type="submit" variant="primary" size="md" fullWidth>
-              Login
+            <Button type="submit" variant="primary" size="md" fullWidth disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
           </form>
 

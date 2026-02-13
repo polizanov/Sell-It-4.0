@@ -1,15 +1,14 @@
 import { useState, FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
+import { AxiosError } from 'axios';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
-import { useAuthStore } from '../store/authStore';
+import { authService } from '../services/authService';
+import type { ApiError } from '../types';
 
 const Register = () => {
-  const navigate = useNavigate();
-  const login = useAuthStore((state) => state.login);
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -23,13 +22,15 @@ const Register = () => {
     confirmPassword: '',
     general: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     // Reset errors
@@ -73,26 +74,50 @@ const Register = () => {
       return;
     }
 
-    // For now, just log the form data (API integration later)
-    console.log('Register form submitted:', {
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-    });
+    setIsSubmitting(true);
 
-    // Simulate successful registration and login (for demo purposes)
-    login(
-      {
-        id: '1',
+    try {
+      await authService.register({
         name: formData.name,
         email: formData.email,
-      },
-      'demo-token-12345'
-    );
+        password: formData.password,
+      });
 
-    // Redirect to home page
-    navigate('/');
+      setRegistrationSuccess(true);
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiError>;
+      const message =
+        axiosError.response?.data?.message || 'An unexpected error occurred. Please try again.';
+      setErrors((prev) => ({ ...prev, general: message }));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (registrationSuccess) {
+    return (
+      <PageContainer>
+        <div className="max-w-md mx-auto">
+          <Card>
+            <div className="text-center py-4">
+              <h1 className="text-3xl font-bold text-text-primary mb-4">
+                Check Your Email
+              </h1>
+              <p className="text-text-secondary mb-8">
+                We've sent a verification link to your email. Please check your inbox and click the link to verify your account.
+              </p>
+              <Link
+                to="/login"
+                className="inline-block bg-orange text-white hover:bg-orange-hover font-medium px-6 py-3 rounded-lg transition-colors"
+              >
+                Go to Login
+              </Link>
+            </div>
+          </Card>
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -154,8 +179,8 @@ const Register = () => {
               required
             />
 
-            <Button type="submit" variant="primary" size="md" fullWidth>
-              Create Account
+            <Button type="submit" variant="primary" size="md" fullWidth disabled={isSubmitting}>
+              {isSubmitting ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
 

@@ -1,0 +1,1 @@
+ I want to add user authentication with login and registration. Use gamil app for email verification. Only verified users should be able to add product later.

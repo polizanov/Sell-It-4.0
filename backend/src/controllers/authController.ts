@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -6,6 +6,7 @@ import { User } from '../models/User';
 import { env } from '../config/environment';
 import { sendVerificationEmail } from '../services/emailService';
 import { AppError } from '../middleware/errorHandler';
+import { AuthRequest } from '../types';
 
 const generateToken = (userId: string, email: string): string => {
   return jwt.sign({ userId, email }, env.JWT_SECRET, {
@@ -13,7 +14,7 @@ const generateToken = (userId: string, email: string): string => {
   } as jwt.SignOptions);
 };
 
-export const register = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+export const register = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const { name, email, password } = req.body;
 
   const existingUser = await User.findOne({ email });
@@ -43,7 +44,7 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
   });
 });
 
-export const login = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+export const login = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
@@ -69,12 +70,31 @@ export const login = asyncHandler(async (req: Request, res: Response): Promise<v
       id: user._id,
       name: user.name,
       email: user.email,
+      isVerified: user.isVerified,
       token,
     },
   });
 });
 
-export const verifyEmail = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+export const getMe = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const user = await User.findById(req.user!.userId);
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  res.json({
+    success: true,
+    message: 'User profile retrieved',
+    data: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      isVerified: user.isVerified,
+    },
+  });
+});
+
+export const verifyEmail = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const { token } = req.params;
 
   const user = await User.findOne({ verificationToken: token });

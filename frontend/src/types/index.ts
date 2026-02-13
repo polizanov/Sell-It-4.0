@@ -2,6 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  isVerified?: boolean;
 }
 
 export interface AuthResponse {
@@ -11,6 +12,7 @@ export interface AuthResponse {
     id: string;
     name: string;
     email: string;
+    isVerified?: boolean;
     token?: string;
   };
 }
