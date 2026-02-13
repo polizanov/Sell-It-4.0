@@ -1,5 +1,5 @@
 import api from './api';
-import type { Product, PaginationInfo, ProductListParams } from '../types';
+import type { Product, PaginationInfo, ProductListParams, UserProfileInfo } from '../types';
 
 interface CreateProductData {
   title: string;
@@ -18,7 +18,7 @@ interface ProductResponseData {
   images: string[];
   category: string;
   condition: string;
-  seller: { _id: string; name: string };
+  seller: { _id: string; name: string; username: string };
   createdAt: string;
 }
 
@@ -45,6 +45,18 @@ interface CategoriesResponse {
   data: string[];
 }
 
+interface UserProductsResponseData {
+  user: UserProfileInfo;
+  products: ProductResponseData[];
+  pagination: PaginationInfo;
+}
+
+interface UserProductsResponse {
+  success: boolean;
+  message: string;
+  data: UserProductsResponseData;
+}
+
 /** Map backend seller object to flat frontend Product type */
 function mapProductResponse(data: ProductResponseData): Product {
   return {
@@ -57,6 +69,7 @@ function mapProductResponse(data: ProductResponseData): Product {
     condition: data.condition as Product['condition'],
     sellerId: data.seller._id,
     sellerName: data.seller.name,
+    sellerUsername: data.seller.username,
     createdAt: data.createdAt,
   };
 }
@@ -100,4 +113,22 @@ export const productService = {
   },
 
   getCategories: () => api.get<CategoriesResponse>('/products/categories'),
+
+  getByUsername: async (
+    username: string,
+    params: { page?: number; limit?: number } = {},
+  ): Promise<{ user: UserProfileInfo; products: Product[]; pagination: PaginationInfo }> => {
+    const searchParams = new URLSearchParams();
+    if (params.page) searchParams.set('page', String(params.page));
+    if (params.limit) searchParams.set('limit', String(params.limit));
+
+    const query = searchParams.toString();
+    const url = `/products/user/${username}${query ? `?${query}` : ''}`;
+    const res = await api.get<UserProductsResponse>(url);
+    return {
+      user: res.data.data.user,
+      products: res.data.data.products.map(mapProductResponse),
+      pagination: res.data.data.pagination,
+    };
+  },
 };

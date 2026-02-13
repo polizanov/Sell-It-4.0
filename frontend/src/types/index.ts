@@ -34,7 +34,14 @@ export interface Product {
   condition: 'New' | 'Like New' | 'Good' | 'Fair';
   sellerId: string;
   sellerName: string;
+  sellerUsername: string;
   createdAt: string;
+}
+
+export interface UserProfileInfo {
+  name: string;
+  username: string;
+  memberSince: string;
 }
 
 export interface NavLink {

@@ -45,7 +45,7 @@ describe('ProductDetail Page', () => {
             ],
             category: 'Electronics',
             condition: 'Good',
-            seller: { _id: 'seller-001', name: 'John Smith' },
+            seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith' },
             createdAt: '2024-01-15T10:30:00.000Z',
           },
         });
@@ -127,5 +127,37 @@ describe('ProductDetail Page', () => {
     // The "Back to Products" text is inside a Link > Button
     const backLink = screen.getByText('Back to Products').closest('a');
     expect(backLink).toHaveAttribute('href', '/products');
+  });
+
+  it('Contact Seller button links to seller profile', async () => {
+    server.use(
+      http.get(`${API_BASE}/products/:id`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Product retrieved successfully',
+          data: {
+            id: '507f1f77bcf86cd799439011',
+            title: 'Test Product',
+            description: 'A test product for contact seller test.',
+            price: 99.99,
+            images: ['https://images.unsplash.com/photo-1.jpg'],
+            category: 'Electronics',
+            condition: 'New',
+            seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith' },
+            createdAt: '2024-01-15T10:30:00.000Z',
+          },
+        });
+      }),
+    );
+
+    renderProductDetail('507f1f77bcf86cd799439011');
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Product')).toBeInTheDocument();
+    });
+
+    const contactButton = screen.getByText('Contact Seller');
+    const link = contactButton.closest('a');
+    expect(link).toHaveAttribute('href', '/profile/johnsmith');
   });
 });

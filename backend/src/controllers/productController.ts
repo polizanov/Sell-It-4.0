@@ -5,6 +5,7 @@ import { IProduct, Product } from '../models/Product';
 import { uploadToCloudinary } from '../middleware/upload';
 import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../types';
+import { User } from '../models/User';
 
 const SORT_OPTIONS: Record<string, Record<string, 1 | -1>> = {
   newest: { createdAt: -1 },
@@ -35,7 +36,7 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response): 
   const skip = (page - 1) * limit;
 
   const [products, totalProducts] = await Promise.all([
-    Product.find(filter).sort(sortOption).skip(skip).limit(limit).populate('seller', 'name'),
+    Product.find(filter).sort(sortOption).skip(skip).limit(limit).populate('seller', 'name username'),
     Product.countDocuments(filter),
   ]);
 
@@ -89,7 +90,7 @@ export const createProduct = asyncHandler(async (req: AuthRequest, res: Response
     seller: req.user!.userId,
   });
 
-  await product.populate('seller', 'name');
+  await product.populate('seller', 'name username');
 
   res.status(201).json({
     success: true,
@@ -126,7 +127,7 @@ export const getProductById = asyncHandler(async (req: Request, res: Response): 
     throw new AppError('Invalid product ID', 400);
   }
 
-  const product = await Product.findById(id).populate('seller', 'name');
+  const product = await Product.findById(id).populate('seller', 'name username');
 
   if (!product) {
     throw new AppError('Product not found', 404);
@@ -145,6 +146,60 @@ export const getProductById = asyncHandler(async (req: Request, res: Response): 
       condition: product.condition,
       seller: product.seller,
       createdAt: product.createdAt,
+    },
+  });
+});
+
+export const getUserProducts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const username = req.params.username as string;
+  const page = Math.max(Number(req.query.page) || 1, 1);
+  const limit = Math.min(Math.max(Number(req.query.limit) || 12, 1), 50);
+  const skip = (page - 1) * limit;
+
+  const user = await User.findOne({ username: username.toLowerCase() }).select('name username createdAt');
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  const [products, totalProducts] = await Promise.all([
+    Product.find({ seller: user._id })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('seller', 'name username'),
+    Product.countDocuments({ seller: user._id }),
+  ]);
+
+  const totalPages = Math.ceil(totalProducts / limit);
+
+  res.json({
+    success: true,
+    message: 'User products retrieved successfully',
+    data: {
+      user: {
+        name: user.name,
+        username: user.username,
+        memberSince: user.createdAt,
+      },
+      products: products.map((product) => ({
+        id: product._id,
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        images: product.images,
+        category: product.category,
+        condition: product.condition,
+        seller: product.seller,
+        createdAt: product.createdAt,
+      })),
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalProducts,
+        limit,
+        hasMore: page < totalPages,
+      },
     },
   });
 });

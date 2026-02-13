@@ -1,58 +1,80 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router';
-import { useAuthStore } from '../store/authStore';
+import { useParams, Link } from 'react-router';
+import { AxiosError } from 'axios';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { ProductGrid } from '../components/products/ProductGrid';
 import { productService } from '../services/productService';
-import type { Product, PaginationInfo } from '../types';
+import type { Product, PaginationInfo, UserProfileInfo, ApiError } from '../types';
 
-const ProductGridSkeleton = () => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    {Array.from({ length: 8 }).map((_, i) => (
-      <div
-        key={i}
-        className="bg-dark-surface border border-dark-border rounded-xl p-4 animate-pulse"
-      >
-        <div className="w-full h-48 bg-dark-elevated rounded-lg mb-4" />
-        <div className="space-y-3">
-          <div className="h-5 bg-dark-elevated rounded w-2/3" />
-          <div className="h-6 bg-dark-elevated rounded w-16" />
-          <div className="h-4 bg-dark-elevated rounded w-full" />
+const ProfileSkeleton = () => (
+  <PageContainer>
+    <div className="space-y-8">
+      <div className="h-8 w-48 bg-dark-surface rounded animate-pulse" />
+      <div className="bg-dark-surface border border-dark-border rounded-xl p-6 animate-pulse">
+        <div className="flex items-start gap-6 flex-col sm:flex-row">
+          <div className="w-24 h-24 rounded-full bg-dark-elevated" />
+          <div className="flex-1 space-y-3">
+            <div className="h-7 w-48 bg-dark-elevated rounded" />
+            <div className="h-5 w-32 bg-dark-elevated rounded" />
+            <div className="h-4 w-40 bg-dark-elevated rounded" />
+          </div>
         </div>
       </div>
-    ))}
-  </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-dark-surface border border-dark-border rounded-xl p-4 animate-pulse"
+          >
+            <div className="w-full h-48 bg-dark-elevated rounded-lg mb-4" />
+            <div className="space-y-3">
+              <div className="h-5 bg-dark-elevated rounded w-2/3" />
+              <div className="h-6 bg-dark-elevated rounded w-16" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </PageContainer>
 );
 
-const MyProfile = () => {
-  const user = useAuthStore((state) => state.user);
+const UserProfile = () => {
+  const { username } = useParams<{ username: string }>();
+  const [userInfo, setUserInfo] = useState<UserProfileInfo | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState('');
+  const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!username) return;
 
     let cancelled = false;
     setIsLoading(true);
-    setError('');
+    setError(null);
+    setNotFound(false);
 
     productService
-      .getByUsername(user.username, { page: 1 })
+      .getByUsername(username, { page: 1 })
       .then((res) => {
         if (!cancelled) {
+          setUserInfo(res.user);
           setProducts(res.products);
           setPagination(res.pagination);
         }
       })
       .catch((err) => {
-        if (!cancelled) {
-          setError(err?.response?.data?.message || 'Failed to load products');
+        if (cancelled) return;
+        const axiosError = err as AxiosError<ApiError>;
+        if (axiosError.response?.status === 404) {
+          setNotFound(true);
+        } else {
+          setError(axiosError.response?.data?.message || 'Failed to load profile');
         }
       })
       .finally(() => {
@@ -62,14 +84,14 @@ const MyProfile = () => {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [username]);
 
   const loadMore = useCallback(() => {
-    if (!user || !pagination || !pagination.hasMore || isLoadingMore) return;
+    if (!username || !pagination || !pagination.hasMore || isLoadingMore) return;
     setIsLoadingMore(true);
 
     productService
-      .getByUsername(user.username, { page: pagination.currentPage + 1 })
+      .getByUsername(username, { page: pagination.currentPage + 1 })
       .then((res) => {
         setProducts((prev) => [...prev, ...res.products]);
         setPagination(res.pagination);
@@ -80,7 +102,7 @@ const MyProfile = () => {
       .finally(() => {
         setIsLoadingMore(false);
       });
-  }, [user, pagination, isLoadingMore]);
+  }, [username, pagination, isLoadingMore]);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -99,11 +121,41 @@ const MyProfile = () => {
     return () => observer.disconnect();
   }, [loadMore]);
 
-  if (!user) {
-    return null;
+  if (isLoading) {
+    return <ProfileSkeleton />;
   }
 
-  const initials = user.name
+  if (notFound) {
+    return (
+      <PageContainer className="py-16">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-text-primary mb-4">User Not Found</h1>
+          <p className="text-text-secondary mb-8">
+            Sorry, the user you're looking for doesn't exist.
+          </p>
+          <Link to="/products">
+            <Button variant="primary">Browse Products</Button>
+          </Link>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (error || !userInfo) {
+    return (
+      <PageContainer className="py-16">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-red-500 mb-4">Something Went Wrong</h1>
+          <p className="text-text-secondary mb-8">{error || 'An unexpected error occurred'}</p>
+          <Link to="/products">
+            <Button variant="primary">Browse Products</Button>
+          </Link>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  const initials = userInfo.name
     .split(' ')
     .map((n) => n[0])
     .join('')
@@ -118,11 +170,8 @@ const MyProfile = () => {
         {/* Profile Header */}
         <div>
           <h1 className="text-3xl font-bold text-text-primary mb-2">
-            My Profile
+            Seller Profile
           </h1>
-          <p className="text-text-secondary">
-            Manage your account and listings
-          </p>
         </div>
 
         {/* User Information Card */}
@@ -133,22 +182,19 @@ const MyProfile = () => {
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-text-primary mb-1">
-                {user.name}
+                {userInfo.name}
               </h2>
               <p className="text-text-secondary mb-1">
-                @{user.username}
+                @{userInfo.username}
               </p>
-              <p className="text-text-secondary mb-4">
-                {user.email}
+              <p className="text-text-muted text-sm">
+                Member since{' '}
+                {new Date(userInfo.memberSince).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
               </p>
-              <div className="flex gap-3">
-                <Button variant="primary" size="sm">
-                  Edit Profile
-                </Button>
-                <Button variant="secondary" size="sm">
-                  Change Password
-                </Button>
-              </div>
             </div>
           </div>
         </Card>
@@ -158,32 +204,16 @@ const MyProfile = () => {
 
         {/* User Products Section */}
         <div>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-text-primary mb-1">
-                My Products
-              </h2>
-              <p className="text-text-secondary">
-                {productCount} {productCount === 1 ? 'listing' : 'listings'}
-              </p>
-            </div>
-            <Link to="/create-product">
-              <Button variant="primary" size="md">
-                Create New Product
-              </Button>
-            </Link>
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-text-primary mb-1">
+              Products
+            </h2>
+            <p className="text-text-secondary">
+              {productCount} {productCount === 1 ? 'listing' : 'listings'}
+            </p>
           </div>
 
-          {/* Error State */}
-          {error && (
-            <div className="bg-red-900/20 border border-red-500/30 rounded-lg px-4 py-3 mb-6">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
-          {isLoading ? (
-            <ProductGridSkeleton />
-          ) : products.length > 0 ? (
+          {products.length > 0 ? (
             <ProductGrid products={products} />
           ) : (
             <Card>
@@ -202,16 +232,11 @@ const MyProfile = () => {
                   />
                 </svg>
                 <h3 className="text-xl font-semibold text-text-secondary mb-2">
-                  No Products Yet
+                  No Products Found
                 </h3>
-                <p className="text-text-muted mb-6">
-                  You haven't listed any products. Start selling today!
+                <p className="text-text-muted">
+                  This user hasn't listed any products yet.
                 </p>
-                <Link to="/create-product">
-                  <Button variant="primary" size="md">
-                    Create Your First Product
-                  </Button>
-                </Link>
               </div>
             </Card>
           )}
@@ -250,4 +275,4 @@ const MyProfile = () => {
   );
 };
 
-export default MyProfile;
+export default UserProfile;

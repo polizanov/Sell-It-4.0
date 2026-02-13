@@ -21,7 +21,7 @@ describe('authStore', () => {
       const mockUser = {
         id: '1',
         name: 'Test User',
-        username: 'testuser',
+      username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
       };

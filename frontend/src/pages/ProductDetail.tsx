@@ -319,8 +319,8 @@ const ProductDetail = () => {
             {/* Seller Information */}
             <div className="border-t border-dark-border pt-6">
               <h2 className="text-xl font-semibold text-text-primary mb-4">Seller Information</h2>
-              <div className="bg-dark-surface rounded-lg p-6 space-y-4">
-                <div className="flex items-center gap-4">
+              <div className="bg-dark-surface rounded-lg p-6 space-y-6">
+                <div className="flex items-center gap-4 mb-4">
                   <div className="w-12 h-12 bg-orange/20 rounded-full flex items-center justify-center">
                     <svg
                       className="w-6 h-6 text-orange"
@@ -337,17 +337,22 @@ const ProductDetail = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-text-primary">
+                    <Link
+                      to={`/profile/${product.sellerUsername}`}
+                      className="text-lg font-semibold text-text-primary hover:text-orange transition-colors"
+                    >
                       {product.sellerName}
-                    </h3>
+                    </Link>
                     <p className="text-text-muted text-sm">
                       Member since {new Date(product.createdAt).getFullYear()}
                     </p>
                   </div>
                 </div>
-                <Button variant="primary" fullWidth>
-                  Contact Seller
-                </Button>
+                <Link to={`/profile/${product.sellerUsername}`}>
+                  <Button variant="primary" fullWidth>
+                    Contact Seller
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

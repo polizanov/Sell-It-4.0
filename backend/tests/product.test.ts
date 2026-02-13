@@ -117,6 +117,7 @@ describe('Product Endpoints', () => {
       expect(res.body.data.category).toBe('Electronics');
       expect(res.body.data.condition).toBe('New');
       expect(res.body.data.seller).toHaveProperty('name', 'Product Test User');
+      expect(res.body.data.seller).toHaveProperty('username', 'producttestuser');
       expect(res.body.data).toHaveProperty('createdAt');
     });
 
@@ -363,6 +364,7 @@ describe('Product Endpoints', () => {
       // Seller should be populated with name
       expect(res.body.data.seller).toHaveProperty('_id', testUserId);
       expect(res.body.data.seller).toHaveProperty('name', 'Product Test User');
+      expect(res.body.data.seller).toHaveProperty('username', 'producttestuser');
       expect(res.body.data).toHaveProperty('createdAt');
     });
 
@@ -611,6 +613,120 @@ describe('Product Endpoints', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.products[0].seller).toHaveProperty('name', 'Product Test User');
+      expect(res.body.data.products[0].seller).toHaveProperty('username', 'producttestuser');
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // GET /api/products/user/:username
+  // --------------------------------------------------------------------------
+  describe('GET /api/products/user/:username', () => {
+    beforeAll(async () => {
+      await Product.deleteMany({});
+
+      const user = await User.findOne({ email: 'productuser@example.com' });
+
+      // Create 15 products for the test user
+      for (let i = 0; i < 15; i++) {
+        await Product.create({
+          title: `User Product ${i}`,
+          description: `Description for user product number ${i}`,
+          price: 10 + i,
+          images: ['https://res.cloudinary.com/test/image/upload/test-image.jpg'],
+          category: i % 2 === 0 ? 'Electronics' : 'Clothing',
+          condition: 'New',
+          seller: user!._id,
+          createdAt: new Date(Date.now() - (15 - i) * 1000),
+        });
+      }
+    });
+
+    it('should return user info and paginated products (12 of 15, hasMore=true)', async () => {
+      const res = await request(app).get('/api/products/user/producttestuser');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('User products retrieved successfully');
+      expect(res.body.data.user).toHaveProperty('name', 'Product Test User');
+      expect(res.body.data.user).toHaveProperty('username', 'producttestuser');
+      expect(res.body.data.user).toHaveProperty('memberSince');
+      expect(res.body.data.products).toHaveLength(12);
+      expect(res.body.data.pagination.currentPage).toBe(1);
+      expect(res.body.data.pagination.totalProducts).toBe(15);
+      expect(res.body.data.pagination.totalPages).toBe(2);
+      expect(res.body.data.pagination.hasMore).toBe(true);
+    });
+
+    it('should return page 2 with remaining products', async () => {
+      const res = await request(app).get('/api/products/user/producttestuser?page=2');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products).toHaveLength(3);
+      expect(res.body.data.pagination.currentPage).toBe(2);
+      expect(res.body.data.pagination.hasMore).toBe(false);
+    });
+
+    it('should return 404 for non-existent username', async () => {
+      const res = await request(app).get('/api/products/user/nonexistentuser');
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('User not found');
+    });
+
+    it('should return user info with empty products for user with 0 products', async () => {
+      // Register a second user with no products
+      await request(app).post('/api/auth/register').send({
+        name: 'Empty User',
+        username: 'emptyuser',
+        email: 'emptyuser@example.com',
+        password: 'password123',
+      });
+      await User.updateOne(
+        { email: 'emptyuser@example.com' },
+        { $set: { isVerified: true } },
+      );
+
+      const res = await request(app).get('/api/products/user/emptyuser');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.user).toHaveProperty('name', 'Empty User');
+      expect(res.body.data.user).toHaveProperty('username', 'emptyuser');
+      expect(res.body.data.products).toEqual([]);
+      expect(res.body.data.pagination.totalProducts).toBe(0);
+    });
+
+    it('should perform case-insensitive username lookup', async () => {
+      const res = await request(app).get('/api/products/user/ProductTestUser');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.user).toHaveProperty('username', 'producttestuser');
+    });
+
+    it('should populate seller with name and username', async () => {
+      const res = await request(app).get('/api/products/user/producttestuser');
+
+      expect(res.status).toBe(200);
+      const product = res.body.data.products[0];
+      expect(product.seller).toHaveProperty('name', 'Product Test User');
+      expect(product.seller).toHaveProperty('username', 'producttestuser');
+    });
+
+    it('should be a public endpoint (no auth required)', async () => {
+      const res = await request(app).get('/api/products/user/producttestuser');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it('should return products sorted by newest first', async () => {
+      const res = await request(app).get('/api/products/user/producttestuser?limit=15');
+
+      expect(res.status).toBe(200);
+      const dates = res.body.data.products.map((p: { createdAt: string }) => new Date(p.createdAt).getTime());
+      for (let i = 1; i < dates.length; i++) {
+        expect(dates[i - 1]).toBeGreaterThanOrEqual(dates[i]);
+      }
     });
   });
 

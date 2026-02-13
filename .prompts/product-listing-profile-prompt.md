@@ -1,0 +1,1 @@
+integrate product listing in profile page to use the real data from api. The edpoint will use username to find all products created by the user. Infinity scroll will work here too with 12 products per page. Contect seller button in product details page should point into product author profile. Add unit, integration, e2e and speed tests and execute them. 

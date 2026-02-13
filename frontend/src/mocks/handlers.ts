@@ -22,7 +22,7 @@ const products: Array<{
   images: string[];
   category: string;
   condition: string;
-  seller: { _id: string; name: string };
+  seller: { _id: string; name: string; username: string };
   createdAt: string;
 }> = [];
 
@@ -36,7 +36,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&h=600&fit=crop'],
     category: 'Electronics',
     condition: 'Good',
-    seller: { _id: 'seller-1', name: 'John Smith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
     createdAt: '2024-01-15T10:30:00.000Z',
   },
   {
@@ -47,7 +47,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=600&fit=crop'],
     category: 'Clothing',
     condition: 'Like New',
-    seller: { _id: 'seller-2', name: 'Sarah Johnson' },
+    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
     createdAt: '2024-01-20T10:30:00.000Z',
   },
   {
@@ -58,7 +58,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=800&h=600&fit=crop'],
     category: 'Sports',
     condition: 'Good',
-    seller: { _id: 'seller-1', name: 'John Smith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
     createdAt: '2024-01-22T10:30:00.000Z',
   },
   {
@@ -69,7 +69,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=800&h=600&fit=crop'],
     category: 'Musical Instruments',
     condition: 'Good',
-    seller: { _id: 'seller-3', name: 'Mike Davis' },
+    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis' },
     createdAt: '2024-01-25T10:30:00.000Z',
   },
   {
@@ -80,7 +80,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&h=600&fit=crop'],
     category: 'Home & Garden',
     condition: 'Like New',
-    seller: { _id: 'seller-2', name: 'Sarah Johnson' },
+    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
     createdAt: '2024-02-01T10:30:00.000Z',
   },
   {
@@ -91,7 +91,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1599669454699-248893623440?w=800&h=600&fit=crop'],
     category: 'Electronics',
     condition: 'New',
-    seller: { _id: 'seller-1', name: 'John Smith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
     createdAt: '2024-02-03T10:30:00.000Z',
   },
   {
@@ -102,7 +102,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=600&fit=crop'],
     category: 'Sports',
     condition: 'Like New',
-    seller: { _id: 'seller-3', name: 'Mike Davis' },
+    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis' },
     createdAt: '2024-02-05T10:30:00.000Z',
   },
   {
@@ -113,7 +113,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=800&h=600&fit=crop'],
     category: 'Home & Garden',
     condition: 'Good',
-    seller: { _id: 'seller-2', name: 'Sarah Johnson' },
+    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
     createdAt: '2024-02-08T10:30:00.000Z',
   },
   {
@@ -124,7 +124,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800&h=600&fit=crop'],
     category: 'Sports',
     condition: 'Fair',
-    seller: { _id: 'seller-1', name: 'John Smith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
     createdAt: '2024-02-10T10:30:00.000Z',
   },
   {
@@ -135,7 +135,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&h=600&fit=crop'],
     category: 'Electronics',
     condition: 'New',
-    seller: { _id: 'seller-3', name: 'Mike Davis' },
+    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis' },
     createdAt: '2024-02-12T10:30:00.000Z',
   },
   {
@@ -146,7 +146,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=600&fit=crop'],
     category: 'Sports',
     condition: 'New',
-    seller: { _id: 'seller-2', name: 'Sarah Johnson' },
+    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
     createdAt: '2024-02-14T10:30:00.000Z',
   },
   {
@@ -157,7 +157,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800&h=600&fit=crop'],
     category: 'Home & Garden',
     condition: 'Good',
-    seller: { _id: 'seller-1', name: 'John Smith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
     createdAt: '2024-02-16T10:30:00.000Z',
   },
   {
@@ -168,7 +168,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=600&fit=crop'],
     category: 'Electronics',
     condition: 'Like New',
-    seller: { _id: 'seller-3', name: 'Mike Davis' },
+    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis' },
     createdAt: '2024-02-18T10:30:00.000Z',
   },
   {
@@ -179,7 +179,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1544923246-77307dd270c3?w=800&h=600&fit=crop'],
     category: 'Clothing',
     condition: 'Good',
-    seller: { _id: 'seller-2', name: 'Sarah Johnson' },
+    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
     createdAt: '2024-02-20T10:30:00.000Z',
   },
   {
@@ -190,7 +190,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1611371805429-8b5c1b2c34ba?w=800&h=600&fit=crop'],
     category: 'Toys & Games',
     condition: 'Good',
-    seller: { _id: 'seller-1', name: 'John Smith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
     createdAt: '2024-02-22T10:30:00.000Z',
   },
 ];
@@ -430,7 +430,7 @@ export const handlers = [
       );
     }
 
-    const seller = users.find((u) => u.isVerified) || { id: '1', name: 'Mock User' };
+    const seller = users.find((u) => u.isVerified) || { id: '1', name: 'Mock User', username: 'mockuser' };
 
     const product = {
       id: String(products.length + 1),
@@ -443,7 +443,7 @@ export const handlers = [
       ],
       category,
       condition,
-      seller: { _id: seller.id, name: seller.name },
+      seller: { _id: seller.id, name: seller.name, username: (seller as { username?: string }).username || 'mockuser' },
       createdAt: new Date().toISOString(),
     };
     products.push(product);
@@ -466,6 +466,63 @@ export const handlers = [
       success: true,
       message: 'Categories retrieved',
       data: allCategories,
+    });
+  }),
+
+  http.get(`${API_BASE}/products/user/:username`, ({ params, request }) => {
+    const { username } = params;
+    const usernameStr = (typeof username === 'string' ? username : '').toLowerCase();
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '12', 10);
+
+    // Map of known mock sellers
+    const mockSellers: Record<string, { id: string; name: string; username: string; memberSince: string }> = {
+      johnsmith: { id: 'seller-1', name: 'John Smith', username: 'johnsmith', memberSince: '2024-01-01T00:00:00.000Z' },
+      sarahjohnson: { id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson', memberSince: '2024-02-01T00:00:00.000Z' },
+      mikedavis: { id: 'seller-3', name: 'Mike Davis', username: 'mikedavis', memberSince: '2024-03-01T00:00:00.000Z' },
+    };
+
+    // Check dynamic users too
+    const dynamicUser = users.find((u) => u.username === usernameStr);
+    const seller = mockSellers[usernameStr] || (dynamicUser ? { id: dynamicUser.id, name: dynamicUser.name, username: dynamicUser.username, memberSince: new Date().toISOString() } : null);
+
+    if (!seller) {
+      return HttpResponse.json(
+        { success: false, message: 'User not found' },
+        { status: 404 },
+      );
+    }
+
+    // Get all products (user-created + defaults), filter by seller
+    const allProducts = [...products, ...defaultProducts];
+    const userProducts = allProducts.filter((p) => p.seller._id === seller.id);
+
+    // Paginate
+    const totalProducts = userProducts.length;
+    const totalPages = Math.max(1, Math.ceil(totalProducts / limit));
+    const start = (page - 1) * limit;
+    const paged = userProducts.slice(start, start + limit);
+
+    return HttpResponse.json({
+      success: true,
+      message: 'User products retrieved successfully',
+      data: {
+        user: {
+          name: seller.name,
+          username: seller.username,
+          memberSince: seller.memberSince,
+        },
+        products: paged,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalProducts,
+          limit,
+          hasMore: page < totalPages,
+        },
+      },
     });
   }),
 
@@ -516,7 +573,7 @@ export const handlers = [
         ],
         category: 'Electronics',
         condition: 'Good',
-        seller: { _id: '507f1f77bcf86cd799439011', name: 'John Smith' },
+        seller: { _id: '507f1f77bcf86cd799439011', name: 'John Smith', username: 'johnsmith' },
         createdAt: '2024-01-15T10:30:00.000Z',
       },
     });

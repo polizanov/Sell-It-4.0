@@ -28,7 +28,7 @@ describe('productService', () => {
                 images: ['https://picsum.photos/seed/mock1/400/300'],
                 category: 'Electronics',
                 condition: 'Good',
-                seller: { _id: '1', name: 'Test User' },
+                seller: { _id: '1', name: 'Test User', username: 'testuser' },
                 createdAt: new Date().toISOString(),
               },
             },
@@ -206,7 +206,7 @@ describe('productService', () => {
                   images: ['https://images.unsplash.com/photo-1.jpg'],
                   category: 'Electronics',
                   condition: 'New',
-                  seller: { _id: 'seller-1', name: 'John Smith' },
+                  seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
                   createdAt: '2024-01-15T10:30:00.000Z',
                 },
                 {
@@ -217,7 +217,7 @@ describe('productService', () => {
                   images: ['https://images.unsplash.com/photo-2.jpg'],
                   category: 'Clothing',
                   condition: 'Good',
-                  seller: { _id: 'seller-2', name: 'Jane Doe' },
+                  seller: { _id: 'seller-2', name: 'Jane Doe', username: 'janedoe' },
                   createdAt: '2024-02-20T10:30:00.000Z',
                 },
               ],
@@ -250,12 +250,14 @@ describe('productService', () => {
       expect(first.title).toBe('Test Product');
       expect(first.sellerId).toBe('seller-1');
       expect(first.sellerName).toBe('John Smith');
+      expect(first.sellerUsername).toBe('johnsmith');
       expect((first as unknown as Record<string, unknown>).seller).toBeUndefined();
 
       const second = result.products[1];
       expect(second.id).toBe('prod-2');
       expect(second.sellerId).toBe('seller-2');
       expect(second.sellerName).toBe('Jane Doe');
+      expect(second.sellerUsername).toBe('janedoe');
     });
 
     it('sends query parameters correctly', async () => {
@@ -343,7 +345,7 @@ describe('productService', () => {
               ],
               category: 'Electronics',
               condition: 'Good',
-              seller: { _id: 'seller-id-456', name: 'Jane Doe' },
+              seller: { _id: 'seller-id-456', name: 'Jane Doe', username: 'janedoe' },
               createdAt: '2024-06-15T10:30:00.000Z',
             },
           });
@@ -365,6 +367,7 @@ describe('productService', () => {
       // Verify the seller object is mapped to flat fields
       expect(product.sellerId).toBe('seller-id-456');
       expect(product.sellerName).toBe('Jane Doe');
+      expect(product.sellerUsername).toBe('janedoe');
       expect(product.createdAt).toBe('2024-06-15T10:30:00.000Z');
       // Ensure there is no nested seller property on the returned Product
       expect((product as unknown as Record<string, unknown>).seller).toBeUndefined();
@@ -394,6 +397,96 @@ describe('productService', () => {
       );
 
       await expect(productService.getById('invalid-id')).rejects.toThrow();
+    });
+  });
+
+  describe('getByUsername', () => {
+    it('returns user info and mapped products with pagination', async () => {
+      server.use(
+        http.get(`${API_BASE}/products/user/:username`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'User products retrieved successfully',
+            data: {
+              user: { name: 'John Smith', username: 'johnsmith', memberSince: '2024-01-01T00:00:00.000Z' },
+              products: [
+                {
+                  id: 'prod-1',
+                  title: 'Test Product',
+                  description: 'A test product description',
+                  price: 49.99,
+                  images: ['https://images.unsplash.com/photo-1.jpg'],
+                  category: 'Electronics',
+                  condition: 'New',
+                  seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
+                  createdAt: '2024-01-15T10:30:00.000Z',
+                },
+              ],
+              pagination: {
+                currentPage: 1,
+                totalPages: 1,
+                totalProducts: 1,
+                limit: 12,
+                hasMore: false,
+              },
+            },
+          });
+        }),
+      );
+
+      const result = await productService.getByUsername('johnsmith');
+
+      expect(result.user.name).toBe('John Smith');
+      expect(result.user.username).toBe('johnsmith');
+      expect(result.user.memberSince).toBe('2024-01-01T00:00:00.000Z');
+      expect(result.products).toHaveLength(1);
+      expect(result.products[0].sellerId).toBe('seller-1');
+      expect(result.products[0].sellerName).toBe('John Smith');
+      expect(result.products[0].sellerUsername).toBe('johnsmith');
+      expect(result.pagination.totalProducts).toBe(1);
+    });
+
+    it('throws 404 for non-existent username', async () => {
+      server.use(
+        http.get(`${API_BASE}/products/user/:username`, () => {
+          return HttpResponse.json(
+            { success: false, message: 'User not found' },
+            { status: 404 },
+          );
+        }),
+      );
+
+      await expect(productService.getByUsername('nonexistent')).rejects.toThrow();
+    });
+
+    it('sends page parameter correctly', async () => {
+      let capturedUrl = '';
+
+      server.use(
+        http.get(`${API_BASE}/products/user/:username`, ({ request }) => {
+          capturedUrl = request.url;
+          return HttpResponse.json({
+            success: true,
+            message: 'User products retrieved successfully',
+            data: {
+              user: { name: 'John', username: 'john', memberSince: '2024-01-01T00:00:00.000Z' },
+              products: [],
+              pagination: {
+                currentPage: 2,
+                totalPages: 3,
+                totalProducts: 30,
+                limit: 12,
+                hasMore: true,
+              },
+            },
+          });
+        }),
+      );
+
+      await productService.getByUsername('john', { page: 2 });
+
+      const url = new URL(capturedUrl);
+      expect(url.searchParams.get('page')).toBe('2');
     });
   });
 });

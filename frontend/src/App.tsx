@@ -11,6 +11,7 @@ import MyProfile from './pages/MyProfile';
 import CreateProduct from './pages/CreateProduct';
 import AllProducts from './pages/AllProducts';
 import ProductDetail from './pages/ProductDetail';
+import UserProfile from './pages/UserProfile';
 
 function App() {
   useEffect(() => {
@@ -28,6 +29,7 @@ function App() {
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/products" element={<AllProducts />} />
           <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/profile/:username" element={<UserProfile />} />
           <Route
             path="/profile"
             element={
