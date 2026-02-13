@@ -240,4 +240,57 @@ export const handlers = [
       data: allCategories,
     });
   }),
+
+  http.get(`${API_BASE}/products/:id`, ({ params }) => {
+    const { id } = params;
+
+    // Simulate invalid ID format (not a valid ObjectId)
+    if (typeof id !== 'string' || id.length < 1) {
+      return HttpResponse.json(
+        { success: false, message: 'Invalid product ID' },
+        { status: 400 },
+      );
+    }
+
+    // Simulate not found for a special "not-found" ID
+    if (id === '000000000000000000000000') {
+      return HttpResponse.json(
+        { success: false, message: 'Product not found' },
+        { status: 404 },
+      );
+    }
+
+    // Check in-memory products first
+    const existingProduct = products.find((p) => p.id === id);
+    if (existingProduct) {
+      return HttpResponse.json({
+        success: true,
+        message: 'Product retrieved successfully',
+        data: existingProduct,
+      });
+    }
+
+    // Return a realistic mock product for any other ID
+    return HttpResponse.json({
+      success: true,
+      message: 'Product retrieved successfully',
+      data: {
+        id,
+        title: 'Vintage Camera',
+        description:
+          'Classic film camera in excellent condition. Perfect for photography enthusiasts and collectors.',
+        price: 249.99,
+        images: [
+          'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1495121605193-b116b5b9c5fe?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1606800052052-a08af7148866?w=800&h=600&fit=crop',
+        ],
+        category: 'Electronics',
+        condition: 'Good',
+        seller: { _id: '507f1f77bcf86cd799439011', name: 'John Smith' },
+        createdAt: '2024-01-15T10:30:00.000Z',
+      },
+    });
+  }),
 ];

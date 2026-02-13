@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { createProduct, getCategories } from '../controllers/productController';
+import { createProduct, getCategories, getProductById } from '../controllers/productController';
 import { validate } from '../middleware/validate';
 import { protect } from '../middleware/authMiddleware';
 import { upload } from '../middleware/upload';
@@ -21,5 +21,6 @@ const createProductSchema = z.object({
 
 router.post('/', protect, upload.array('images', 5), validate(createProductSchema), createProduct);
 router.get('/categories', getCategories);
+router.get('/:id', getProductById);
 
 export default router;

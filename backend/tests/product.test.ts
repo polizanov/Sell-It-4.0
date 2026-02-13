@@ -326,6 +326,109 @@ describe('Product Endpoints', () => {
   });
 
   // --------------------------------------------------------------------------
+  // GET /api/products/:id
+  // --------------------------------------------------------------------------
+  describe('GET /api/products/:id', () => {
+    let createdProductId: string;
+
+    beforeAll(async () => {
+      // Create a product to fetch later
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Fetchable Product')
+        .field('description', 'A product created for the GET by ID tests')
+        .field('price', '59.99')
+        .field('category', 'Electronics')
+        .field('condition', 'Like New')
+        .attach('images', testImageBuffer, { filename: 'fetch-test.jpg', contentType: 'image/jpeg' });
+
+      createdProductId = res.body.data.id;
+    });
+
+    it('should return 200 with full product data for an existing product', async () => {
+      const res = await request(app).get(`/api/products/${createdProductId}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Product retrieved successfully');
+      expect(res.body.data).toHaveProperty('id');
+      expect(res.body.data.title).toBe('Fetchable Product');
+      expect(res.body.data.description).toBe('A product created for the GET by ID tests');
+      expect(res.body.data.price).toBe(59.99);
+      expect(res.body.data.images).toHaveLength(1);
+      expect(res.body.data.category).toBe('Electronics');
+      expect(res.body.data.condition).toBe('Like New');
+      // Seller should be populated with name
+      expect(res.body.data.seller).toHaveProperty('_id', testUserId);
+      expect(res.body.data.seller).toHaveProperty('name', 'Product Test User');
+      expect(res.body.data).toHaveProperty('createdAt');
+    });
+
+    it('should return 404 for a valid ObjectId that does not exist', async () => {
+      const nonExistentId = new mongoose.Types.ObjectId().toString();
+      const res = await request(app).get(`/api/products/${nonExistentId}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Product not found');
+    });
+
+    it('should return 400 for an invalid ObjectId format (plain string)', async () => {
+      const res = await request(app).get('/api/products/invalid-id');
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Invalid product ID');
+    });
+
+    it('should return 400 for a short numeric string', async () => {
+      const res = await request(app).get('/api/products/123');
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Invalid product ID');
+    });
+
+    it('should return 400 for path traversal attempt in ID', async () => {
+      const res = await request(app).get('/api/products/..%2Fadmin');
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Invalid product ID');
+    });
+
+    it('should return 400 for NoSQL injection attempt in ID', async () => {
+      const res = await request(app).get(
+        `/api/products/${encodeURIComponent('{"$gt":""}')}`
+      );
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Invalid product ID');
+    });
+
+    it('should return 400 for XSS attempt in ID', async () => {
+      const res = await request(app).get(
+        `/api/products/${encodeURIComponent('<script>alert(1)</script>')}`
+      );
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Invalid product ID');
+    });
+
+    it('should not require authentication (public endpoint)', async () => {
+      // Fetch without any Authorization header
+      const res = await request(app).get(`/api/products/${createdProductId}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.title).toBe('Fetchable Product');
+    });
+  });
+
+  // --------------------------------------------------------------------------
   // Security Tests
   // --------------------------------------------------------------------------
   describe('Security', () => {

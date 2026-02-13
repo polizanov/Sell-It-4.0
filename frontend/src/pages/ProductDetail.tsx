@@ -1,35 +1,176 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router';
+import { AxiosError } from 'axios';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Thumbs, Keyboard } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/common/Button';
-import { mockProducts } from '../data/mockProducts';
+import { productService } from '../services/productService';
+import type { Product, ApiError } from '../types';
 
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/thumbs';
 
+const ProductDetailSkeleton = () => (
+  <div className="min-h-screen bg-dark-bg">
+    <PageContainer className="py-8">
+      {/* Back link skeleton */}
+      <div className="h-5 w-36 bg-dark-surface rounded animate-pulse mb-6" />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        {/* Image gallery skeleton */}
+        <div className="space-y-4">
+          <div className="aspect-square w-full bg-dark-surface rounded-lg animate-pulse" />
+          <div className="grid grid-cols-4 gap-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className="aspect-square w-full bg-dark-surface rounded-lg animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Product info skeleton */}
+        <div className="space-y-6">
+          {/* Title */}
+          <div>
+            <div className="h-9 w-3/4 bg-dark-surface rounded animate-pulse mb-4" />
+            <div className="h-10 w-32 bg-dark-surface rounded animate-pulse mb-4" />
+            <div className="flex gap-2">
+              <div className="h-7 w-24 bg-dark-surface rounded-full animate-pulse" />
+              <div className="h-7 w-20 bg-dark-surface rounded-full animate-pulse" />
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <div className="h-6 w-32 bg-dark-surface rounded animate-pulse mb-3" />
+            <div className="space-y-2">
+              <div className="h-4 w-full bg-dark-surface rounded animate-pulse" />
+              <div className="h-4 w-full bg-dark-surface rounded animate-pulse" />
+              <div className="h-4 w-2/3 bg-dark-surface rounded animate-pulse" />
+            </div>
+          </div>
+
+          {/* Product Details */}
+          <div className="border-t border-dark-border pt-6">
+            <div className="h-6 w-36 bg-dark-surface rounded animate-pulse mb-3" />
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex justify-between">
+                  <div className="h-4 w-24 bg-dark-surface rounded animate-pulse" />
+                  <div className="h-4 w-28 bg-dark-surface rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Seller Information */}
+          <div className="border-t border-dark-border pt-6">
+            <div className="h-6 w-40 bg-dark-surface rounded animate-pulse mb-4" />
+            <div className="bg-dark-surface rounded-lg p-6 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-dark-elevated rounded-full animate-pulse" />
+                <div>
+                  <div className="h-5 w-32 bg-dark-elevated rounded animate-pulse mb-2" />
+                  <div className="h-4 w-28 bg-dark-elevated rounded animate-pulse" />
+                </div>
+              </div>
+              <div className="h-12 w-full bg-dark-elevated rounded-lg animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </PageContainer>
+  </div>
+);
+
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
-  // Find the product
-  const product = mockProducts.find((p) => p.id === id);
+  useEffect(() => {
+    if (!id) {
+      setError('No product ID provided');
+      setIsLoading(false);
+      return;
+    }
 
-  // Handle product not found
-  if (!product) {
+    let cancelled = false;
+
+    const fetchProduct = async () => {
+      setIsLoading(true);
+      setError(null);
+      setNotFound(false);
+
+      try {
+        const data = await productService.getById(id);
+        if (!cancelled) {
+          setProduct(data);
+        }
+      } catch (err) {
+        if (cancelled) return;
+
+        const axiosError = err as AxiosError<ApiError>;
+        const status = axiosError.response?.status;
+        const message = axiosError.response?.data?.message || 'Failed to load product';
+
+        if (status === 404) {
+          setNotFound(true);
+        } else {
+          setError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchProduct();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  // Loading state
+  if (isLoading) {
+    return <ProductDetailSkeleton />;
+  }
+
+  // Not found state
+  if (notFound) {
     return (
       <PageContainer className="py-16">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-text-primary mb-4">
-            Product Not Found
-          </h1>
+          <h1 className="text-4xl font-bold text-text-primary mb-4">Product Not Found</h1>
           <p className="text-text-secondary mb-8">
             Sorry, the product you're looking for doesn't exist.
           </p>
+          <Link to="/products">
+            <Button variant="primary">Back to Products</Button>
+          </Link>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  // Error state
+  if (error || !product) {
+    return (
+      <PageContainer className="py-16">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-red-500 mb-4">Something Went Wrong</h1>
+          <p className="text-text-secondary mb-8">{error || 'An unexpected error occurred'}</p>
           <Link to="/products">
             <Button variant="primary">Back to Products</Button>
           </Link>
@@ -146,31 +287,21 @@ const ProductDetail = () => {
 
             {/* Description */}
             <div>
-              <h2 className="text-xl font-semibold text-text-primary mb-3">
-                Description
-              </h2>
-              <p className="text-text-secondary leading-relaxed">
-                {product.description}
-              </p>
+              <h2 className="text-xl font-semibold text-text-primary mb-3">Description</h2>
+              <p className="text-text-secondary leading-relaxed">{product.description}</p>
             </div>
 
             {/* Product Details */}
             <div className="border-t border-dark-border pt-6">
-              <h2 className="text-xl font-semibold text-text-primary mb-3">
-                Product Details
-              </h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-3">Product Details</h2>
               <dl className="space-y-2">
                 <div className="flex justify-between">
                   <dt className="text-text-muted">Category:</dt>
-                  <dd className="text-text-secondary font-medium">
-                    {product.category}
-                  </dd>
+                  <dd className="text-text-secondary font-medium">{product.category}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-text-muted">Condition:</dt>
-                  <dd className="text-text-secondary font-medium">
-                    {product.condition}
-                  </dd>
+                  <dd className="text-text-secondary font-medium">{product.condition}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt className="text-text-muted">Posted:</dt>
@@ -187,9 +318,7 @@ const ProductDetail = () => {
 
             {/* Seller Information */}
             <div className="border-t border-dark-border pt-6">
-              <h2 className="text-xl font-semibold text-text-primary mb-4">
-                Seller Information
-              </h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-4">Seller Information</h2>
               <div className="bg-dark-surface rounded-lg p-6 space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-orange/20 rounded-full flex items-center justify-center">
@@ -212,8 +341,7 @@ const ProductDetail = () => {
                       {product.sellerName}
                     </h3>
                     <p className="text-text-muted text-sm">
-                      Member since{' '}
-                      {new Date(product.createdAt).getFullYear()}
+                      Member since {new Date(product.createdAt).getFullYear()}
                     </p>
                   </div>
                 </div>

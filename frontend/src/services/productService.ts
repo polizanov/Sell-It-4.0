@@ -1,4 +1,5 @@
 import api from './api';
+import type { Product } from '../types';
 
 interface CreateProductData {
   title: string;
@@ -9,26 +10,44 @@ interface CreateProductData {
   images: File[];
 }
 
+interface ProductResponseData {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  images: string[];
+  category: string;
+  condition: string;
+  seller: { _id: string; name: string };
+  createdAt: string;
+}
+
 interface ProductResponse {
   success: boolean;
   message: string;
-  data?: {
-    id: string;
-    title: string;
-    description: string;
-    price: number;
-    images: string[];
-    category: string;
-    condition: string;
-    seller: { _id: string; name: string };
-    createdAt: string;
-  };
+  data?: ProductResponseData;
 }
 
 interface CategoriesResponse {
   success: boolean;
   message: string;
   data: string[];
+}
+
+/** Map backend seller object to flat frontend Product type */
+function mapProductResponse(data: ProductResponseData): Product {
+  return {
+    id: data.id,
+    title: data.title,
+    description: data.description,
+    price: data.price,
+    images: data.images,
+    category: data.category,
+    condition: data.condition as Product['condition'],
+    sellerId: data.seller._id,
+    sellerName: data.seller.name,
+    createdAt: data.createdAt,
+  };
 }
 
 export const productService = {
@@ -43,6 +62,11 @@ export const productService = {
     return api.post<ProductResponse>('/products', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+  },
+
+  getById: async (id: string): Promise<Product> => {
+    const res = await api.get<ProductResponse>(`/products/${id}`);
+    return mapProductResponse(res.data.data!);
   },
 
   getCategories: () => api.get<CategoriesResponse>('/products/categories'),

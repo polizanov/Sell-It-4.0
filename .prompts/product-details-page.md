@@ -1,0 +1,2 @@
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ Implement product details page. Fill the mocked data on the template with the dynamic from the api.  Write unit, integration, security, e2e tests for the frontend and backend and execute them 
