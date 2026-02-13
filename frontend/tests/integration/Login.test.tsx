@@ -7,6 +7,8 @@ import Login from '../../src/pages/Login';
 import { useAuthStore } from '../../src/store/authStore';
 import { server } from '../../src/mocks/server';
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router', async () => {
@@ -135,7 +137,7 @@ describe('Login Page', () => {
 
     // Set up a one-time handler that returns a successful login
     server.use(
-      http.post('/api/auth/login', () => {
+      http.post(`${API_BASE}/auth/login`, () => {
         return HttpResponse.json({
           success: true,
           message: 'Login successful',
@@ -176,7 +178,7 @@ describe('Login Page', () => {
 
     // Use a delayed response to observe the loading state
     server.use(
-      http.post('/api/auth/login', async () => {
+      http.post(`${API_BASE}/auth/login`, async () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
         return HttpResponse.json({
           success: true,
@@ -215,7 +217,7 @@ describe('Login Page', () => {
     const user = userEvent.setup();
 
     server.use(
-      http.post('/api/auth/login', () => {
+      http.post(`${API_BASE}/auth/login`, () => {
         return HttpResponse.json(
           { success: false, message: 'Invalid email or password' },
           { status: 401 },
@@ -245,7 +247,7 @@ describe('Login Page', () => {
     const user = userEvent.setup();
 
     server.use(
-      http.post('/api/auth/login', () => {
+      http.post(`${API_BASE}/auth/login`, () => {
         return HttpResponse.json(
           {
             success: false,

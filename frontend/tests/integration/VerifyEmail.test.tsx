@@ -5,6 +5,8 @@ import { http, HttpResponse } from 'msw';
 import VerifyEmail from '../../src/pages/VerifyEmail';
 import { server } from '../../src/mocks/server';
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 const renderVerifyEmail = (url: string) => {
   return render(
     <MemoryRouter initialEntries={[url]}>
@@ -24,7 +26,7 @@ describe('VerifyEmail Page', () => {
     // The default handler will try to find the user in the empty array and fail,
     // but we need a delayed handler to observe the loading state.
     server.use(
-      http.get('/api/auth/verify-email/:token', async () => {
+      http.get(`${API_BASE}/auth/verify-email/:token`, async () => {
         await new Promise((resolve) => setTimeout(resolve, 200));
         return HttpResponse.json({
           success: true,
@@ -40,7 +42,7 @@ describe('VerifyEmail Page', () => {
 
   it('shows "Email Verified!" on successful verification with Go to Login link', async () => {
     server.use(
-      http.get('/api/auth/verify-email/:token', () => {
+      http.get(`${API_BASE}/auth/verify-email/:token`, () => {
         return HttpResponse.json({
           success: true,
           message: 'Email verified successfully',
@@ -73,7 +75,7 @@ describe('VerifyEmail Page', () => {
 
   it('shows "Verification Failed" on error with invalid token', async () => {
     server.use(
-      http.get('/api/auth/verify-email/:token', () => {
+      http.get(`${API_BASE}/auth/verify-email/:token`, () => {
         return HttpResponse.json(
           {
             success: false,
@@ -114,7 +116,7 @@ describe('VerifyEmail Page', () => {
 
   it('shows "Verification Failed" with custom error message from server', async () => {
     server.use(
-      http.get('/api/auth/verify-email/:token', () => {
+      http.get(`${API_BASE}/auth/verify-email/:token`, () => {
         return HttpResponse.json(
           {
             success: false,

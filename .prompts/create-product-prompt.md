@@ -1,0 +1,1 @@
+ I want to implement create product fuctionality. The product should have title, description, price, category(should be input field, but if the category exist while user types it should appear), product images(max 5). Only authenticated users should be able to create a product   

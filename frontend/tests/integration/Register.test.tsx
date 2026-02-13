@@ -6,6 +6,8 @@ import { http, HttpResponse } from 'msw';
 import Register from '../../src/pages/Register';
 import { server } from '../../src/mocks/server';
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 const renderRegister = () => {
   return render(
     <MemoryRouter initialEntries={['/register']}>
@@ -177,7 +179,7 @@ describe('Register Page', () => {
     const user = userEvent.setup();
 
     server.use(
-      http.post('/api/auth/register', () => {
+      http.post(`${API_BASE}/auth/register`, () => {
         return HttpResponse.json(
           {
             success: true,
@@ -233,7 +235,7 @@ describe('Register Page', () => {
     const user = userEvent.setup();
 
     server.use(
-      http.post('/api/auth/register', async () => {
+      http.post(`${API_BASE}/auth/register`, async () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
         return HttpResponse.json(
           {
@@ -280,7 +282,7 @@ describe('Register Page', () => {
     const user = userEvent.setup();
 
     server.use(
-      http.post('/api/auth/register', () => {
+      http.post(`${API_BASE}/auth/register`, () => {
         return HttpResponse.json(
           {
             success: false,

@@ -3,6 +3,8 @@ import { http, HttpResponse } from 'msw';
 import { authService } from '../../src/services/authService';
 import { server } from '../../src/mocks/server';
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 describe('authService', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -11,7 +13,7 @@ describe('authService', () => {
   describe('register', () => {
     it('calls POST /api/auth/register and returns success response', async () => {
       server.use(
-        http.post('/api/auth/register', async ({ request }) => {
+        http.post(`${API_BASE}/auth/register`, async ({ request }) => {
           const body = (await request.json()) as {
             name: string;
             email: string;
@@ -45,7 +47,7 @@ describe('authService', () => {
 
     it('returns error response for duplicate email', async () => {
       server.use(
-        http.post('/api/auth/register', () => {
+        http.post(`${API_BASE}/auth/register`, () => {
           return HttpResponse.json(
             {
               success: false,
@@ -79,7 +81,7 @@ describe('authService', () => {
   describe('login', () => {
     it('calls POST /api/auth/login and returns success with token', async () => {
       server.use(
-        http.post('/api/auth/login', () => {
+        http.post(`${API_BASE}/auth/login`, () => {
           return HttpResponse.json({
             success: true,
             message: 'Login successful',
@@ -107,7 +109,7 @@ describe('authService', () => {
 
     it('returns 401 for invalid credentials', async () => {
       server.use(
-        http.post('/api/auth/login', () => {
+        http.post(`${API_BASE}/auth/login`, () => {
           return HttpResponse.json(
             { success: false, message: 'Invalid email or password' },
             { status: 401 },
@@ -136,7 +138,7 @@ describe('authService', () => {
   describe('verifyEmail', () => {
     it('calls GET /api/auth/verify-email/:token and returns success', async () => {
       server.use(
-        http.get('/api/auth/verify-email/:token', () => {
+        http.get(`${API_BASE}/auth/verify-email/:token`, () => {
           return HttpResponse.json({
             success: true,
             message: 'Email verified successfully',
@@ -154,7 +156,7 @@ describe('authService', () => {
 
     it('returns error for invalid token', async () => {
       server.use(
-        http.get('/api/auth/verify-email/:token', () => {
+        http.get(`${API_BASE}/auth/verify-email/:token`, () => {
           return HttpResponse.json(
             {
               success: false,
@@ -185,7 +187,7 @@ describe('authService', () => {
       localStorage.setItem('token', 'mock-jwt-token');
 
       server.use(
-        http.get('/api/auth/me', ({ request }) => {
+        http.get(`${API_BASE}/auth/me`, ({ request }) => {
           const authHeader = request.headers.get('Authorization');
           if (authHeader === 'Bearer mock-jwt-token') {
             return HttpResponse.json({
@@ -216,7 +218,7 @@ describe('authService', () => {
     it('returns 401 when no token is set', async () => {
       // No token in localStorage
       server.use(
-        http.get('/api/auth/me', () => {
+        http.get(`${API_BASE}/auth/me`, () => {
           return HttpResponse.json(
             { success: false, message: 'Not authorized' },
             { status: 401 },

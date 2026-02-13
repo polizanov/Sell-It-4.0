@@ -1,9 +1,16 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { AxiosError } from 'axios';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
+import { CategoryAutocomplete } from '../components/common/CategoryAutocomplete';
+import { ImageUpload } from '../components/common/ImageUpload';
+import { productService } from '../services/productService';
+import type { ApiError } from '../types';
+
+const CONDITIONS = ['New', 'Like New', 'Good', 'Fair'] as const;
 
 const CreateProduct = () => {
   const navigate = useNavigate();
@@ -13,7 +20,8 @@ const CreateProduct = () => {
     description: '',
     price: '',
     category: '',
-    image: null as File | null,
+    condition: '',
+    images: [] as File[],
   });
 
   const [errors, setErrors] = useState({
@@ -21,29 +29,38 @@ const CreateProduct = () => {
     description: '',
     price: '',
     category: '',
+    condition: '',
+    images: '',
     general: '',
   });
 
-  const categories = [
-    'Electronics',
-    'Clothing',
-    'Home & Garden',
-    'Sports',
-    'Musical Instruments',
-    'Books',
-    'Toys & Games',
-    'Other',
-  ];
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     // Reset errors
-    setErrors({ title: '', description: '', price: '', category: '', general: '' });
+    setErrors({
+      title: '',
+      description: '',
+      price: '',
+      category: '',
+      condition: '',
+      images: '',
+      general: '',
+    });
 
     // Validation
     let hasErrors = false;
-    const newErrors = { title: '', description: '', price: '', category: '', general: '' };
+    const newErrors = {
+      title: '',
+      description: '',
+      price: '',
+      category: '',
+      condition: '',
+      images: '',
+      general: '',
+    };
 
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
@@ -63,8 +80,18 @@ const CreateProduct = () => {
       hasErrors = true;
     }
 
-    if (!formData.category) {
-      newErrors.category = 'Please select a category';
+    if (!formData.category.trim()) {
+      newErrors.category = 'Category is required';
+      hasErrors = true;
+    }
+
+    if (!formData.condition) {
+      newErrors.condition = 'Condition is required';
+      hasErrors = true;
+    }
+
+    if (formData.images.length === 0) {
+      newErrors.images = 'At least one image is required';
       hasErrors = true;
     }
 
@@ -73,23 +100,21 @@ const CreateProduct = () => {
       return;
     }
 
-    // For now, just log the form data (API integration later)
-    console.log('Create Product form submitted:', {
-      title: formData.title,
-      description: formData.description,
-      price: parseFloat(formData.price),
-      category: formData.category,
-      image: formData.image,
-    });
+    setIsSubmitting(true);
 
-    // Show success message and redirect
-    alert('Product created successfully! (This is a demo - API integration pending)');
-    navigate('/profile');
-  };
+    try {
+      const response = await productService.create(formData);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData({ ...formData, image: e.target.files[0] });
+      if (response.data.data) {
+        navigate(`/products/${response.data.data.id}`);
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiError>;
+      const message =
+        axiosError.response?.data?.message || 'An unexpected error occurred. Please try again.';
+      setErrors((prev) => ({ ...prev, general: message }));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -97,12 +122,8 @@ const CreateProduct = () => {
     <PageContainer>
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-text-primary mb-2">
-            Create New Product
-          </h1>
-          <p className="text-text-secondary">
-            List your item and reach potential buyers
-          </p>
+          <h1 className="text-3xl font-bold text-text-primary mb-2">Create New Product</h1>
+          <p className="text-text-secondary">List your item and reach potential buyers</p>
         </div>
 
         <Card>
@@ -154,53 +175,57 @@ const CreateProduct = () => {
               step="0.01"
             />
 
+            <CategoryAutocomplete
+              value={formData.category}
+              onChange={(value) => setFormData({ ...formData, category: value })}
+              error={errors.category}
+              required
+            />
+
             <div className="w-full">
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                Category
+              <label
+                htmlFor="condition"
+                className="block text-sm font-medium text-text-secondary mb-2"
+              >
+                Condition
                 <span className="text-orange ml-1">*</span>
               </label>
               <select
+                id="condition"
                 className={`w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent transition-all duration-200 ${
-                  errors.category ? 'border-red-500 focus:ring-red-500' : ''
-                } ${!formData.category ? 'text-text-muted' : ''}`}
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  errors.condition ? 'border-red-500 focus:ring-red-500' : ''
+                } ${!formData.condition ? 'text-text-muted' : ''}`}
+                value={formData.condition}
+                onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
                 required
               >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category} value={category} className="text-text-primary">
-                    {category}
+                <option value="">Select condition</option>
+                {CONDITIONS.map((condition) => (
+                  <option key={condition} value={condition} className="text-text-primary">
+                    {condition}
                   </option>
                 ))}
               </select>
-              {errors.category && (
-                <p className="mt-2 text-sm text-red-500">{errors.category}</p>
+              {errors.condition && (
+                <p className="mt-2 text-sm text-red-500">{errors.condition}</p>
               )}
             </div>
 
-            <div className="w-full">
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                Product Image
-              </label>
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-lg text-text-primary file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-orange file:text-white file:cursor-pointer hover:file:bg-orange-hover focus:outline-none focus:ring-2 focus:ring-orange transition-all duration-200"
-                />
-              </div>
-              {formData.image && (
-                <p className="mt-2 text-sm text-text-secondary">
-                  Selected: {formData.image.name}
-                </p>
-              )}
-            </div>
+            <ImageUpload
+              images={formData.images}
+              onChange={(images) => setFormData({ ...formData, images })}
+              error={errors.images}
+            />
 
             <div className="flex gap-4 pt-4">
-              <Button type="submit" variant="primary" size="md" fullWidth>
-                Create Product
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                fullWidth
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Creating...' : 'Create Product'}
               </Button>
               <Link to="/profile" className="flex-1">
                 <Button type="button" variant="secondary" size="md" fullWidth>

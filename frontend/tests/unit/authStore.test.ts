@@ -3,6 +3,8 @@ import { http, HttpResponse } from 'msw';
 import { useAuthStore } from '../../src/store/authStore';
 import { server } from '../../src/mocks/server';
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 describe('authStore', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -102,7 +104,7 @@ describe('authStore', () => {
 
       // Set up MSW handler for this test to return a known user
       server.use(
-        http.get('/api/auth/me', ({ request }) => {
+        http.get(`${API_BASE}/auth/me`, ({ request }) => {
           const authHeader = request.headers.get('Authorization');
           if (authHeader === 'Bearer mock-jwt-token') {
             return HttpResponse.json({
@@ -144,7 +146,7 @@ describe('authStore', () => {
       // But since the in-memory users array is empty after reset,
       // any token will fail. We override to be explicit:
       server.use(
-        http.get('/api/auth/me', () => {
+        http.get(`${API_BASE}/auth/me`, () => {
           return HttpResponse.json(
             { success: false, message: 'Not authorized' },
             { status: 401 },

@@ -1,5 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
 // In-memory users for mock
 const users: Array<{
   id: string;
@@ -10,12 +12,35 @@ const users: Array<{
   verificationToken?: string;
 }> = [];
 
+// In-memory products for mock
+const products: Array<{
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  images: string[];
+  category: string;
+  condition: string;
+  seller: { _id: string; name: string };
+  createdAt: string;
+}> = [];
+
+const defaultCategories = [
+  'Books',
+  'Clothing',
+  'Electronics',
+  'Home & Garden',
+  'Musical Instruments',
+  'Sports',
+  'Toys & Games',
+];
+
 export const handlers = [
-  http.get('/api/health', () => {
+  http.get(`${API_BASE}/health`, () => {
     return HttpResponse.json({ success: true, message: 'Server is running' });
   }),
 
-  http.post('/api/auth/register', async ({ request }) => {
+  http.post(`${API_BASE}/auth/register`, async ({ request }) => {
     const body = (await request.json()) as {
       name: string;
       email: string;
@@ -57,7 +82,7 @@ export const handlers = [
     );
   }),
 
-  http.post('/api/auth/login', async ({ request }) => {
+  http.post(`${API_BASE}/auth/login`, async ({ request }) => {
     const body = (await request.json()) as {
       email: string;
       password: string;
@@ -94,7 +119,7 @@ export const handlers = [
     });
   }),
 
-  http.get('/api/auth/verify-email/:token', ({ params }) => {
+  http.get(`${API_BASE}/auth/verify-email/:token`, ({ params }) => {
     const { token } = params;
     const user = users.find((u) => u.verificationToken === token);
 
@@ -114,7 +139,7 @@ export const handlers = [
     });
   }),
 
-  http.get('/api/auth/me', ({ request }) => {
+  http.get(`${API_BASE}/auth/me`, ({ request }) => {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return HttpResponse.json(
@@ -144,5 +169,75 @@ export const handlers = [
       { success: false, message: 'Not authorized' },
       { status: 401 },
     );
+  }),
+
+  http.post(`${API_BASE}/products`, async ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (token !== 'mock-jwt-token') {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const formData = await request.formData();
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const price = formData.get('price') as string;
+    const category = formData.get('category') as string;
+    const condition = formData.get('condition') as string;
+
+    if (!title || !description || !price || !category || !condition) {
+      return HttpResponse.json(
+        { success: false, message: 'All fields are required' },
+        { status: 400 },
+      );
+    }
+
+    const seller = users.find((u) => u.isVerified) || { id: '1', name: 'Mock User' };
+
+    const product = {
+      id: String(products.length + 1),
+      title,
+      description,
+      price: parseFloat(price),
+      images: [
+        'https://picsum.photos/seed/mock1/400/300',
+        'https://picsum.photos/seed/mock2/400/300',
+      ],
+      category,
+      condition,
+      seller: { _id: seller.id, name: seller.name },
+      createdAt: new Date().toISOString(),
+    };
+    products.push(product);
+
+    return HttpResponse.json(
+      {
+        success: true,
+        message: 'Product created successfully',
+        data: product,
+      },
+      { status: 201 },
+    );
+  }),
+
+  http.get(`${API_BASE}/products/categories`, () => {
+    const productCategories = products.map((p) => p.category);
+    const allCategories = [...new Set([...defaultCategories, ...productCategories])].sort();
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Categories retrieved',
+      data: allCategories,
+    });
   }),
 ];

@@ -1,0 +1,370 @@
+// CRITICAL: Set all environment variables BEFORE any imports of app code.
+// The Zod validation in environment.ts runs at import time and will exit the process
+// if required env vars are missing.
+process.env.PORT = '5001';
+process.env.MONGODB_URI = 'mongodb://localhost:27017/sellit-test';
+process.env.JWT_SECRET = 'test-jwt-secret-key';
+process.env.JWT_EXPIRES_IN = '7d';
+process.env.GMAIL_USER = 'test@gmail.com';
+process.env.GMAIL_APP_PASSWORD = 'test-app-password';
+process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';
+process.env.CLOUDINARY_API_KEY = 'test-key';
+process.env.CLOUDINARY_API_SECRET = 'test-secret';
+process.env.CLIENT_URL = 'http://localhost:5173';
+process.env.NODE_ENV = 'test';
+
+// Mock the email service to prevent real emails from being sent during tests.
+jest.mock('../src/services/emailService', () => ({
+  sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
+}));
+
+// Mock the Cloudinary upload to prevent real uploads during tests.
+jest.mock('../src/middleware/upload', () => {
+  const actual = jest.requireActual('../src/middleware/upload');
+  return {
+    ...actual,
+    uploadToCloudinary: jest
+      .fn()
+      .mockResolvedValue('https://res.cloudinary.com/test/image/upload/test-image.jpg'),
+  };
+});
+
+import request from 'supertest';
+import mongoose from 'mongoose';
+import app from '../src/app';
+import { User } from '../src/models/User';
+import { Product } from '../src/models/Product';
+
+const testImageBuffer = Buffer.from('fake-image-data');
+
+describe('Product Endpoints', () => {
+  let authToken: string;
+  let testUserId: string;
+
+  beforeAll(async () => {
+    await mongoose.connect(process.env.MONGODB_URI!);
+    await User.deleteMany({});
+    await Product.deleteMany({});
+
+    // Register a test user
+    await request(app).post('/api/auth/register').send({
+      name: 'Product Test User',
+      email: 'productuser@example.com',
+      password: 'password123',
+    });
+
+    // Verify the user directly in the database
+    await User.updateOne(
+      { email: 'productuser@example.com' },
+      { $set: { isVerified: true, verificationToken: undefined } },
+    );
+
+    // Login to get an auth token
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: 'productuser@example.com',
+      password: 'password123',
+    });
+
+    authToken = loginRes.body.data.token;
+    testUserId = loginRes.body.data.id;
+  });
+
+  afterAll(async () => {
+    await Product.deleteMany({});
+    await User.deleteMany({});
+  });
+
+  // --------------------------------------------------------------------------
+  // GET /api/products/categories (when no products exist)
+  // --------------------------------------------------------------------------
+  describe('GET /api/products/categories (empty)', () => {
+    it('should return empty array when no products exist', async () => {
+      // Ensure no products exist
+      await Product.deleteMany({});
+
+      const res = await request(app).get('/api/products/categories');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toEqual([]);
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // POST /api/products
+  // --------------------------------------------------------------------------
+  describe('POST /api/products', () => {
+    it('should create a product with valid data and auth token', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Test Product')
+        .field('description', 'A valid product description here')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toContain('Product created');
+      expect(res.body.data).toHaveProperty('id');
+      expect(res.body.data.title).toBe('Test Product');
+      expect(res.body.data.description).toBe('A valid product description here');
+      expect(res.body.data.price).toBe(29.99);
+      expect(res.body.data.images).toHaveLength(1);
+      expect(res.body.data.category).toBe('Electronics');
+      expect(res.body.data.condition).toBe('New');
+      expect(res.body.data.seller).toHaveProperty('name', 'Product Test User');
+      expect(res.body.data).toHaveProperty('createdAt');
+    });
+
+    it('should return 401 without auth token', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .field('title', 'Test Product')
+        .field('description', 'A valid product description here')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 401 with invalid auth token', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', 'Bearer invalid-jwt-token')
+        .field('title', 'Test Product')
+        .field('description', 'A valid product description here')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when required fields are missing (no title)', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('description', 'A valid product description here')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when title is too short (< 3 chars)', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Ab')
+        .field('description', 'A valid product description here')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when description is too short (< 10 chars)', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'Short')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when price is zero', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'A valid product description here')
+        .field('price', '0')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when price is negative', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'A valid product description here')
+        .field('price', '-5')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when price is not a number', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'A valid product description here')
+        .field('price', 'abc')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when condition is invalid enum value', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'A valid product description here')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'Terrible')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when no images are attached', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'A valid product description here')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New');
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return error when more than 5 images are attached', async () => {
+      const req = request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'A valid product description here')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New');
+
+      // Attach 6 images to exceed the limit of 5
+      for (let i = 0; i < 6; i++) {
+        req.attach('images', testImageBuffer, {
+          filename: `test${i}.jpg`,
+          contentType: 'image/jpeg',
+        });
+      }
+
+      const res = await req;
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('Too many files');
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // GET /api/products/categories (after products created)
+  // --------------------------------------------------------------------------
+  describe('GET /api/products/categories (with products)', () => {
+    beforeAll(async () => {
+      // Create a second product in a different category to test distinct + sort
+      await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Second Product')
+        .field('description', 'Another valid product description here')
+        .field('price', '49.99')
+        .field('category', 'Books')
+        .field('condition', 'Good')
+        .attach('images', testImageBuffer, { filename: 'test2.jpg', contentType: 'image/jpeg' });
+    });
+
+    it('should return distinct categories sorted alphabetically', async () => {
+      const res = await request(app).get('/api/products/categories');
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+      // Categories should be sorted alphabetically: Books before Electronics
+      expect(res.body.data).toEqual(
+        [...res.body.data].sort((a: string, b: string) => a.localeCompare(b)),
+      );
+      expect(res.body.data).toContain('Books');
+      expect(res.body.data).toContain('Electronics');
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // Security Tests
+  // --------------------------------------------------------------------------
+  describe('Security', () => {
+    it('should reject non-image file uploads', async () => {
+      const textBuffer = Buffer.from('this is a text file, not an image');
+
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'A valid product description here')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', textBuffer, { filename: 'test.txt', contentType: 'text/plain' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should set product seller from JWT, not from request body', async () => {
+      const fakeObjectId = new mongoose.Types.ObjectId().toString();
+
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Seller Test Product')
+        .field('description', 'Testing that seller comes from JWT not body')
+        .field('price', '19.99')
+        .field('category', 'Clothing')
+        .field('condition', 'Like New')
+        .field('seller', fakeObjectId)
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      // The seller should be the authenticated user, not the spoofed value
+      expect(res.body.data.seller._id).toBe(testUserId);
+      expect(res.body.data.seller._id).not.toBe(fakeObjectId);
+    });
+  });
+});
