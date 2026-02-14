@@ -833,4 +833,367 @@ describe('Product Endpoints', () => {
       expect(res.body.data.seller._id).not.toBe(fakeObjectId);
     });
   });
+
+  // --------------------------------------------------------------------------
+  // PUT /api/products/:id
+  // --------------------------------------------------------------------------
+  describe('PUT /api/products/:id', () => {
+    let productId: string;
+    let productImageUrl: string;
+
+    beforeAll(async () => {
+      await Product.deleteMany({});
+
+      // Create a product owned by the test user
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Original Product')
+        .field('description', 'Original description for update tests')
+        .field('price', '100.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'original.jpg', contentType: 'image/jpeg' });
+
+      productId = res.body.data.id;
+      productImageUrl = res.body.data.images[0];
+    });
+
+    it('should update product with valid data (existing + new images)', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Updated Product')
+        .field('description', 'Updated description for the product')
+        .field('price', '150.00')
+        .field('category', 'Clothing')
+        .field('condition', 'Like New')
+        .field('existingImages', JSON.stringify([productImageUrl]))
+        .attach('images', testImageBuffer, { filename: 'new.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Product updated successfully');
+      expect(res.body.data.title).toBe('Updated Product');
+      expect(res.body.data.description).toBe('Updated description for the product');
+      expect(res.body.data.price).toBe(150);
+      expect(res.body.data.category).toBe('Clothing');
+      expect(res.body.data.condition).toBe('Like New');
+      expect(res.body.data.images).toHaveLength(2);
+      expect(res.body.data.images[0]).toBe(productImageUrl);
+      expect(res.body.data.seller).toHaveProperty('name', 'Product Test User');
+      expect(res.body.data.seller).toHaveProperty('username', 'producttestuser');
+
+      // Update the stored image URL for subsequent tests
+      productImageUrl = res.body.data.images[0];
+    });
+
+    it('should keep only existing images (no new uploads)', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Keep Images Product')
+        .field('description', 'Keeping only existing images here')
+        .field('price', '120.00')
+        .field('category', 'Electronics')
+        .field('condition', 'Good')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.images).toHaveLength(1);
+      expect(res.body.data.images[0]).toBe(productImageUrl);
+    });
+
+    it('should replace all images with new uploads (empty existingImages)', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'New Images Product')
+        .field('description', 'Replacing all images with new ones')
+        .field('price', '130.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([]))
+        .attach('images', testImageBuffer, { filename: 'replace1.jpg', contentType: 'image/jpeg' })
+        .attach('images', testImageBuffer, { filename: 'replace2.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.images).toHaveLength(2);
+
+      // Update stored URL for subsequent tests
+      productImageUrl = res.body.data.images[0];
+    });
+
+    it('should return 401 without auth token', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .field('title', 'No Auth Update')
+        .field('description', 'Attempting to update without auth')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 401 with invalid auth token', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', 'Bearer invalid-jwt-token')
+        .field('title', 'Invalid Auth Update')
+        .field('description', 'Attempting to update with invalid auth')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 403 when non-owner tries to edit', async () => {
+      // Register a second user
+      await request(app).post('/api/auth/register').send({
+        name: 'Other User',
+        username: 'otheruser',
+        email: 'otheruser@example.com',
+        password: 'password123',
+      });
+
+      await User.updateOne(
+        { email: 'otheruser@example.com' },
+        { $set: { isVerified: true, verificationToken: undefined } },
+      );
+
+      const loginRes = await request(app).post('/api/auth/login').send({
+        email: 'otheruser@example.com',
+        password: 'password123',
+      });
+
+      const otherToken = loginRes.body.data.token;
+
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .field('title', 'Unauthorized Update')
+        .field('description', 'Non-owner attempting to edit product')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('not authorized');
+    });
+
+    it('should return 404 for non-existent product', async () => {
+      const nonExistentId = new mongoose.Types.ObjectId().toString();
+      const res = await request(app)
+        .put(`/api/products/${nonExistentId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Ghost Product')
+        .field('description', 'Updating a product that does not exist')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([]));
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Product not found');
+    });
+
+    it('should return 400 for invalid ObjectId', async () => {
+      const res = await request(app)
+        .put('/api/products/invalid-id')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Invalid ID Product')
+        .field('description', 'Updating with an invalid product ID')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([]));
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Invalid product ID');
+    });
+
+    it('should return 400 when title is missing', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('description', 'Description without a title')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when title is too short (< 3 chars)', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Ab')
+        .field('description', 'Valid description for the product')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when description is too short (< 10 chars)', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'Short')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when price is zero', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'Valid description for the product')
+        .field('price', '0')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when price is negative', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'Valid description for the product')
+        .field('price', '-5')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when price is not a number', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'Valid description for the product')
+        .field('price', 'abc')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when condition is invalid enum value', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'Valid description for the product')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'Terrible')
+        .field('existingImages', JSON.stringify([productImageUrl]));
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when 0 images total (empty existingImages and no new files)', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Valid Title')
+        .field('description', 'Valid description for the product')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify([]));
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('At least one image is required');
+    });
+
+    it('should return 400 when more than 5 images total', async () => {
+      // 3 existing + 3 new = 6 total > 5
+      // First, create a product with 3 images
+      const createRes = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Multi Image Product')
+        .field('description', 'Product with multiple images for limit test')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'img1.jpg', contentType: 'image/jpeg' })
+        .attach('images', testImageBuffer, { filename: 'img2.jpg', contentType: 'image/jpeg' })
+        .attach('images', testImageBuffer, { filename: 'img3.jpg', contentType: 'image/jpeg' });
+
+      const multiProductId = createRes.body.data.id;
+      const existingImgs = createRes.body.data.images;
+
+      const res = await request(app)
+        .put(`/api/products/${multiProductId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Too Many Images')
+        .field('description', 'Trying to exceed the image limit')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify(existingImgs))
+        .attach('images', testImageBuffer, { filename: 'new1.jpg', contentType: 'image/jpeg' })
+        .attach('images', testImageBuffer, { filename: 'new2.jpg', contentType: 'image/jpeg' })
+        .attach('images', testImageBuffer, { filename: 'new3.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('Maximum 5 images allowed');
+    });
+
+    it('should return 400 when existingImages URL is not in product (URL injection attempt)', async () => {
+      const res = await request(app)
+        .put(`/api/products/${productId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'URL Injection')
+        .field('description', 'Attempting to inject a foreign image URL')
+        .field('price', '50.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .field('existingImages', JSON.stringify(['https://evil.com/malicious-image.jpg']));
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('Invalid existing image URL');
+    });
+  });
 });

@@ -150,6 +150,78 @@ export const getProductById = asyncHandler(async (req: Request, res: Response): 
   });
 });
 
+export const updateProduct = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    throw new AppError('Invalid product ID', 400);
+  }
+
+  const product = await Product.findById(id);
+
+  if (!product) {
+    throw new AppError('Product not found', 404);
+  }
+
+  if (product.seller.toString() !== req.user!.userId) {
+    throw new AppError('You are not authorized to edit this product', 403);
+  }
+
+  const { title, description, price, category, condition } = req.body;
+
+  let existingImages: string[] = [];
+  if (req.body.existingImages) {
+    existingImages = JSON.parse(req.body.existingImages);
+  }
+
+  for (const url of existingImages) {
+    if (!product.images.includes(url)) {
+      throw new AppError('Invalid existing image URL', 400);
+    }
+  }
+
+  const files = req.files as Express.Multer.File[];
+  const newImageUrls = files && files.length > 0
+    ? await Promise.all(files.map((file) => uploadToCloudinary(file.buffer, 'products')))
+    : [];
+
+  const allImages = [...existingImages, ...newImageUrls];
+
+  if (allImages.length === 0) {
+    throw new AppError('At least one image is required', 400);
+  }
+
+  if (allImages.length > 5) {
+    throw new AppError('Maximum 5 images allowed', 400);
+  }
+
+  product.title = title;
+  product.description = description;
+  product.price = parseFloat(price);
+  product.category = category;
+  product.condition = condition;
+  product.images = allImages;
+
+  await product.save();
+  await product.populate('seller', 'name username');
+
+  res.json({
+    success: true,
+    message: 'Product updated successfully',
+    data: {
+      id: product._id,
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      images: product.images,
+      category: product.category,
+      condition: product.condition,
+      seller: product.seller,
+      createdAt: product.createdAt,
+    },
+  });
+});
+
 export const getUserProducts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const username = req.params.username as string;
   const page = Math.max(Number(req.query.page) || 1, 1);

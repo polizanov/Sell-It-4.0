@@ -1,0 +1,1 @@
+implement edit product functionality. Only authors should be able to edit his products. The edit button should appear on product details page. When it is clicked the edit for should appear with populated data.   

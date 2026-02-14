@@ -13,6 +13,7 @@ import AllProducts from './pages/AllProducts';
 import ProductDetail from './pages/ProductDetail';
 import UserProfile from './pages/UserProfile';
 import MyFavourites from './pages/MyFavourites';
+import EditProduct from './pages/EditProduct';
 
 function App() {
   useEffect(() => {
@@ -29,6 +30,14 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/products" element={<AllProducts />} />
+          <Route
+            path="/products/:id/edit"
+            element={
+              <ProtectedRoute>
+                <EditProduct />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/profile/:username" element={<UserProfile />} />
           <Route

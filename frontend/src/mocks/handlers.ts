@@ -696,6 +696,98 @@ export const handlers = [
     });
   }),
 
+  http.put(`${API_BASE}/products/:id`, async ({ request, params }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (token !== 'mock-jwt-token') {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const { id } = params;
+    const idStr = typeof id === 'string' ? id : '';
+
+    // Look up product in dynamic and default products
+    const allProducts = [...products, ...defaultProducts];
+    const existingProduct = allProducts.find((p) => p.id === idStr);
+
+    if (!existingProduct) {
+      return HttpResponse.json(
+        { success: false, message: 'Product not found' },
+        { status: 404 },
+      );
+    }
+
+    // Check ownership
+    const seller = users.find((u) => u.isVerified) || {
+      id: '1',
+      name: 'Mock User',
+      username: 'mockuser',
+    };
+    if (existingProduct.seller._id !== seller.id) {
+      return HttpResponse.json(
+        { success: false, message: 'You are not authorized to edit this product' },
+        { status: 403 },
+      );
+    }
+
+    const formData = await request.formData();
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const price = formData.get('price') as string;
+    const category = formData.get('category') as string;
+    const condition = formData.get('condition') as string;
+
+    if (!title || !description || !price || !category || !condition) {
+      return HttpResponse.json(
+        { success: false, message: 'All fields are required' },
+        { status: 400 },
+      );
+    }
+
+    // Parse existing images
+    const existingImagesRaw = formData.get('existingImages') as string | null;
+    const existingImages: string[] = existingImagesRaw ? JSON.parse(existingImagesRaw) : [];
+
+    // Merge existing + mock new images
+    const newImageUrls = formData.getAll('images').length > 0
+      ? ['https://picsum.photos/seed/updated/400/300']
+      : [];
+    const allImages = [...existingImages, ...newImageUrls];
+
+    // Update in-memory product
+    const productIndex = products.findIndex((p) => p.id === idStr);
+    const updatedProduct = {
+      ...existingProduct,
+      title,
+      description,
+      price: parseFloat(price),
+      category,
+      condition,
+      images: allImages.length > 0 ? allImages : existingProduct.images,
+      seller: { _id: seller.id, name: seller.name, username: (seller as { username?: string }).username || 'mockuser' },
+    };
+
+    if (productIndex !== -1) {
+      products[productIndex] = updatedProduct;
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Product updated successfully',
+      data: updatedProduct,
+    });
+  }),
+
   http.get(`${API_BASE}/products/:id`, ({ params }) => {
     const { id } = params;
 

@@ -10,6 +10,16 @@ interface CreateProductData {
   images: File[];
 }
 
+interface UpdateProductData {
+  title: string;
+  description: string;
+  price: string;
+  category: string;
+  condition: string;
+  existingImages: string[];
+  newImages: File[];
+}
+
 interface ProductResponseData {
   id: string;
   title: string;
@@ -113,6 +123,20 @@ export const productService = {
   },
 
   getCategories: () => api.get<CategoriesResponse>('/products/categories'),
+
+  update: (id: string, data: UpdateProductData) => {
+    const formData = new FormData();
+    formData.append('title', data.title);
+    formData.append('description', data.description);
+    formData.append('price', data.price);
+    formData.append('category', data.category);
+    formData.append('condition', data.condition);
+    formData.append('existingImages', JSON.stringify(data.existingImages));
+    data.newImages.forEach((image) => formData.append('images', image));
+    return api.put<ProductResponse>(`/products/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 
   getByUsername: async (
     username: string,

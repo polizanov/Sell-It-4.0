@@ -171,6 +171,94 @@ describe('ProductDetail Page', () => {
   });
 
   // --------------------------------------------------------------------------
+  // Edit Product Button Tests
+  // --------------------------------------------------------------------------
+  describe('Edit Product button', () => {
+    const editProductData = {
+      id: '507f1f77bcf86cd799439011',
+      title: 'Test Edit Button Product',
+      description: 'A product to test the edit button visibility.',
+      price: 149.99,
+      images: ['https://images.unsplash.com/photo-1.jpg'],
+      category: 'Electronics',
+      condition: 'Good',
+      seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith' },
+      createdAt: '2024-01-15T10:30:00.000Z',
+    };
+
+    beforeEach(() => {
+      server.use(
+        http.get(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'Product retrieved successfully',
+            data: editProductData,
+          });
+        }),
+      );
+    });
+
+    it('shows "Edit Product" button for product owner', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'seller-001',
+          name: 'John Smith',
+          username: 'johnsmith',
+          email: 'john@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
+      });
+
+      const editButton = screen.getByText('Edit Product');
+      expect(editButton).toBeInTheDocument();
+
+      // Verify the edit link points to the correct URL
+      const editLink = editButton.closest('a');
+      expect(editLink).toHaveAttribute('href', '/products/507f1f77bcf86cd799439011/edit');
+    });
+
+    it('hides "Edit Product" button for non-owner', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'different-user',
+          name: 'Other User',
+          username: 'otheruser',
+          email: 'other@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText('Edit Product')).not.toBeInTheDocument();
+    });
+
+    it('hides "Edit Product" button for unauthenticated user', async () => {
+      // Auth store is already cleared in beforeEach
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByText('Edit Product')).not.toBeInTheDocument();
+    });
+  });
+
+  // --------------------------------------------------------------------------
   // Favourite Button Tests
   // --------------------------------------------------------------------------
   describe('Favourite button', () => {

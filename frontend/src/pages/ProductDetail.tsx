@@ -334,6 +334,15 @@ const ProductDetail = () => {
               </div>
             </div>
 
+            {/* Edit Product Button */}
+            {isOwner && (
+              <Link to={`/products/${product.id}/edit`}>
+                <Button variant="secondary" size="md">
+                  Edit Product
+                </Button>
+              </Link>
+            )}
+
             {/* Description */}
             <div>
               <h2 className="text-xl font-semibold text-text-primary mb-3">Description</h2>

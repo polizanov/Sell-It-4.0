@@ -400,6 +400,131 @@ describe('productService', () => {
     });
   });
 
+  describe('update', () => {
+    it('sends FormData via PUT and returns updated product', async () => {
+      localStorage.setItem('token', 'mock-jwt-token');
+
+      server.use(
+        http.put(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'Product updated successfully',
+            data: {
+              id: 'prod-1',
+              title: 'Updated Camera',
+              description: 'An updated vintage camera description',
+              price: 59.99,
+              images: [
+                'https://res.cloudinary.com/test/existing-image.jpg',
+                'https://res.cloudinary.com/test/new-image.jpg',
+              ],
+              category: 'Electronics',
+              condition: 'Like New',
+              seller: { _id: '1', name: 'Test User', username: 'testuser' },
+              createdAt: '2024-01-15T10:30:00.000Z',
+            },
+          });
+        }),
+      );
+
+      const file = new File(['image-data'], 'new-image.jpg', { type: 'image/jpeg' });
+
+      const response = await productService.update('prod-1', {
+        title: 'Updated Camera',
+        description: 'An updated vintage camera description',
+        price: '59.99',
+        category: 'Electronics',
+        condition: 'Like New',
+        existingImages: ['https://res.cloudinary.com/test/existing-image.jpg'],
+        newImages: [file],
+      });
+
+      expect(response.data.success).toBe(true);
+      expect(response.data.message).toBe('Product updated successfully');
+      expect(response.data.data?.title).toBe('Updated Camera');
+      expect(response.data.data?.price).toBe(59.99);
+      expect(response.data.data?.images).toHaveLength(2);
+      expect(response.data.data?.condition).toBe('Like New');
+      expect(response.data.data?.id).toBe('prod-1');
+    });
+
+    it('handles 401 unauthorized error', async () => {
+      // No token in localStorage
+
+      server.use(
+        http.put(`${API_BASE}/products/:id`, ({ request }) => {
+          const authHeader = request.headers.get('Authorization');
+          if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return HttpResponse.json(
+              { success: false, message: 'Not authorized' },
+              { status: 401 },
+            );
+          }
+          return HttpResponse.json(
+            { success: true, message: 'Product updated successfully' },
+          );
+        }),
+      );
+
+      const file = new File(['image-data'], 'test.jpg', { type: 'image/jpeg' });
+
+      try {
+        await productService.update('prod-1', {
+          title: 'Test Product',
+          description: 'Test description',
+          price: '10.00',
+          category: 'Electronics',
+          condition: 'New',
+          existingImages: [],
+          newImages: [file],
+        });
+        expect.fail('Expected request to throw');
+      } catch (error: unknown) {
+        const axiosError = error as {
+          response: { status: number; data: { message: string } };
+        };
+        expect(axiosError.response.status).toBe(401);
+        expect(axiosError.response.data.message).toBe('Not authorized');
+      }
+    });
+
+    it('handles 403 non-owner error', async () => {
+      localStorage.setItem('token', 'mock-jwt-token');
+
+      server.use(
+        http.put(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json(
+            { success: false, message: 'You are not authorized to edit this product' },
+            { status: 403 },
+          );
+        }),
+      );
+
+      const file = new File(['image-data'], 'test.jpg', { type: 'image/jpeg' });
+
+      try {
+        await productService.update('prod-1', {
+          title: 'Test Product',
+          description: 'Test description',
+          price: '10.00',
+          category: 'Electronics',
+          condition: 'New',
+          existingImages: [],
+          newImages: [file],
+        });
+        expect.fail('Expected request to throw');
+      } catch (error: unknown) {
+        const axiosError = error as {
+          response: { status: number; data: { message: string } };
+        };
+        expect(axiosError.response.status).toBe(403);
+        expect(axiosError.response.data.message).toBe(
+          'You are not authorized to edit this product',
+        );
+      }
+    });
+  });
+
   describe('getByUsername', () => {
     it('returns user info and mapped products with pagination', async () => {
       server.use(
