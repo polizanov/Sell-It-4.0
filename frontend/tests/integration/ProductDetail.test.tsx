@@ -216,11 +216,8 @@ describe('ProductDetail Page', () => {
         expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
       });
 
-      const editButton = screen.getByText('Edit Product');
-      expect(editButton).toBeInTheDocument();
-
-      // Verify the edit link points to the correct URL
-      const editLink = editButton.closest('a');
+      const editLink = screen.getByLabelText('Edit product');
+      expect(editLink).toBeInTheDocument();
       expect(editLink).toHaveAttribute('href', '/products/507f1f77bcf86cd799439011/edit');
     });
 
@@ -242,7 +239,7 @@ describe('ProductDetail Page', () => {
         expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
       });
 
-      expect(screen.queryByText('Edit Product')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Edit product')).not.toBeInTheDocument();
     });
 
     it('hides "Edit Product" button for unauthenticated user', async () => {
@@ -254,7 +251,7 @@ describe('ProductDetail Page', () => {
         expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
       });
 
-      expect(screen.queryByText('Edit Product')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('Edit product')).not.toBeInTheDocument();
     });
   });
 
