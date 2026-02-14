@@ -1,0 +1,1 @@
+implement add to favourites product funtionality. Only not authors should be able to do this action. They should see like button on product details page. Implement 'My favourites' page whitch will list (with infinity scroll that we mentioned before)  products liked by logged user. Implement unit, integration, security and e2e tests. 

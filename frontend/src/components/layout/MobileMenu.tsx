@@ -99,6 +99,9 @@ export const MobileMenu = () => {
                 <Link to="/profile" className={linkStyles('/profile')} onClick={closeMenu}>
                   My Profile
                 </Link>
+                <Link to="/favourites" className={linkStyles('/favourites')} onClick={closeMenu}>
+                  My Favourites
+                </Link>
               </>
             ) : (
               <>

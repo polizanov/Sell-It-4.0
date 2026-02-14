@@ -12,6 +12,7 @@ import CreateProduct from './pages/CreateProduct';
 import AllProducts from './pages/AllProducts';
 import ProductDetail from './pages/ProductDetail';
 import UserProfile from './pages/UserProfile';
+import MyFavourites from './pages/MyFavourites';
 
 function App() {
   useEffect(() => {
@@ -43,6 +44,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <CreateProduct />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/favourites"
+            element={
+              <ProtectedRoute>
+                <MyFavourites />
               </ProtectedRoute>
             }
           />

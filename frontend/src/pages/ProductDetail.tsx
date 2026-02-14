@@ -7,6 +7,8 @@ import type { Swiper as SwiperType } from 'swiper';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/common/Button';
 import { productService } from '../services/productService';
+import { useAuthStore } from '../store/authStore';
+import { useFavouritesStore } from '../store/favouritesStore';
 import type { Product, ApiError } from '../types';
 
 // Import Swiper styles
@@ -96,6 +98,9 @@ const ProductDetail = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const { isAuthenticated, user } = useAuthStore();
+  const { isFavourite, toggleFavourite } = useFavouritesStore();
+  const [isTogglingFavourite, setIsTogglingFavourite] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -178,6 +183,20 @@ const ProductDetail = () => {
       </PageContainer>
     );
   }
+
+  const isOwner = isAuthenticated && user?.id === product?.sellerId;
+  const showFavouriteButton = isAuthenticated && !isOwner && product !== null;
+  const isFavourited = product ? isFavourite(product.id) : false;
+
+  const handleToggleFavourite = async () => {
+    if (!product || isTogglingFavourite) return;
+    setIsTogglingFavourite(true);
+    try {
+      await toggleFavourite(product.id);
+    } finally {
+      setIsTogglingFavourite(false);
+    }
+  };
 
   const conditionColors = {
     New: 'bg-green-500/20 text-green-400',
@@ -263,9 +282,39 @@ const ProductDetail = () => {
           <div className="space-y-6">
             {/* Title and Price */}
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">
-                {product.title}
-              </h1>
+              <div className="flex items-start justify-between gap-4">
+                <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">
+                  {product.title}
+                </h1>
+                {showFavouriteButton && (
+                  <button
+                    onClick={handleToggleFavourite}
+                    disabled={isTogglingFavourite}
+                    aria-label={isFavourited ? 'Remove from favourites' : 'Add to favourites'}
+                    className={`flex-shrink-0 p-2 rounded-lg transition-colors ${
+                      isTogglingFavourite ? 'opacity-50 cursor-not-allowed' : ''
+                    } ${
+                      isFavourited
+                        ? 'text-red-500 hover:text-red-400'
+                        : 'text-text-muted hover:text-red-500'
+                    }`}
+                  >
+                    <svg
+                      className="w-7 h-7"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill={isFavourited ? 'currentColor' : 'none'}
+                        d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
               <div className="text-4xl font-bold text-orange mb-4">
                 ${product.price.toFixed(2)}
               </div>

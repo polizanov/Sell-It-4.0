@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { User } from '../types';
 import { authService } from '../services/authService';
+import { useFavouritesStore } from './favouritesStore';
 
 interface AuthState {
   user: User | null;
@@ -21,10 +22,12 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: (user, token) => {
     localStorage.setItem('token', token);
     set({ user, token, isAuthenticated: true, isLoading: false });
+    useFavouritesStore.getState().loadFavouriteIds();
   },
   logout: () => {
     localStorage.removeItem('token');
     set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+    useFavouritesStore.getState().clearFavourites();
   },
   setUser: (user) => set({ user }),
   initializeAuth: async () => {
@@ -49,6 +52,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           isAuthenticated: true,
           isLoading: false,
         });
+        useFavouritesStore.getState().loadFavouriteIds();
       }
     } catch {
       localStorage.removeItem('token');

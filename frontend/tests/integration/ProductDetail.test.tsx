@@ -4,6 +4,8 @@ import { MemoryRouter, Routes, Route } from 'react-router';
 import { http, HttpResponse } from 'msw';
 import ProductDetail from '../../src/pages/ProductDetail';
 import { server } from '../../src/mocks/server';
+import { useAuthStore } from '../../src/store/authStore';
+import { useFavouritesStore } from '../../src/store/favouritesStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -25,6 +27,13 @@ const renderProductDetail = (id: string) => {
 describe('ProductDetail Page', () => {
   beforeEach(() => {
     localStorage.clear();
+    useAuthStore.setState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
+    useFavouritesStore.setState({ favouriteIds: new Set<string>(), isLoaded: false });
   });
 
   it('renders product details after successful fetch', async () => {
@@ -159,5 +168,145 @@ describe('ProductDetail Page', () => {
     const contactButton = screen.getByText('Contact Seller');
     const link = contactButton.closest('a');
     expect(link).toHaveAttribute('href', '/profile/johnsmith');
+  });
+
+  // --------------------------------------------------------------------------
+  // Favourite Button Tests
+  // --------------------------------------------------------------------------
+  describe('Favourite button', () => {
+    const productData = {
+      id: '507f1f77bcf86cd799439011',
+      title: 'Test Favourite Product',
+      description: 'A product to test the favourite button visibility.',
+      price: 149.99,
+      images: ['https://images.unsplash.com/photo-1.jpg'],
+      category: 'Electronics',
+      condition: 'Good',
+      seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith' },
+      createdAt: '2024-01-15T10:30:00.000Z',
+    };
+
+    beforeEach(() => {
+      server.use(
+        http.get(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'Product retrieved successfully',
+            data: productData,
+          });
+        }),
+      );
+    });
+
+    it('shows heart button for authenticated non-owner user', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'user-123',
+          name: 'Test User',
+          username: 'testuser',
+          email: 'test@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+      useFavouritesStore.setState({ favouriteIds: new Set<string>(), isLoaded: true });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Favourite Product')).toBeInTheDocument();
+      });
+
+      const heartButton = screen.getByRole('button', { name: /favourites/i });
+      expect(heartButton).toBeInTheDocument();
+    });
+
+    it('does NOT show heart button for unauthenticated user', async () => {
+      // Auth store is already cleared in beforeEach
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Favourite Product')).toBeInTheDocument();
+      });
+
+      const heartButton = screen.queryByRole('button', { name: /favourites/i });
+      expect(heartButton).not.toBeInTheDocument();
+    });
+
+    it('does NOT show heart button for product owner', async () => {
+      // Set user ID to match the seller._id
+      useAuthStore.setState({
+        user: {
+          id: 'seller-001',
+          name: 'John Smith',
+          username: 'johnsmith',
+          email: 'john@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Favourite Product')).toBeInTheDocument();
+      });
+
+      const heartButton = screen.queryByRole('button', { name: /favourites/i });
+      expect(heartButton).not.toBeInTheDocument();
+    });
+
+    it('shows filled heart when product is in favourites', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'user-123',
+          name: 'Test User',
+          username: 'testuser',
+          email: 'test@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+      useFavouritesStore.setState({
+        favouriteIds: new Set(['507f1f77bcf86cd799439011']),
+        isLoaded: true,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Favourite Product')).toBeInTheDocument();
+      });
+
+      const heartButton = screen.getByRole('button', { name: /remove from favourites/i });
+      expect(heartButton).toBeInTheDocument();
+    });
+
+    it('shows outline heart when product is not in favourites', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'user-123',
+          name: 'Test User',
+          username: 'testuser',
+          email: 'test@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+      useFavouritesStore.setState({
+        favouriteIds: new Set<string>(),
+        isLoaded: true,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Favourite Product')).toBeInTheDocument();
+      });
+
+      const heartButton = screen.getByRole('button', { name: /add to favourites/i });
+      expect(heartButton).toBeInTheDocument();
+    });
   });
 });

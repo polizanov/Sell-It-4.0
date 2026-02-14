@@ -13,6 +13,14 @@ const users: Array<{
   verificationToken?: string;
 }> = [];
 
+// In-memory favourites for mock
+const favourites: Array<{
+  id: string;
+  userId: string;
+  productId: string;
+  createdAt: string;
+}> = [];
+
 // In-memory products for mock
 const products: Array<{
   id: string;
@@ -352,6 +360,168 @@ export const handlers = [
       { success: false, message: 'Not authorized' },
       { status: 401 },
     );
+  }),
+
+  http.get(`${API_BASE}/favourites/ids`, ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (
+      !authHeader ||
+      !authHeader.startsWith('Bearer ') ||
+      authHeader.split(' ')[1] !== 'mock-jwt-token'
+    ) {
+      return HttpResponse.json({ success: false, message: 'Not authorized' }, { status: 401 });
+    }
+    const user = users.find((u) => u.isVerified);
+    // If the token is valid but no user exists in-memory, return empty array.
+    // This handles tests that override the login handler without registering a user.
+    const userFavs = user ? favourites.filter((f) => f.userId === user.id) : [];
+    return HttpResponse.json({
+      success: true,
+      message: 'Favourite IDs retrieved successfully',
+      data: userFavs.map((f) => f.productId),
+    });
+  }),
+
+  http.get(`${API_BASE}/favourites`, ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (
+      !authHeader ||
+      !authHeader.startsWith('Bearer ') ||
+      authHeader.split(' ')[1] !== 'mock-jwt-token'
+    ) {
+      return HttpResponse.json({ success: false, message: 'Not authorized' }, { status: 401 });
+    }
+    const user = users.find((u) => u.isVerified);
+    if (!user) {
+      return HttpResponse.json({ success: false, message: 'Not authorized' }, { status: 401 });
+    }
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '12', 10);
+
+    const userFavs = favourites.filter((f) => f.userId === user.id);
+    const allProducts = [...products, ...defaultProducts];
+
+    const favProducts = userFavs
+      .map((f) => allProducts.find((p) => p.id === f.productId))
+      .filter(Boolean);
+
+    const totalProducts = favProducts.length;
+    const totalPages = Math.max(1, Math.ceil(totalProducts / limit));
+    const start = (page - 1) * limit;
+    const paged = favProducts.slice(start, start + limit);
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Favourites retrieved successfully',
+      data: {
+        products: paged,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalProducts,
+          limit,
+          hasMore: page < totalPages,
+        },
+      },
+    });
+  }),
+
+  http.post(`${API_BASE}/favourites/:productId`, ({ request, params }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (
+      !authHeader ||
+      !authHeader.startsWith('Bearer ') ||
+      authHeader.split(' ')[1] !== 'mock-jwt-token'
+    ) {
+      return HttpResponse.json({ success: false, message: 'Not authorized' }, { status: 401 });
+    }
+    const user = users.find((u) => u.isVerified);
+    if (!user) {
+      return HttpResponse.json({ success: false, message: 'Not authorized' }, { status: 401 });
+    }
+
+    const { productId } = params;
+    const productIdStr = typeof productId === 'string' ? productId : '';
+
+    const allProducts = [...products, ...defaultProducts];
+    const product = allProducts.find((p) => p.id === productIdStr);
+    if (!product) {
+      return HttpResponse.json(
+        { success: false, message: 'Product not found' },
+        { status: 404 },
+      );
+    }
+
+    if (product.seller._id === user.id) {
+      return HttpResponse.json(
+        { success: false, message: 'You cannot favourite your own product' },
+        { status: 403 },
+      );
+    }
+
+    const existing = favourites.find(
+      (f) => f.userId === user.id && f.productId === productIdStr,
+    );
+    if (existing) {
+      return HttpResponse.json(
+        { success: false, message: 'Product is already in your favourites' },
+        { status: 409 },
+      );
+    }
+
+    const fav = {
+      id: String(favourites.length + 1),
+      userId: user.id,
+      productId: productIdStr,
+      createdAt: new Date().toISOString(),
+    };
+    favourites.push(fav);
+
+    return HttpResponse.json(
+      {
+        success: true,
+        message: 'Product added to favourites',
+        data: { id: fav.id, productId: fav.productId, createdAt: fav.createdAt },
+      },
+      { status: 201 },
+    );
+  }),
+
+  http.delete(`${API_BASE}/favourites/:productId`, ({ request, params }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (
+      !authHeader ||
+      !authHeader.startsWith('Bearer ') ||
+      authHeader.split(' ')[1] !== 'mock-jwt-token'
+    ) {
+      return HttpResponse.json({ success: false, message: 'Not authorized' }, { status: 401 });
+    }
+    const user = users.find((u) => u.isVerified);
+    if (!user) {
+      return HttpResponse.json({ success: false, message: 'Not authorized' }, { status: 401 });
+    }
+
+    const { productId } = params;
+    const productIdStr = typeof productId === 'string' ? productId : '';
+
+    const index = favourites.findIndex(
+      (f) => f.userId === user.id && f.productId === productIdStr,
+    );
+    if (index === -1) {
+      return HttpResponse.json(
+        { success: false, message: 'Favourite not found' },
+        { status: 404 },
+      );
+    }
+
+    favourites.splice(index, 1);
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Product removed from favourites',
+    });
   }),
 
   http.get(`${API_BASE}/products`, ({ request }) => {

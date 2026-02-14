@@ -39,6 +39,9 @@ export const Navbar = () => {
               <Link to="/profile" className={linkStyles('/profile')}>
                 My Profile
               </Link>
+              <Link to="/favourites" className={linkStyles('/favourites')}>
+                My Favourites
+              </Link>
               <Button
                 variant="danger"
                 size="sm"
