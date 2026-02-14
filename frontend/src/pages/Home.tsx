@@ -37,7 +37,7 @@ const FeaturedSkeleton = () => (
 );
 
 const Home = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isAuthenticated, user } = useAuthStore();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [isLoadingFeatured, setIsLoadingFeatured] = useState(true);
 
@@ -78,7 +78,7 @@ const Home = () => {
                   Browse Products
                 </Button>
               </Link>
-              <Link to={isAuthenticated ? '/create-product' : '/login'}>
+              <Link to={isAuthenticated && user?.isVerified !== false ? '/create-product' : '/login'}>
                 <Button variant="secondary" size="lg" className="min-w-[200px]">
                   Start Selling
                 </Button>

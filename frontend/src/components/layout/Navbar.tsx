@@ -6,7 +6,7 @@ import { Button } from '../common/Button';
 export const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, user, logout } = useAuthStore();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -39,15 +39,19 @@ export const Navbar = () => {
 
           {isAuthenticated ? (
             <>
-              <Link to="/create-product" className={linkStyles('/create-product')}>
-                Create Product
-              </Link>
+              {user?.isVerified !== false && (
+                <Link to="/create-product" className={linkStyles('/create-product')}>
+                  Create Product
+                </Link>
+              )}
               <Link to="/profile" className={linkStyles('/profile')}>
                 My Profile
               </Link>
-              <Link to="/favourites" className={linkStyles('/favourites')}>
-                My Favourites
-              </Link>
+              {user?.isVerified !== false && (
+                <Link to="/favourites" className={linkStyles('/favourites')}>
+                  My Favourites
+                </Link>
+              )}
               <Button
                 variant="danger"
                 size="sm"

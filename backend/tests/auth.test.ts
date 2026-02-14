@@ -222,7 +222,7 @@ describe('Auth Endpoints', () => {
       expect(res.body.success).toBe(false);
     });
 
-    it('should return 403 for an unverified user', async () => {
+    it('should allow an unverified user to login with isVerified=false', async () => {
       // Register a new user (unverified by default)
       await request(app).post('/api/auth/register').send({
         name: 'Unverified User',
@@ -236,9 +236,10 @@ describe('Auth Endpoints', () => {
         password: 'password123',
       });
 
-      expect(res.status).toBe(403);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toMatch(/verify/i);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('token');
+      expect(res.body.data.isVerified).toBe(false);
     });
 
     it('should return 400 when required fields are missing', async () => {

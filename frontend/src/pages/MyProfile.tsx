@@ -167,11 +167,13 @@ const MyProfile = () => {
                 {productCount} {productCount === 1 ? 'listing' : 'listings'}
               </p>
             </div>
-            <Link to="/create-product">
-              <Button variant="primary" size="md">
-                Create New Product
-              </Button>
-            </Link>
+            {user?.isVerified !== false && (
+              <Link to="/create-product">
+                <Button variant="primary" size="md">
+                  Create New Product
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Error State */}
@@ -204,14 +206,22 @@ const MyProfile = () => {
                 <h3 className="text-xl font-semibold text-text-secondary mb-2">
                   No Products Yet
                 </h3>
-                <p className="text-text-muted mb-6">
-                  You haven't listed any products. Start selling today!
-                </p>
-                <Link to="/create-product">
-                  <Button variant="primary" size="md">
-                    Create Your First Product
-                  </Button>
-                </Link>
+                {user?.isVerified === false ? (
+                  <p className="text-text-muted mb-6">
+                    Verify your email to start listing products.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-text-muted mb-6">
+                      You haven't listed any products. Start selling today!
+                    </p>
+                    <Link to="/create-product">
+                      <Button variant="primary" size="md">
+                        Create Your First Product
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </Card>
           )}

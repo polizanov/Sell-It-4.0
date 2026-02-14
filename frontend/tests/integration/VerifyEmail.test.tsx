@@ -40,7 +40,7 @@ describe('VerifyEmail Page', () => {
     expect(screen.getByText('Verifying your email...')).toBeInTheDocument();
   });
 
-  it('shows "Email Verified!" on successful verification with Go to Login link', async () => {
+  it('shows "Email Verified!" on successful verification with Go to Login link (unauthenticated)', async () => {
     server.use(
       http.get(`${API_BASE}/auth/verify-email/:token`, () => {
         return HttpResponse.json({

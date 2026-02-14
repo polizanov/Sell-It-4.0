@@ -285,16 +285,6 @@ export const handlers = [
       );
     }
 
-    if (!user.isVerified) {
-      return HttpResponse.json(
-        {
-          success: false,
-          message: 'Please verify your email before logging in',
-        },
-        { status: 403 },
-      );
-    }
-
     return HttpResponse.json({
       success: true,
       message: 'Login successful',
@@ -341,6 +331,23 @@ export const handlers = [
     const token = authHeader.split(' ')[1];
     if (token === 'mock-jwt-token') {
       const user = users.find((u) => u.isVerified);
+      if (user) {
+        return HttpResponse.json({
+          success: true,
+          message: 'User profile retrieved',
+          data: {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            email: user.email,
+            isVerified: user.isVerified,
+          },
+        });
+      }
+    }
+
+    if (token === 'mock-jwt-token-unverified') {
+      const user = users.find((u) => !u.isVerified);
       if (user) {
         return HttpResponse.json({
           success: true,

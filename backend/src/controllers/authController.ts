@@ -64,10 +64,6 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response): Promi
     throw new AppError('Invalid email or password', 401);
   }
 
-  if (!user.isVerified) {
-    throw new AppError('Please verify your email before logging in', 403);
-  }
-
   const token = generateToken(String(user._id), user.email);
 
   res.json({

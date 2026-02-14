@@ -8,7 +8,7 @@ export const MobileMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, user, logout } = useAuthStore();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
@@ -95,15 +95,19 @@ export const MobileMenu = () => {
 
             {isAuthenticated ? (
               <>
-                <Link to="/create-product" className={linkStyles('/create-product')} onClick={closeMenu}>
-                  Create Product
-                </Link>
+                {user?.isVerified !== false && (
+                  <Link to="/create-product" className={linkStyles('/create-product')} onClick={closeMenu}>
+                    Create Product
+                  </Link>
+                )}
                 <Link to="/profile" className={linkStyles('/profile')} onClick={closeMenu}>
                   My Profile
                 </Link>
-                <Link to="/favourites" className={linkStyles('/favourites')} onClick={closeMenu}>
-                  My Favourites
-                </Link>
+                {user?.isVerified !== false && (
+                  <Link to="/favourites" className={linkStyles('/favourites')} onClick={closeMenu}>
+                    My Favourites
+                  </Link>
+                )}
               </>
             ) : (
               <>

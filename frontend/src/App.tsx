@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import { Navigation } from './components/layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { VerifiedRoute } from './components/auth/VerifiedRoute';
+import { VerificationBanner } from './components/common/VerificationBanner';
 import { useAuthStore } from './store/authStore';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -24,6 +26,7 @@ function App() {
     <BrowserRouter>
       <div className="min-h-screen bg-dark-bg text-white">
         <Navigation />
+        <VerificationBanner />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -33,9 +36,9 @@ function App() {
           <Route
             path="/products/:id/edit"
             element={
-              <ProtectedRoute>
+              <VerifiedRoute>
                 <EditProduct />
-              </ProtectedRoute>
+              </VerifiedRoute>
             }
           />
           <Route path="/products/:id" element={<ProductDetail />} />
@@ -51,17 +54,17 @@ function App() {
           <Route
             path="/create-product"
             element={
-              <ProtectedRoute>
+              <VerifiedRoute>
                 <CreateProduct />
-              </ProtectedRoute>
+              </VerifiedRoute>
             }
           />
           <Route
             path="/favourites"
             element={
-              <ProtectedRoute>
+              <VerifiedRoute>
                 <MyFavourites />
-              </ProtectedRoute>
+              </VerifiedRoute>
             }
           />
         </Routes>

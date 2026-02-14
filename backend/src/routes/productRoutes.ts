@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { createProduct, deleteProduct, getAllProducts, getCategories, getProductById, getUserProducts, updateProduct } from '../controllers/productController';
 import { validate } from '../middleware/validate';
-import { protect } from '../middleware/authMiddleware';
+import { protect, requireVerified } from '../middleware/authMiddleware';
 import { upload } from '../middleware/upload';
 
 const router = Router();
@@ -33,11 +33,11 @@ const updateProductSchema = z.object({
 });
 
 router.get('/', getAllProducts);
-router.post('/', protect, upload.array('images', 5), validate(createProductSchema), createProduct);
+router.post('/', protect, requireVerified, upload.array('images', 5), validate(createProductSchema), createProduct);
 router.get('/categories', getCategories);
 router.get('/user/:username', getUserProducts);
-router.put('/:id', protect, upload.array('images', 5), validate(updateProductSchema), updateProduct);
-router.delete('/:id', protect, deleteProduct);
+router.put('/:id', protect, requireVerified, upload.array('images', 5), validate(updateProductSchema), updateProduct);
+router.delete('/:id', protect, requireVerified, deleteProduct);
 router.get('/:id', getProductById);
 
 export default router;

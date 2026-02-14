@@ -5,13 +5,13 @@ import {
   getFavourites,
   getFavouriteIds,
 } from '../controllers/favouriteController';
-import { protect } from '../middleware/authMiddleware';
+import { protect, requireVerified } from '../middleware/authMiddleware';
 
 const router = Router();
 
 router.get('/', protect, getFavourites);
 router.get('/ids', protect, getFavouriteIds);
-router.post('/:productId', protect, addFavourite);
-router.delete('/:productId', protect, removeFavourite);
+router.post('/:productId', protect, requireVerified, addFavourite);
+router.delete('/:productId', protect, requireVerified, removeFavourite);
 
 export default router;

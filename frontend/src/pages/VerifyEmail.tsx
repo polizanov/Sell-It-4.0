@@ -4,6 +4,7 @@ import { AxiosError } from 'axios';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/common/Card';
 import { authService } from '../services/authService';
+import { useAuthStore } from '../store/authStore';
 import type { ApiError } from '../types';
 
 type VerifyStatus = 'loading' | 'success' | 'error';
@@ -17,6 +18,7 @@ const VerifyEmail = () => {
     token ? '' : 'Invalid verification link'
   );
   const verificationAttempted = useRef(false);
+  const { isAuthenticated, user, setUser } = useAuthStore();
 
   useEffect(() => {
     if (!token) return;
@@ -26,6 +28,9 @@ const VerifyEmail = () => {
     const verify = async () => {
       try {
         await authService.verifyEmail(token);
+        if (user) {
+          setUser({ ...user, isVerified: true });
+        }
         setStatus('success');
       } catch (error) {
         const axiosError = error as AxiosError<ApiError>;
@@ -61,13 +66,13 @@ const VerifyEmail = () => {
                   Email Verified!
                 </h1>
                 <p className="text-text-secondary mb-8">
-                  Your email has been successfully verified. You can now log in to your account.
+                  Your email has been successfully verified. You now have full access to all features.
                 </p>
                 <Link
-                  to="/login"
+                  to={isAuthenticated ? '/' : '/login'}
                   className="inline-block bg-orange text-white hover:bg-orange-hover font-medium px-6 py-3 rounded-lg transition-colors"
                 >
-                  Go to Login
+                  {isAuthenticated ? 'Go to Homepage' : 'Go to Login'}
                 </Link>
               </>
             )}

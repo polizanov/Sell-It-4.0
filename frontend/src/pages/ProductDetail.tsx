@@ -188,8 +188,10 @@ const ProductDetail = () => {
     );
   }
 
+  const isVerified = user?.isVerified !== false;
   const isOwner = isAuthenticated && user?.id === product?.sellerId;
-  const showFavouriteButton = isAuthenticated && !isOwner && product !== null;
+  const showFavouriteButton = isAuthenticated && isVerified && !isOwner && product !== null;
+  const showOwnerActions = isOwner && isVerified;
   const isFavourited = product ? isFavourite(product.id) : false;
 
   const handleToggleFavourite = async () => {
@@ -331,7 +333,7 @@ const ProductDetail = () => {
                     </svg>
                   </button>
                 )}
-                {isOwner && (
+                {showOwnerActions && (
                   <div className="flex items-center gap-1">
                     <Link
                       to={`/products/${product.id}/edit`}
@@ -375,6 +377,11 @@ const ProductDetail = () => {
                   </div>
                 )}
               </div>
+              {isAuthenticated && !isVerified && (
+                <p className="text-amber-300 text-sm mt-2">
+                  Verify your email to {isOwner ? 'manage this product' : 'add products to favourites'}.
+                </p>
+              )}
               <div className="text-4xl font-bold text-orange mb-4">
                 ${product.price.toFixed(2)}
               </div>
