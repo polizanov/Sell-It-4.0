@@ -1,0 +1,1 @@
+Implement delete product funnctionality. Only authors should be able to delete their products. When delete icon is clicked custom confirmation popup will appear with appopriate message.

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router';
 import { http, HttpResponse } from 'msw';
 import ProductDetail from '../../src/pages/ProductDetail';
@@ -392,6 +392,230 @@ describe('ProductDetail Page', () => {
 
       const heartButton = screen.getByRole('button', { name: /add to favourites/i });
       expect(heartButton).toBeInTheDocument();
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // Delete Product Tests
+  // --------------------------------------------------------------------------
+  describe('Delete Product', () => {
+    const deleteProductData = {
+      id: '507f1f77bcf86cd799439011',
+      title: 'Product To Delete',
+      description: 'A product to test delete functionality.',
+      price: 99.99,
+      images: ['https://images.unsplash.com/photo-1.jpg'],
+      category: 'Electronics',
+      condition: 'Good',
+      seller: { _id: 'owner-001', name: 'Product Owner', username: 'productowner' },
+      createdAt: '2024-01-15T10:30:00.000Z',
+    };
+
+    beforeEach(() => {
+      server.use(
+        http.get(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'Product retrieved successfully',
+            data: deleteProductData,
+          });
+        }),
+      );
+    });
+
+    it('shows delete button for product owner', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'owner-001',
+          name: 'Product Owner',
+          username: 'productowner',
+          email: 'owner@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Product To Delete')).toBeInTheDocument();
+      });
+
+      expect(screen.getByLabelText('Delete product')).toBeInTheDocument();
+    });
+
+    it('does NOT show delete button for non-owner', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'different-user',
+          name: 'Other User',
+          username: 'otheruser',
+          email: 'other@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Product To Delete')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByLabelText('Delete product')).not.toBeInTheDocument();
+    });
+
+    it('does NOT show delete button for unauthenticated user', async () => {
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Product To Delete')).toBeInTheDocument();
+      });
+
+      expect(screen.queryByLabelText('Delete product')).not.toBeInTheDocument();
+    });
+
+    it('clicking delete button shows confirmation dialog with product title', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'owner-001',
+          name: 'Product Owner',
+          username: 'productowner',
+          email: 'owner@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Product To Delete')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByLabelText('Delete product'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      // The dialog message should contain the product title
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toHaveTextContent('Product To Delete');
+    });
+
+    it('clicking Cancel closes dialog without deleting', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'owner-001',
+          name: 'Product Owner',
+          username: 'productowner',
+          email: 'owner@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Product To Delete')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByLabelText('Delete product'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByText('Cancel'));
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+    });
+
+    it('clicking Delete calls API and navigates to /products', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'owner-001',
+          name: 'Product Owner',
+          username: 'productowner',
+          email: 'owner@test.com',
+        },
+        token: 'mock-jwt-token',
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      server.use(
+        http.delete(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json({ success: true, message: 'Product deleted successfully' });
+        }),
+      );
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Product To Delete')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByLabelText('Delete product'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      // Click the Delete button inside the dialog
+      const dialogDeleteButton = screen.getByRole('dialog').querySelector('button:last-child');
+      fireEvent.click(dialogDeleteButton!);
+
+      await waitFor(() => {
+        expect(screen.getByText('All Products Page')).toBeInTheDocument();
+      });
+    });
+
+    it('shows error when delete API fails', async () => {
+      useAuthStore.setState({
+        user: {
+          id: 'owner-001',
+          name: 'Product Owner',
+          username: 'productowner',
+          email: 'owner@test.com',
+        },
+        token: 'mock-jwt-token',
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      server.use(
+        http.delete(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json(
+            { success: false, message: 'Internal server error' },
+            { status: 500 },
+          );
+        }),
+      );
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Product To Delete')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByLabelText('Delete product'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      // Click the Delete button inside the dialog
+      const dialogDeleteButton = screen.getByRole('dialog').querySelector('button:last-child');
+      fireEvent.click(dialogDeleteButton!);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Failed to delete product/)).toBeInTheDocument();
+      });
     });
   });
 });

@@ -34,6 +34,7 @@ import mongoose from 'mongoose';
 import app from '../src/app';
 import { User } from '../src/models/User';
 import { Product } from '../src/models/Product';
+import { Favourite } from '../src/models/Favourite';
 
 const testImageBuffer = Buffer.from('fake-image-data');
 
@@ -1194,6 +1195,142 @@ describe('Product Endpoints', () => {
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toContain('Invalid existing image URL');
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // DELETE /api/products/:id
+  // --------------------------------------------------------------------------
+  describe('DELETE /api/products/:id', () => {
+    let deleteProductId: string;
+    let otherUserToken: string;
+
+    beforeAll(async () => {
+      await Product.deleteMany({});
+      await Favourite.deleteMany({});
+
+      // Create a product owned by the test user for delete+verify tests
+      const createRes = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Product To Delete')
+        .field('description', 'This product will be deleted in tests')
+        .field('price', '75.00')
+        .field('category', 'Electronics')
+        .field('condition', 'Good')
+        .attach('images', testImageBuffer, { filename: 'delete-test.jpg', contentType: 'image/jpeg' });
+
+      deleteProductId = createRes.body.data.id;
+
+      // Create a favourite entry for this product (using a different user ID)
+      const otherUser = await User.findOne({ email: 'otheruser@example.com' });
+      if (otherUser) {
+        await Favourite.create({ user: otherUser._id, product: deleteProductId });
+      }
+
+      // Create a second user for non-owner tests (reuse if already exists)
+      const existingOther = await User.findOne({ email: 'deleteother@example.com' });
+      if (!existingOther) {
+        await request(app).post('/api/auth/register').send({
+          name: 'Delete Other User',
+          username: 'deleteotheruser',
+          email: 'deleteother@example.com',
+          password: 'password123',
+        });
+
+        await User.updateOne(
+          { email: 'deleteother@example.com' },
+          { $set: { isVerified: true, verificationToken: undefined } },
+        );
+      }
+
+      const loginRes = await request(app).post('/api/auth/login').send({
+        email: 'deleteother@example.com',
+        password: 'password123',
+      });
+
+      otherUserToken = loginRes.body.data.token;
+    });
+
+    it('should return 401 without auth token', async () => {
+      // Create a separate product for this test
+      const createRes = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'No Auth Delete Product')
+        .field('description', 'Testing delete without auth token')
+        .field('price', '20.00')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'noauth.jpg', contentType: 'image/jpeg' });
+
+      const res = await request(app).delete(`/api/products/${createRes.body.data.id}`);
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 401 with invalid auth token', async () => {
+      const res = await request(app)
+        .delete(`/api/products/${deleteProductId}`)
+        .set('Authorization', 'Bearer invalid-jwt-token');
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 403 when non-owner tries to delete', async () => {
+      const res = await request(app)
+        .delete(`/api/products/${deleteProductId}`)
+        .set('Authorization', `Bearer ${otherUserToken}`);
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('not authorized');
+    });
+
+    it('should return 404 for non-existent product (valid ObjectId)', async () => {
+      const nonExistentId = new mongoose.Types.ObjectId().toString();
+      const res = await request(app)
+        .delete(`/api/products/${nonExistentId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Product not found');
+    });
+
+    it('should return 400 for invalid ObjectId format', async () => {
+      const res = await request(app)
+        .delete('/api/products/invalid-id')
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Invalid product ID');
+    });
+
+    it('should delete product successfully (200)', async () => {
+      const res = await request(app)
+        .delete(`/api/products/${deleteProductId}`)
+        .set('Authorization', `Bearer ${authToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Product deleted successfully');
+    });
+
+    it('should return 404 when fetching deleted product', async () => {
+      const res = await request(app).get(`/api/products/${deleteProductId}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toBe('Product not found');
+    });
+
+    it('should clean up associated favourites on deletion', async () => {
+      const favourite = await Favourite.findOne({ product: deleteProductId });
+      expect(favourite).toBeNull();
     });
   });
 });

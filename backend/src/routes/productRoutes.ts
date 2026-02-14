@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { createProduct, getAllProducts, getCategories, getProductById, getUserProducts, updateProduct } from '../controllers/productController';
+import { createProduct, deleteProduct, getAllProducts, getCategories, getProductById, getUserProducts, updateProduct } from '../controllers/productController';
 import { validate } from '../middleware/validate';
 import { protect } from '../middleware/authMiddleware';
 import { upload } from '../middleware/upload';
@@ -37,6 +37,7 @@ router.post('/', protect, upload.array('images', 5), validate(createProductSchem
 router.get('/categories', getCategories);
 router.get('/user/:username', getUserProducts);
 router.put('/:id', protect, upload.array('images', 5), validate(updateProductSchema), updateProduct);
+router.delete('/:id', protect, deleteProduct);
 router.get('/:id', getProductById);
 
 export default router;

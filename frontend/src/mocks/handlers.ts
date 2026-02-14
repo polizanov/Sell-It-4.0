@@ -788,6 +788,68 @@ export const handlers = [
     });
   }),
 
+  http.delete(`${API_BASE}/products/:id`, ({ request, params }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (token !== 'mock-jwt-token') {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const { id } = params;
+    const idStr = typeof id === 'string' ? id : '';
+
+    const allProducts = [...products, ...defaultProducts];
+    const existingProduct = allProducts.find((p) => p.id === idStr);
+
+    if (!existingProduct) {
+      return HttpResponse.json(
+        { success: false, message: 'Product not found' },
+        { status: 404 },
+      );
+    }
+
+    // Check ownership
+    const seller = users.find((u) => u.isVerified) || {
+      id: '1',
+      name: 'Mock User',
+      username: 'mockuser',
+    };
+    if (existingProduct.seller._id !== seller.id) {
+      return HttpResponse.json(
+        { success: false, message: 'You are not authorized to delete this product' },
+        { status: 403 },
+      );
+    }
+
+    // Remove associated favourites
+    for (let i = favourites.length - 1; i >= 0; i--) {
+      if (favourites[i]!.productId === idStr) {
+        favourites.splice(i, 1);
+      }
+    }
+
+    // Remove the product from the dynamic products array
+    const productIndex = products.findIndex((p) => p.id === idStr);
+    if (productIndex !== -1) {
+      products.splice(productIndex, 1);
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Product deleted successfully',
+    });
+  }),
+
   http.get(`${API_BASE}/products/:id`, ({ params }) => {
     const { id } = params;
 

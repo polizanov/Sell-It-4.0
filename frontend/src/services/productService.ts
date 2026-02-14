@@ -138,6 +138,8 @@ export const productService = {
     });
   },
 
+  delete: (id: string) => api.delete<ProductResponse>(`/products/${id}`),
+
   getByUsername: async (
     username: string,
     params: { page?: number; limit?: number } = {},

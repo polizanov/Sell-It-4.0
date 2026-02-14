@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import mongoose, { FilterQuery } from 'mongoose';
 import { IProduct, Product } from '../models/Product';
+import { Favourite } from '../models/Favourite';
 import { uploadToCloudinary } from '../middleware/upload';
 import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../types';
@@ -273,5 +274,31 @@ export const getUserProducts = asyncHandler(async (req: Request, res: Response):
         hasMore: page < totalPages,
       },
     },
+  });
+});
+
+export const deleteProduct = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
+  const { id } = req.params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    throw new AppError('Invalid product ID', 400);
+  }
+
+  const product = await Product.findById(id);
+
+  if (!product) {
+    throw new AppError('Product not found', 404);
+  }
+
+  if (product.seller.toString() !== req.user!.userId) {
+    throw new AppError('You are not authorized to delete this product', 403);
+  }
+
+  await Favourite.deleteMany({ product: id });
+  await Product.findByIdAndDelete(id);
+
+  res.json({
+    success: true,
+    message: 'Product deleted successfully',
   });
 });
