@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useAuthStore } from '../../store/authStore';
 import { Logo } from '../common/Logo';
 import { Button } from '../common/Button';
@@ -7,6 +7,7 @@ import { Button } from '../common/Button';
 export const MobileMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthStore();
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -24,6 +25,7 @@ export const MobileMenu = () => {
   const handleLogout = () => {
     logout();
     closeMenu();
+    navigate('/');
   };
 
   return (

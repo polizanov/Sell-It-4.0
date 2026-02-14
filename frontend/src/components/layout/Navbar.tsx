@@ -1,10 +1,11 @@
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useAuthStore } from '../../store/authStore';
 import { Logo } from '../common/Logo';
 import { Button } from '../common/Button';
 
 export const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuthStore();
 
   const isActive = (path: string) => location.pathname === path;
@@ -15,6 +16,11 @@ export const Navbar = () => {
         ? 'text-orange bg-orange/10 border-b-2 border-orange'
         : 'text-text-secondary hover:text-text-primary hover:bg-dark-elevated'
     }`;
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <nav className="hidden md:flex fixed top-0 left-0 right-0 z-50 bg-dark-surface/95 backdrop-blur-sm border-b border-dark-border">
@@ -45,7 +51,7 @@ export const Navbar = () => {
               <Button
                 variant="danger"
                 size="sm"
-                onClick={logout}
+                onClick={handleLogout}
                 className="ml-4"
               >
                 Logout
