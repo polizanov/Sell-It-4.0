@@ -30,10 +30,6 @@ export const Navbar = () => {
 
         {/* Navigation Links */}
         <div className="flex items-center gap-2">
-          <Link to="/" className={linkStyles('/')}>
-            Home
-          </Link>
-
           {isAuthenticated ? (
             <>
               {user?.isVerified !== false && (
