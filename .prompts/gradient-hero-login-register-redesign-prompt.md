@@ -1,0 +1,1 @@
+On hero page i want the ornge light on the gradient  to follow my mouse. The section uder the hero should be with white background and dark font color. The same background with reflection like the hero should persist in product listing section. login and regoster page backgrounds should have white background with orange reflection gradient like the hero

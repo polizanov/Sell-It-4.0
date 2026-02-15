@@ -89,6 +89,7 @@ Task: "Generate a searchable PDF in the background and allow users to download i
 | 5   | Elevate the user experience for the interface, making application more intuitive, accessible, and delightful to use.  | UI-UX Designer |
 | 6   | Add the "Download Searchable PDF" UI (button/action + download flow)                                                  | Frontend       |
 | 7   | Implement unit, integration, e2e, performance, security tests for the Backend and Frontend functionality              | QA Expert      |
+| 7   | If the task is for update remove old tests only for updated element and keep new ones                                 | QA Expert      |
 | 8   | Run the tests and return errors to the appoprites subagents for fixing                                                | QA Expert      |
 
 ### Execution

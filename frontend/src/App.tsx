@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
-import { Navigation } from './components/layout';
+import { Navigation, Footer } from './components/layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { VerifiedRoute } from './components/auth/VerifiedRoute';
 import { VerificationBanner } from './components/common/VerificationBanner';
@@ -67,6 +67,7 @@ function App() {
             }
           />
         </Routes>
+        <Footer />
       </div>
     </BrowserRouter>
   );
