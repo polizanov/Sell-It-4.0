@@ -7,6 +7,7 @@ import type { Swiper as SwiperType } from 'swiper';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/common/Button';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
+import { EditProductModal } from '../components/product/EditProductModal';
 import { productService } from '../services/productService';
 import { useAuthStore } from '../store/authStore';
 import { useFavouritesStore } from '../store/favouritesStore';
@@ -104,6 +105,7 @@ const ProductDetail = () => {
   const [isTogglingFavourite, setIsTogglingFavourite] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -150,6 +152,19 @@ const ProductDetail = () => {
       cancelled = true;
     };
   }, [id]);
+
+  const refreshProduct = async () => {
+    if (!id) return;
+
+    try {
+      const data = await productService.getById(id);
+      setProduct(data);
+    } catch (err) {
+      const axiosError = err as AxiosError<ApiError>;
+      const message = axiosError.response?.data?.message || 'Failed to reload product';
+      setError(message);
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -335,8 +350,8 @@ const ProductDetail = () => {
                 )}
                 {showOwnerActions && (
                   <div className="flex items-center gap-1">
-                    <Link
-                      to={`/products/${product.id}/edit`}
+                    <button
+                      onClick={() => setIsEditModalOpen(true)}
                       className="flex-shrink-0 p-2 rounded-lg transition-colors text-text-muted hover:text-orange"
                       aria-label="Edit product"
                     >
@@ -353,7 +368,7 @@ const ProductDetail = () => {
                           d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
                         />
                       </svg>
-                    </Link>
+                    </button>
                     <button
                       onClick={() => setShowDeleteDialog(true)}
                       aria-label="Delete product"
@@ -483,6 +498,22 @@ const ProductDetail = () => {
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteDialog(false)}
         isLoading={isDeleting}
+      />
+
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        productId={product.id}
+        productData={{
+          title: product.title,
+          description: product.description,
+          price: product.price,
+          category: product.category,
+          condition: product.condition,
+          images: product.images,
+          sellerId: product.sellerId,
+        }}
+        onSuccess={refreshProduct}
       />
     </div>
   );

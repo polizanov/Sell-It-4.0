@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router';
 import { http, HttpResponse } from 'msw';
 import ProductDetail from '../../src/pages/ProductDetail';
@@ -8,6 +9,15 @@ import { useAuthStore } from '../../src/store/authStore';
 import { useFavouritesStore } from '../../src/store/favouritesStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
+// Reusable categories handler for edit modal
+const categoriesHandler = http.get(`${API_BASE}/products/categories`, () => {
+  return HttpResponse.json({
+    success: true,
+    message: 'Categories retrieved',
+    data: ['Books', 'Clothing', 'Electronics', 'Home & Garden', 'Sports'],
+  });
+});
 
 /**
  * Renders ProductDetail inside a MemoryRouter configured with the /products/:id route.
@@ -34,6 +44,10 @@ describe('ProductDetail Page', () => {
       isLoading: false,
     });
     useFavouritesStore.setState({ favouriteIds: new Set<string>(), isLoaded: false });
+
+    // Mock URL.createObjectURL and revokeObjectURL for image handling in modal
+    global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
+    global.URL.revokeObjectURL = vi.fn();
   });
 
   it('renders product details after successful fetch', async () => {
@@ -171,9 +185,9 @@ describe('ProductDetail Page', () => {
   });
 
   // --------------------------------------------------------------------------
-  // Edit Product Button Tests
+  // Edit Product Modal Tests
   // --------------------------------------------------------------------------
-  describe('Edit Product button', () => {
+  describe('Edit Product Modal', () => {
     const editProductData = {
       id: '507f1f77bcf86cd799439011',
       title: 'Test Edit Button Product',
@@ -188,6 +202,7 @@ describe('ProductDetail Page', () => {
 
     beforeEach(() => {
       server.use(
+        categoriesHandler,
         http.get(`${API_BASE}/products/:id`, () => {
           return HttpResponse.json({
             success: true,
@@ -198,7 +213,7 @@ describe('ProductDetail Page', () => {
       );
     });
 
-    it('shows "Edit Product" button for product owner', async () => {
+    it('shows edit button for product owner', async () => {
       useAuthStore.setState({
         user: {
           id: 'seller-001',
@@ -216,12 +231,11 @@ describe('ProductDetail Page', () => {
         expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
       });
 
-      const editLink = screen.getByLabelText('Edit product');
-      expect(editLink).toBeInTheDocument();
-      expect(editLink).toHaveAttribute('href', '/products/507f1f77bcf86cd799439011/edit');
+      const editButton = screen.getByLabelText('Edit product');
+      expect(editButton).toBeInTheDocument();
     });
 
-    it('hides "Edit Product" button for non-owner', async () => {
+    it('hides edit button for non-owner', async () => {
       useAuthStore.setState({
         user: {
           id: 'different-user',
@@ -242,9 +256,7 @@ describe('ProductDetail Page', () => {
       expect(screen.queryByLabelText('Edit product')).not.toBeInTheDocument();
     });
 
-    it('hides "Edit Product" button for unauthenticated user', async () => {
-      // Auth store is already cleared in beforeEach
-
+    it('hides edit button for unauthenticated user', async () => {
       renderProductDetail('507f1f77bcf86cd799439011');
 
       await waitFor(() => {
@@ -252,6 +264,217 @@ describe('ProductDetail Page', () => {
       });
 
       expect(screen.queryByLabelText('Edit product')).not.toBeInTheDocument();
+    });
+
+    it('opens modal when edit button clicked', async () => {
+      const user = userEvent.setup();
+      useAuthStore.setState({
+        user: {
+          id: 'seller-001',
+          name: 'John Smith',
+          username: 'johnsmith',
+          email: 'john@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
+      });
+
+      const editButton = screen.getByLabelText('Edit product');
+      await user.click(editButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+        expect(screen.getByText('Edit Product')).toBeInTheDocument();
+      });
+    });
+
+    it('modal receives correct product data', async () => {
+      const user = userEvent.setup();
+      useAuthStore.setState({
+        user: {
+          id: 'seller-001',
+          name: 'John Smith',
+          username: 'johnsmith',
+          email: 'john@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
+      });
+
+      const editButton = screen.getByLabelText('Edit product');
+      await user.click(editButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      // Verify form is pre-populated with product data
+      const titleInput = screen.getByLabelText(/product title/i) as HTMLInputElement;
+      expect(titleInput.value).toBe('Test Edit Button Product');
+
+      const descriptionInput = screen.getByPlaceholderText(
+        /describe your product/i,
+      ) as HTMLTextAreaElement;
+      expect(descriptionInput.value).toBe('A product to test the edit button visibility.');
+
+      const priceInput = screen.getByLabelText(/price/i) as HTMLInputElement;
+      expect(priceInput.value).toBe('149.99');
+    });
+
+    it('closes modal when cancel clicked', async () => {
+      const user = userEvent.setup();
+      useAuthStore.setState({
+        user: {
+          id: 'seller-001',
+          name: 'John Smith',
+          username: 'johnsmith',
+          email: 'john@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
+      });
+
+      const editButton = screen.getByLabelText('Edit product');
+      await user.click(editButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      await user.click(cancelButton);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+    });
+
+    it('refreshes product after successful edit', async () => {
+      const user = userEvent.setup();
+      localStorage.setItem('token', 'mock-jwt-token');
+
+      useAuthStore.setState({
+        user: {
+          id: 'seller-001',
+          name: 'John Smith',
+          username: 'johnsmith',
+          email: 'john@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      let fetchCount = 0;
+      server.use(
+        categoriesHandler,
+        http.get(`${API_BASE}/products/:id`, () => {
+          fetchCount++;
+          return HttpResponse.json({
+            success: true,
+            message: 'Product retrieved successfully',
+            data: {
+              ...editProductData,
+              title: fetchCount === 1 ? 'Test Edit Button Product' : 'Updated Product Title',
+            },
+          });
+        }),
+        http.put(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'Product updated successfully',
+            data: { ...editProductData, title: 'Updated Product Title' },
+          });
+        }),
+      );
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
+      });
+
+      const editButton = screen.getByLabelText('Edit product');
+      await user.click(editButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      const submitButton = screen.getByRole('button', { name: /save changes/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      }, { timeout: 3000 });
+
+      // Product should be refreshed with new data
+      await waitFor(() => {
+        expect(screen.getByText('Updated Product Title')).toBeInTheDocument();
+      }, { timeout: 3000 });
+    });
+
+    it('closes modal and refreshes on successful edit', async () => {
+      const user = userEvent.setup();
+      localStorage.setItem('token', 'mock-jwt-token');
+
+      useAuthStore.setState({
+        user: {
+          id: 'seller-001',
+          name: 'John Smith',
+          username: 'johnsmith',
+          email: 'john@test.com',
+        },
+        isAuthenticated: true,
+        isLoading: false,
+      });
+
+      server.use(
+        http.put(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'Product updated successfully',
+            data: editProductData,
+          });
+        }),
+      );
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Edit Button Product')).toBeInTheDocument();
+      });
+
+      const editButton = screen.getByLabelText('Edit product');
+      await user.click(editButton);
+
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      const submitButton = screen.getByRole('button', { name: /save changes/i });
+      await user.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
     });
   });
 

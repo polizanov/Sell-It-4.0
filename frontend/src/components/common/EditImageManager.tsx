@@ -7,6 +7,7 @@ interface EditImageManagerProps {
   onNewImagesChange: (images: File[]) => void;
   maxImages?: number;
   error?: string;
+  variant?: 'dark' | 'light';
 }
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -18,6 +19,7 @@ export const EditImageManager = ({
   onNewImagesChange,
   maxImages = 5,
   error,
+  variant = 'dark',
 }: EditImageManagerProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,12 +86,28 @@ export const EditImageManager = ({
 
   const totalImages = existingImages.length + newImages.length;
 
+  const labelClasses = variant === 'light'
+    ? 'block text-sm font-medium text-gray-700 mb-2'
+    : 'block text-sm font-medium text-text-secondary mb-2';
+
+  const imageContainerClasses = variant === 'light'
+    ? 'relative aspect-square rounded-lg overflow-hidden border border-gray-300 bg-gray-50 group'
+    : 'relative aspect-square rounded-lg overflow-hidden border border-dark-border bg-dark-elevated group';
+
+  const removeButtonClasses = variant === 'light'
+    ? 'absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-full bg-white/90 text-gray-700 hover:bg-red-600 hover:text-white transition-colors duration-200'
+    : 'absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-full bg-dark-bg/80 text-text-primary hover:bg-red-600 hover:text-white transition-colors duration-200';
+
+  const addButtonClasses = variant === 'light'
+    ? 'aspect-square rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-orange hover:bg-white transition-all duration-200 flex flex-col items-center justify-center gap-2 text-gray-400 hover:text-orange cursor-pointer'
+    : 'aspect-square rounded-lg border-2 border-dashed border-dark-border bg-dark-elevated hover:border-orange hover:bg-dark-surface transition-all duration-200 flex flex-col items-center justify-center gap-2 text-text-muted hover:text-orange cursor-pointer';
+
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-text-secondary mb-2">
+      <label className={labelClasses}>
         Product Images
         <span className="text-orange ml-1">*</span>
-        <span className="text-text-muted ml-2 font-normal">(max {maxImages})</span>
+        <span className={variant === 'light' ? 'text-gray-400 ml-2 font-normal' : 'text-text-muted ml-2 font-normal'}>(max {maxImages})</span>
       </label>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -97,7 +115,7 @@ export const EditImageManager = ({
         {existingImages.map((url, index) => (
           <div
             key={`existing-${index}`}
-            className="relative aspect-square rounded-lg overflow-hidden border border-dark-border bg-dark-elevated group"
+            className={imageContainerClasses}
           >
             <img
               src={url}
@@ -107,7 +125,7 @@ export const EditImageManager = ({
             <button
               type="button"
               onClick={() => removeExistingImage(index)}
-              className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-full bg-dark-bg/80 text-text-primary hover:bg-red-600 hover:text-white transition-colors duration-200"
+              className={removeButtonClasses}
               aria-label={`Remove existing image ${index + 1}`}
             >
               <svg
@@ -126,7 +144,7 @@ export const EditImageManager = ({
         {newImages.map((image, index) => (
           <div
             key={`new-${image.name}-${image.size}-${index}`}
-            className="relative aspect-square rounded-lg overflow-hidden border border-dark-border bg-dark-elevated group"
+            className={imageContainerClasses}
           >
             <img
               src={objectUrls[index]}
@@ -136,7 +154,7 @@ export const EditImageManager = ({
             <button
               type="button"
               onClick={() => removeNewImage(index)}
-              className="absolute top-1 right-1 w-6 h-6 flex items-center justify-center rounded-full bg-dark-bg/80 text-text-primary hover:bg-red-600 hover:text-white transition-colors duration-200"
+              className={removeButtonClasses}
               aria-label={`Remove new image ${index + 1}`}
             >
               <svg
@@ -156,7 +174,7 @@ export const EditImageManager = ({
           <button
             type="button"
             onClick={handleAddClick}
-            className="aspect-square rounded-lg border-2 border-dashed border-dark-border bg-dark-elevated hover:border-orange hover:bg-dark-surface transition-all duration-200 flex flex-col items-center justify-center gap-2 text-text-muted hover:text-orange cursor-pointer"
+            className={addButtonClasses}
             aria-label="Add image"
           >
             <svg
