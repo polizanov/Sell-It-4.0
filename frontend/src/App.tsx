@@ -4,13 +4,13 @@ import { Navigation, Footer } from './components/layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { VerifiedRoute } from './components/auth/VerifiedRoute';
 import { VerificationBanner } from './components/common/VerificationBanner';
+import { CreateProductFAB } from './components/common/CreateProductFAB';
 import { useAuthStore } from './store/authStore';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 import MyProfile from './pages/MyProfile';
-import CreateProduct from './pages/CreateProduct';
 import ProductDetail from './pages/ProductDetail';
 import UserProfile from './pages/UserProfile';
 import MyFavourites from './pages/MyFavourites';
@@ -50,14 +50,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/create-product"
-            element={
-              <VerifiedRoute>
-                <CreateProduct />
-              </VerifiedRoute>
-            }
-          />
+          <Route path="/create-product" element={<Navigate to="/" replace />} />
           <Route
             path="/favourites"
             element={
@@ -68,6 +61,7 @@ function App() {
           />
         </Routes>
         <Footer />
+        <CreateProductFAB />
       </div>
     </BrowserRouter>
   );

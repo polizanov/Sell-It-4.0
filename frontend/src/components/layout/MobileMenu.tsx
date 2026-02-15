@@ -88,11 +88,6 @@ export const MobileMenu = () => {
           <nav className="flex-1 overflow-y-auto py-6">
             {isAuthenticated ? (
               <>
-                {user?.isVerified !== false && (
-                  <Link to="/create-product" className={linkStyles('/create-product')} onClick={closeMenu}>
-                    Create Product
-                  </Link>
-                )}
                 <Link to="/profile" className={linkStyles('/profile')} onClick={closeMenu}>
                   My Profile
                 </Link>

@@ -32,11 +32,6 @@ export const Navbar = () => {
         <div className="flex items-center gap-2">
           {isAuthenticated ? (
             <>
-              {user?.isVerified !== false && (
-                <Link to="/create-product" className={linkStyles('/create-product')}>
-                  Create Product
-                </Link>
-              )}
               <Link to="/profile" className={linkStyles('/profile')}>
                 My Profile
               </Link>

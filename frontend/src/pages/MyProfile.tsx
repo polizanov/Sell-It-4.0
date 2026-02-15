@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Link } from 'react-router';
 import { useAuthStore } from '../store/authStore';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/common/Card';
@@ -158,22 +157,13 @@ const MyProfile = () => {
 
         {/* User Products Section */}
         <div>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-text-primary mb-1">
-                My Products
-              </h2>
-              <p className="text-text-secondary">
-                {productCount} {productCount === 1 ? 'listing' : 'listings'}
-              </p>
-            </div>
-            {user?.isVerified !== false && (
-              <Link to="/create-product">
-                <Button variant="primary" size="md">
-                  Create New Product
-                </Button>
-              </Link>
-            )}
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-text-primary mb-1">
+              My Products
+            </h2>
+            <p className="text-text-secondary">
+              {productCount} {productCount === 1 ? 'listing' : 'listings'}
+            </p>
           </div>
 
           {/* Error State */}
@@ -206,22 +196,11 @@ const MyProfile = () => {
                 <h3 className="text-xl font-semibold text-text-secondary mb-2">
                   No Products Yet
                 </h3>
-                {user?.isVerified === false ? (
-                  <p className="text-text-muted mb-6">
-                    Verify your email to start listing products.
-                  </p>
-                ) : (
-                  <>
-                    <p className="text-text-muted mb-6">
-                      You haven't listed any products. Start selling today!
-                    </p>
-                    <Link to="/create-product">
-                      <Button variant="primary" size="md">
-                        Create Your First Product
-                      </Button>
-                    </Link>
-                  </>
-                )}
+                <p className="text-text-muted">
+                  {user?.isVerified === false
+                    ? 'Verify your email to start listing products.'
+                    : "You haven't listed any products yet. Use the floating button to create your first listing!"}
+                </p>
               </div>
             </Card>
           )}

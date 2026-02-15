@@ -6,6 +6,7 @@ interface CategoryAutocompleteProps {
   onChange: (value: string) => void;
   error?: string;
   required?: boolean;
+  variant?: 'dark' | 'light';
 }
 
 export const CategoryAutocomplete = ({
@@ -13,6 +14,7 @@ export const CategoryAutocomplete = ({
   onChange,
   error,
   required,
+  variant = 'dark',
 }: CategoryAutocompleteProps) => {
   const [categories, setCategories] = useState<string[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -100,11 +102,42 @@ export const CategoryAutocomplete = ({
     }
   }, [highlightedIndex]);
 
+  const labelClasses = variant === 'light'
+    ? 'block text-sm font-medium text-gray-700 mb-2'
+    : 'block text-sm font-medium text-text-secondary mb-2';
+
+  const inputClasses = variant === 'light'
+    ? `w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent transition-all duration-200 ${
+        error ? 'border-red-500 focus:ring-red-500' : ''
+      }`
+    : `w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent transition-all duration-200 ${
+        error ? 'border-red-500 focus:ring-red-500' : ''
+      }`;
+
+  const listboxClasses = variant === 'light'
+    ? 'absolute z-10 w-full mt-1 max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg'
+    : 'absolute z-10 w-full mt-1 max-h-48 overflow-y-auto bg-dark-elevated border border-dark-border rounded-lg shadow-lg';
+
+  const listItemClasses = (isHighlighted: boolean) => {
+    if (variant === 'light') {
+      return `px-4 py-2 cursor-pointer text-gray-900 transition-colors duration-100 ${
+        isHighlighted
+          ? 'bg-orange/20 text-orange'
+          : 'hover:bg-gray-100'
+      }`;
+    }
+    return `px-4 py-2 cursor-pointer text-text-primary transition-colors duration-100 ${
+      isHighlighted
+        ? 'bg-orange/20 text-orange'
+        : 'hover:bg-dark-surface'
+    }`;
+  };
+
   return (
     <div className="w-full relative">
       <label
         htmlFor="category"
-        className="block text-sm font-medium text-text-secondary mb-2"
+        className={labelClasses}
       >
         Category
         {required && <span className="text-orange ml-1">*</span>}
@@ -113,9 +146,7 @@ export const CategoryAutocomplete = ({
         ref={inputRef}
         id="category"
         type="text"
-        className={`w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent transition-all duration-200 ${
-          error ? 'border-red-500 focus:ring-red-500' : ''
-        }`}
+        className={inputClasses}
         placeholder="Search or enter a category"
         value={value}
         onChange={(e) => {
@@ -137,18 +168,14 @@ export const CategoryAutocomplete = ({
           ref={listRef}
           id="category-listbox"
           role="listbox"
-          className="absolute z-10 w-full mt-1 max-h-48 overflow-y-auto bg-dark-elevated border border-dark-border rounded-lg shadow-lg"
+          className={listboxClasses}
         >
           {filtered.map((category, index) => (
             <li
               key={category}
               role="option"
               aria-selected={index === highlightedIndex}
-              className={`px-4 py-2 cursor-pointer text-text-primary transition-colors duration-100 ${
-                index === highlightedIndex
-                  ? 'bg-orange/20 text-orange'
-                  : 'hover:bg-dark-surface'
-              }`}
+              className={listItemClasses(index === highlightedIndex)}
               onMouseDown={() => selectCategory(category)}
             >
               {category}

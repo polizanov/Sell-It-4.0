@@ -52,6 +52,7 @@ export default {
         'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
         'scale-in': 'scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'fadeIn': 'fadeIn 200ms ease-out',
       },
       keyframes: {
         fadeInUp: {
@@ -77,9 +78,21 @@ export default {
             opacity: '1'
           },
         },
+        fadeIn: {
+          '0%': {
+            opacity: '0'
+          },
+          '100%': {
+            opacity: '1'
+          },
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+      },
+      boxShadow: {
+        'fab': '0 8px 24px rgba(255, 87, 34, 0.35), 0 4px 8px rgba(0, 0, 0, 0.25)',
+        'fab-hover': '0 12px 32px rgba(255, 87, 34, 0.5), 0 6px 12px rgba(0, 0, 0, 0.3)',
       },
     },
   },
