@@ -91,14 +91,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen relative bg-white">
+    <section className="min-h-screen relative bg-white overflow-hidden">
       <MouseFollowGradient
-        activationMode="hover"
+        activationMode="always"
         gradientColor="rgba(255, 87, 34, 0.08)"
         gradientSize={70}
         disableOnMobile={true}
       >
-        <PageContainer className="relative z-10">
+        <PageContainer className="py-20 md:py-32 relative z-10">
           <div className="max-w-md mx-auto">
             <div className="text-center mb-8">
               <div className="w-20 h-20 bg-gradient-icon-glow rounded-full flex items-center justify-center mx-auto mb-6">
@@ -167,7 +167,7 @@ const Login = () => {
           </div>
         </PageContainer>
       </MouseFollowGradient>
-    </div>
+    </section>
   );
 };
 

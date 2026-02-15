@@ -345,10 +345,10 @@ describe('Home Page — Product Listing', () => {
     const productSection = container.querySelector('.bg-dark-bg');
     expect(productSection).toBeInTheDocument();
 
-    // The product section gradient should be in hover mode (initially opacity: 0)
+    // The product section gradient should be in always mode (initially opacity: 1)
     const productGradientOverlay = productSection?.querySelector('.pointer-events-none') as HTMLElement;
     expect(productGradientOverlay).toBeTruthy();
-    expect(productGradientOverlay?.style.opacity).toBe('0');
+    expect(productGradientOverlay?.style.opacity).toBe('1');
   });
 
   it('hides hero and features sections for authenticated users', async () => {

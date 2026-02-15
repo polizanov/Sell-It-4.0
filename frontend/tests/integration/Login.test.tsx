@@ -292,9 +292,9 @@ describe('Login Page', () => {
     expect(gradientOverlay).toHaveClass('inset-0');
     expect(gradientOverlay).toHaveClass('transition-opacity');
 
-    // Gradient should be in hover mode (initially opacity: 0)
+    // Gradient should be in always mode (initially opacity: 1)
     const overlay = gradientOverlay as HTMLElement;
-    expect(overlay?.style.opacity).toBe('0');
+    expect(overlay?.style.opacity).toBe('1');
   });
 
   it('renders gradient design enhancements', () => {
