@@ -11,7 +11,6 @@ import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 import MyProfile from './pages/MyProfile';
 import CreateProduct from './pages/CreateProduct';
-import AllProducts from './pages/AllProducts';
 import ProductDetail from './pages/ProductDetail';
 import UserProfile from './pages/UserProfile';
 import MyFavourites from './pages/MyFavourites';

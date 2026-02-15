@@ -1,0 +1,1 @@
+❯ Authentication accses. Users who are not verified should be able to log in but they will have limited options. They will not be able to create, edit, delete products and they will not be able to add it to favourites as well. They should see verify message in the homepage, profile page and if they try to do something whitch they do not have acces   

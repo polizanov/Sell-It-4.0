@@ -93,15 +93,22 @@ const Login = () => {
     <PageContainer>
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-text-primary mb-2">
+          <div className="w-20 h-20 bg-gradient-icon-glow rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+          </div>
+          <h1 className="text-4xl font-bold text-text-primary mb-3">
             Welcome Back
           </h1>
-          <p className="text-text-secondary">
+          <p className="text-text-secondary text-lg">
             Login to your Sell-It account
           </p>
         </div>
 
-        <Card>
+        <div className="relative">
+          <div className="absolute -inset-0.5 bg-gradient-form-glow rounded-2xl blur-xl opacity-30"></div>
+          <Card className="relative bg-dark-surface backdrop-blur-sm border-2 border-dark-border hover:border-orange/30 transition-all duration-500">
           <form onSubmit={handleSubmit} className="space-y-6">
             {errors.general && (
               <div className="bg-red-500/10 border border-red-500 rounded-lg p-4 text-red-500 text-sm">
@@ -129,7 +136,15 @@ const Login = () => {
               required
             />
 
-            <Button type="submit" variant="primary" size="md" fullWidth disabled={isSubmitting}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              fullWidth
+              gradient={true}
+              disabled={isSubmitting}
+              className="shadow-xl shadow-orange/40 hover:shadow-2xl hover:shadow-orange/50 transition-shadow duration-300"
+            >
               {isSubmitting ? 'Logging in...' : 'Login'}
             </Button>
           </form>
@@ -142,7 +157,8 @@ const Login = () => {
               </Link>
             </p>
           </div>
-        </Card>
+          </Card>
+        </div>
       </div>
     </PageContainer>
   );

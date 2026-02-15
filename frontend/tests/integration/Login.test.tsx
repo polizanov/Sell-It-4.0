@@ -277,4 +277,32 @@ describe('Login Page', () => {
       ).toBeInTheDocument();
     });
   });
+
+  it('renders gradient design enhancements', () => {
+    const { container } = renderLogin();
+
+    // Verify icon container with gradient glow is present
+    const iconGlowElements = container.querySelectorAll('.bg-gradient-icon-glow');
+    expect(iconGlowElements.length).toBeGreaterThan(0);
+
+    // Verify form card has gradient glow effect
+    const formGlowElements = container.querySelectorAll('.bg-gradient-form-glow');
+    expect(formGlowElements.length).toBeGreaterThan(0);
+
+    // Verify submit button has gradient and shadow classes
+    const submitButton = screen.getByRole('button', { name: /login/i });
+    expect(submitButton.className).toContain('shadow-xl');
+    expect(submitButton.className).toContain('shadow-orange');
+  });
+
+  it('login button has gradient styling when rendered', () => {
+    const { container } = renderLogin();
+
+    const submitButton = screen.getByRole('button', { name: /login/i });
+
+    // Verify gradient classes are applied
+    expect(submitButton.className).toContain('bg-gradient-cta');
+    expect(submitButton.className).toContain('shadow-xl');
+    expect(submitButton.className).toContain('shadow-orange/40');
+  });
 });

@@ -1,0 +1,1 @@
+All content in 'All products'  page should be moved in homepage. Hero section should be showm only for non authenticated users. So because of the infinity scroll the content of the footer section will be moved under hero section, and it will be visible only for non authenticated users.

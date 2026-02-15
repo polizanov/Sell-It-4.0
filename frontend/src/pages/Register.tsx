@@ -115,22 +115,34 @@ const Register = () => {
     return (
       <PageContainer>
         <div className="max-w-md mx-auto">
-          <Card>
-            <div className="text-center py-4">
-              <h1 className="text-3xl font-bold text-text-primary mb-4">
-                Check Your Email
-              </h1>
-              <p className="text-text-secondary mb-8">
-                We've sent a verification link to your email. Please check your inbox and click the link to verify your account.
-              </p>
-              <Link
-                to="/login"
-                className="inline-block bg-orange text-white hover:bg-orange-hover font-medium px-6 py-3 rounded-lg transition-colors"
-              >
-                Go to Login
-              </Link>
-            </div>
-          </Card>
+          <div className="relative">
+            {/* Animated success glow background */}
+            <div className="absolute -inset-8 bg-gradient-success-glow rounded-3xl blur-3xl opacity-40 animate-pulse-slow"></div>
+
+            <Card className="relative bg-dark-surface backdrop-blur-sm border-2 border-green-500/30">
+              <div className="text-center py-8">
+                {/* Success Icon with scale-in animation */}
+                <div className="w-24 h-24 bg-gradient-success-icon rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-green-500/50 animate-scale-in">
+                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+
+                <h1 className="text-4xl font-bold text-text-primary mb-4">
+                  Check Your Email
+                </h1>
+                <p className="text-text-secondary text-lg mb-8 leading-relaxed">
+                  We've sent a verification link to your email. Please check your inbox and click the link to verify your account.
+                </p>
+                <Link
+                  to="/login"
+                  className="inline-block bg-gradient-cta hover:bg-gradient-cta-hover text-white font-medium px-8 py-4 rounded-lg transition-all duration-300 shadow-xl shadow-orange/40 hover:shadow-2xl hover:shadow-orange/50"
+                >
+                  Go to Login
+                </Link>
+              </div>
+            </Card>
+          </div>
         </div>
       </PageContainer>
     );
@@ -140,15 +152,22 @@ const Register = () => {
     <PageContainer>
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-text-primary mb-2">
+          <div className="w-20 h-20 bg-gradient-icon-glow rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+          </div>
+          <h1 className="text-4xl font-bold text-text-primary mb-3">
             Create Account
           </h1>
-          <p className="text-text-secondary">
+          <p className="text-text-secondary text-lg">
             Join Sell-It and start trading today
           </p>
         </div>
 
-        <Card>
+        <div className="relative">
+          <div className="absolute -inset-0.5 bg-gradient-form-glow rounded-2xl blur-xl opacity-30"></div>
+          <Card className="relative bg-dark-surface backdrop-blur-sm border-2 border-dark-border hover:border-orange/30 transition-all duration-500">
           <form onSubmit={handleSubmit} className="space-y-6">
             {errors.general && (
               <div className="bg-red-500/10 border border-red-500 rounded-lg p-4 text-red-500 text-sm">
@@ -206,7 +225,15 @@ const Register = () => {
               required
             />
 
-            <Button type="submit" variant="primary" size="md" fullWidth disabled={isSubmitting}>
+            <Button
+              type="submit"
+              variant="primary"
+              size="md"
+              fullWidth
+              gradient={true}
+              disabled={isSubmitting}
+              className="shadow-xl shadow-orange/40 hover:shadow-2xl hover:shadow-orange/50 transition-shadow duration-300"
+            >
               {isSubmitting ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
@@ -219,7 +246,8 @@ const Register = () => {
               </Link>
             </p>
           </div>
-        </Card>
+          </Card>
+        </div>
       </div>
     </PageContainer>
   );

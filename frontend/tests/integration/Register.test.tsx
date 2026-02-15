@@ -379,4 +379,88 @@ describe('Register Page', () => {
       ).toBeInTheDocument();
     });
   });
+
+  it('renders gradient design enhancements on registration form', () => {
+    const { container } = renderRegister();
+
+    // Verify icon container with gradient glow is present
+    const iconGlowElements = container.querySelectorAll('.bg-gradient-icon-glow');
+    expect(iconGlowElements.length).toBeGreaterThan(0);
+
+    // Verify form card has gradient glow effect
+    const formGlowElements = container.querySelectorAll('.bg-gradient-form-glow');
+    expect(formGlowElements.length).toBeGreaterThan(0);
+
+    // Verify submit button has gradient and shadow classes
+    const submitButton = screen.getByRole('button', { name: /create account/i });
+    expect(submitButton.className).toContain('shadow-xl');
+    expect(submitButton.className).toContain('shadow-orange');
+  });
+
+  it('success state displays gradient enhancements', async () => {
+    const user = userEvent.setup();
+
+    server.use(
+      http.post(`${API_BASE}/auth/register`, () => {
+        return HttpResponse.json(
+          {
+            success: true,
+            message: 'Registration successful.',
+            data: {
+              id: '1',
+              name: 'Test User',
+              username: 'testuser',
+              email: 'newuser@example.com',
+            },
+          },
+          { status: 201 },
+        );
+      }),
+    );
+
+    const { container } = renderRegister();
+
+    await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(
+      screen.getByLabelText(/email address/i),
+      'newuser@example.com',
+    );
+    await user.type(
+      screen.getByPlaceholderText('At least 6 characters'),
+      'password123',
+    );
+    await user.type(
+      screen.getByPlaceholderText('Re-enter your password'),
+      'password123',
+    );
+
+    const submitButton = screen.getByRole('button', {
+      name: /create account/i,
+    });
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /check your email/i }),
+      ).toBeInTheDocument();
+    });
+
+    // Verify success gradient glow background is present
+    const successGlowElements = container.querySelectorAll('.bg-gradient-success-glow');
+    expect(successGlowElements.length).toBeGreaterThan(0);
+
+    // Verify success icon with gradient background
+    const successIconElements = container.querySelectorAll('.bg-gradient-success-icon');
+    expect(successIconElements.length).toBeGreaterThan(0);
+
+    // Verify scale-in animation class is present
+    const scaleInElements = container.querySelectorAll('.animate-scale-in');
+    expect(scaleInElements.length).toBeGreaterThan(0);
+
+    // Verify "Go to Login" button has gradient styling
+    const loginButton = screen.getByRole('link', { name: /go to login/i });
+    expect(loginButton.className).toContain('bg-gradient-cta');
+    expect(loginButton.className).toContain('shadow-xl');
+  });
 });

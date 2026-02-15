@@ -195,4 +195,122 @@ describe('Home Page — Product Listing', () => {
     // The hero section should still be visible for non-authenticated users
     expect(screen.getByText('Browse Products')).toBeInTheDocument();
   });
+
+  it('renders features section with gradient styles for non-authenticated users', async () => {
+    server.use(
+      http.get(`${API_BASE}/products`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Products retrieved successfully',
+          data: {
+            products: featuredProducts,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalProducts: 4,
+              limit: 12,
+              hasMore: false,
+            },
+          },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+        });
+      }),
+    );
+
+    const { container } = renderHome();
+
+    // Wait for page to fully render
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    // Verify "Why Choose Sell-It" section header is present
+    expect(screen.getByText('Why Choose Sell-It')).toBeInTheDocument();
+
+    // Verify all three feature cards are present
+    expect(screen.getByText('Easy to Sell')).toBeInTheDocument();
+    expect(screen.getByText('Secure Trading')).toBeInTheDocument();
+    expect(screen.getByText('Growing Community')).toBeInTheDocument();
+
+    // Verify feature card descriptions
+    expect(screen.getByText('List your items in minutes and reach buyers instantly')).toBeInTheDocument();
+    expect(screen.getByText('Safe and secure platform for all your transactions')).toBeInTheDocument();
+    expect(screen.getByText('Join thousands of buyers and sellers today')).toBeInTheDocument();
+
+    // Verify gradient classes are applied to feature cards
+    const gradientCard1 = container.querySelector('.bg-gradient-feature-glow-1');
+    const gradientCard2 = container.querySelector('.bg-gradient-feature-glow-2');
+    const gradientCard3 = container.querySelector('.bg-gradient-feature-glow-3');
+    expect(gradientCard1).toBeInTheDocument();
+    expect(gradientCard2).toBeInTheDocument();
+    expect(gradientCard3).toBeInTheDocument();
+
+    // Verify icon containers with gradient backgrounds exist
+    const iconGlowElements = container.querySelectorAll('.bg-gradient-icon-glow');
+    expect(iconGlowElements.length).toBeGreaterThanOrEqual(3);
+
+    // Verify animation classes are applied
+    const fadeInUpElements = container.querySelectorAll('.animate-fade-in-up');
+    expect(fadeInUpElements.length).toBe(3); // Three feature cards
+  });
+
+  it('hides hero and features sections for authenticated users', async () => {
+    useAuthStore.setState({
+      user: { id: '1', name: 'Test User', username: 'testuser', email: 'test@example.com', isVerified: true },
+      token: 'mock-token',
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    server.use(
+      http.get(`${API_BASE}/products`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Products retrieved successfully',
+          data: {
+            products: featuredProducts,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalProducts: 4,
+              limit: 12,
+              hasMore: false,
+            },
+          },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+        });
+      }),
+    );
+
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    // Hero section should NOT be present for authenticated users
+    expect(screen.queryByText('Browse Products')).not.toBeInTheDocument();
+    expect(screen.queryByText('Start Selling')).not.toBeInTheDocument();
+
+    // Features section should NOT be present for authenticated users
+    expect(screen.queryByText('Why Choose Sell-It')).not.toBeInTheDocument();
+    expect(screen.queryByText('Easy to Sell')).not.toBeInTheDocument();
+    expect(screen.queryByText('Secure Trading')).not.toBeInTheDocument();
+    expect(screen.queryByText('Growing Community')).not.toBeInTheDocument();
+
+    // Product listing should still be visible
+    expect(screen.getByText('All Products')).toBeInTheDocument();
+  });
 });

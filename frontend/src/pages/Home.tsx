@@ -182,40 +182,74 @@ const Home = () => {
 
       {/* Features Section - NON-AUTHENTICATED ONLY */}
       {!isAuthenticated && (
-        <section className="bg-dark-surface border-t border-dark-border">
-        <PageContainer className="py-16">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-orange/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2">Easy to Sell</h3>
-              <p className="text-text-secondary">List your items in minutes and reach buyers instantly</p>
+        <section className="bg-dark-surface border-t border-dark-border relative overflow-hidden">
+          <PageContainer className="py-20">
+            {/* Section Header */}
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-text-primary mb-4">
+                Why Choose Sell-It
+              </h2>
+              <div className="h-1 w-24 bg-gradient-cta mx-auto rounded-full"></div>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 bg-orange/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
+            {/* Staggered Feature Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {/* Card 1 - Easy to Sell */}
+              <div
+                className="group relative bg-gradient-feature-glow-1 border border-dark-border rounded-2xl p-8 text-center transition-all duration-500 hover:-translate-y-2 hover:border-orange/40 hover:shadow-2xl hover:shadow-orange/20 animate-fade-in-up"
+                style={{ animationDelay: '0ms' }}
+              >
+                <div className="relative z-10">
+                  <div className="w-20 h-20 bg-gradient-icon-glow rounded-full flex items-center justify-center mx-auto mb-6 transition-transform duration-500 group-hover:scale-110">
+                    <svg className="w-10 h-10 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-semibold text-text-primary mb-3">Easy to Sell</h3>
+                  <p className="text-text-secondary leading-relaxed">List your items in minutes and reach buyers instantly</p>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2">Secure Trading</h3>
-              <p className="text-text-secondary">Safe and secure platform for all your transactions</p>
+
+              {/* Card 2 - Secure Trading (Elevated) */}
+              <div
+                className="group relative bg-gradient-feature-glow-2 border border-dark-border rounded-2xl p-8 text-center transition-all duration-500 hover:-translate-y-2 md:-translate-y-6 hover:border-orange/40 hover:shadow-2xl hover:shadow-orange/20 animate-fade-in-up"
+                style={{ animationDelay: '150ms' }}
+              >
+                <div className="relative z-10">
+                  <div className="w-20 h-20 bg-gradient-icon-glow rounded-full flex items-center justify-center mx-auto mb-6 transition-transform duration-500 group-hover:scale-110">
+                    <svg className="w-10 h-10 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-semibold text-text-primary mb-3">Secure Trading</h3>
+                  <p className="text-text-secondary leading-relaxed">Safe and secure platform for all your transactions</p>
+                </div>
+              </div>
+
+              {/* Card 3 - Growing Community */}
+              <div
+                className="group relative bg-gradient-feature-glow-3 border border-dark-border rounded-2xl p-8 text-center transition-all duration-500 hover:-translate-y-2 hover:border-orange/40 hover:shadow-2xl hover:shadow-orange/20 animate-fade-in-up"
+                style={{ animationDelay: '300ms' }}
+              >
+                <div className="relative z-10">
+                  <div className="w-20 h-20 bg-gradient-icon-glow rounded-full flex items-center justify-center mx-auto mb-6 transition-transform duration-500 group-hover:scale-110">
+                    <svg className="w-10 h-10 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-semibold text-text-primary mb-3">Growing Community</h3>
+                  <p className="text-text-secondary leading-relaxed">Join thousands of buyers and sellers today</p>
+                </div>
+              </div>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 bg-orange/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-text-primary mb-2">Growing Community</h3>
-              <p className="text-text-secondary">Join thousands of buyers and sellers today</p>
+            {/* Transition Element - Arrow pointing down */}
+            <div className="flex justify-center mt-16 animate-pulse-slow">
+              <svg className="w-8 h-8 text-orange/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
             </div>
-          </div>
-        </PageContainer>
+          </PageContainer>
         </section>
       )}
 
