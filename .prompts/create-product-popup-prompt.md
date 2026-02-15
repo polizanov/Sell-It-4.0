@@ -1,0 +1,1 @@
+Update Create product UI. Create product button should be at the bottom left on the page in curlce shape with + cymbol insine who will rotate in 45 deg on hover with transition. When user click it The form shold appear in popup with orange background. 

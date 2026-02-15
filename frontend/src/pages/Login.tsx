@@ -1,7 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { AxiosError } from 'axios';
-import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
@@ -98,8 +97,8 @@ const Login = () => {
         gradientSize={70}
         disableOnMobile={true}
       >
-        <PageContainer className="py-20 md:py-32 relative z-10">
-          <div className="max-w-md mx-auto">
+        <div className="min-h-screen flex items-center justify-center px-4 relative z-10">
+          <div className="w-full max-w-md pt-28 pb-8">
             <div className="text-center mb-8">
               <div className="w-20 h-20 bg-gradient-icon-glow rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg className="w-10 h-10 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +164,7 @@ const Login = () => {
               </div>
             </Card>
           </div>
-        </PageContainer>
+        </div>
       </MouseFollowGradient>
     </section>
   );
