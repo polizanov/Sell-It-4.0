@@ -89,9 +89,6 @@ export const MobileMenu = () => {
             <Link to="/" className={linkStyles('/')} onClick={closeMenu}>
               Home
             </Link>
-            <Link to="/products" className={linkStyles('/products')} onClick={closeMenu}>
-              All Products
-            </Link>
 
             {isAuthenticated ? (
               <>

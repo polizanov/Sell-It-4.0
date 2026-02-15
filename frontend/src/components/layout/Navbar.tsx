@@ -33,9 +33,6 @@ export const Navbar = () => {
           <Link to="/" className={linkStyles('/')}>
             Home
           </Link>
-          <Link to="/products" className={linkStyles('/products')}>
-            All Products
-          </Link>
 
           {isAuthenticated ? (
             <>

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { Navigation } from './components/layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { VerifiedRoute } from './components/auth/VerifiedRoute';
@@ -32,7 +32,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/products" element={<AllProducts />} />
+          <Route path="/products" element={<Navigate to="/" replace />} />
           <Route
             path="/products/:id/edit"
             element={

@@ -63,7 +63,7 @@ const renderHome = () => {
   );
 };
 
-describe('Home Page — Featured Products', () => {
+describe('Home Page — Product Listing', () => {
   beforeEach(() => {
     localStorage.clear();
     useAuthStore.setState({
@@ -74,7 +74,7 @@ describe('Home Page — Featured Products', () => {
     });
   });
 
-  it('fetches and displays featured products with limit=4 param', async () => {
+  it('fetches and displays all products with pagination', async () => {
     let capturedUrl = '';
 
     server.use(
@@ -89,17 +89,24 @@ describe('Home Page — Featured Products', () => {
               currentPage: 1,
               totalPages: 1,
               totalProducts: 4,
-              limit: 4,
+              limit: 12,
               hasMore: false,
             },
           },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
         });
       }),
     );
 
     renderHome();
 
-    // Wait for featured products to load
+    // Wait for products to load
     await waitFor(() => {
       expect(screen.getByText('Featured Camera')).toBeInTheDocument();
     });
@@ -108,13 +115,13 @@ describe('Home Page — Featured Products', () => {
     expect(screen.getByText('Featured Guitar')).toBeInTheDocument();
     expect(screen.getByText('Featured Desk Lamp')).toBeInTheDocument();
 
-    // Verify that the API was called with limit=4
+    // Verify that the API was called with pagination page
     const url = new URL(capturedUrl);
-    expect(url.searchParams.get('limit')).toBe('4');
-    expect(url.searchParams.get('sort')).toBe('newest');
+    expect(url.searchParams.get('page')).toBe('1');
+    // Note: limit is not sent explicitly, uses backend default
   });
 
-  it('shows skeleton while loading featured products', async () => {
+  it('shows skeleton while loading products', async () => {
     server.use(
       http.get(`${API_BASE}/products`, async () => {
         await new Promise((resolve) => setTimeout(resolve, 200));
@@ -127,10 +134,17 @@ describe('Home Page — Featured Products', () => {
               currentPage: 1,
               totalPages: 1,
               totalProducts: 4,
-              limit: 4,
+              limit: 12,
               hasMore: false,
             },
           },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
         });
       }),
     );
@@ -151,7 +165,7 @@ describe('Home Page — Featured Products', () => {
     expect(skeletonsAfterLoad.length).toBe(0);
   });
 
-  it('gracefully handles API error for featured products (non-critical section)', async () => {
+  it('gracefully handles API error for products', async () => {
     server.use(
       http.get(`${API_BASE}/products`, () => {
         return HttpResponse.json(
@@ -159,19 +173,26 @@ describe('Home Page — Featured Products', () => {
           { status: 500 },
         );
       }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+        });
+      }),
     );
 
     renderHome();
 
     // The page should still render without crashing
     await waitFor(() => {
-      expect(screen.getByText('Featured Products')).toBeInTheDocument();
+      expect(screen.getByText('Internal server error')).toBeInTheDocument();
     });
 
-    // The "No Products Found" message should appear since the featured array is empty
+    // The "No Products Found" message should appear since products failed to load
     expect(screen.getByText('No Products Found')).toBeInTheDocument();
 
-    // The hero section should still be visible
+    // The hero section should still be visible for non-authenticated users
     expect(screen.getByText('Browse Products')).toBeInTheDocument();
   });
 });
