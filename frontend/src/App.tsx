@@ -23,43 +23,45 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-dark-bg text-white">
+      <div className="min-h-screen flex flex-col bg-dark-bg text-white">
         <Navigation />
         <VerificationBanner />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/products" element={<Navigate to="/" replace />} />
-          <Route
-            path="/products/:id/edit"
-            element={
-              <VerifiedRoute>
-                <EditProduct />
-              </VerifiedRoute>
-            }
-          />
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/profile/:username" element={<UserProfile />} />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <MyProfile />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/create-product" element={<Navigate to="/" replace />} />
-          <Route
-            path="/favourites"
-            element={
-              <VerifiedRoute>
-                <MyFavourites />
-              </VerifiedRoute>
-            }
-          />
-        </Routes>
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/products" element={<Navigate to="/" replace />} />
+            <Route
+              path="/products/:id/edit"
+              element={
+                <VerifiedRoute>
+                  <EditProduct />
+                </VerifiedRoute>
+              }
+            />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/profile/:username" element={<UserProfile />} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <MyProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/create-product" element={<Navigate to="/" replace />} />
+            <Route
+              path="/favourites"
+              element={
+                <VerifiedRoute>
+                  <MyFavourites />
+                </VerifiedRoute>
+              }
+            />
+          </Routes>
+        </main>
         <Footer />
         <CreateProductFAB />
       </div>
