@@ -278,16 +278,31 @@ describe('Login Page', () => {
     });
   });
 
+  it('renders white background with mouse-follow gradient', () => {
+    const { container } = renderLogin();
+
+    // Verify white background is present
+    const whiteBg = container.querySelector('.bg-white');
+    expect(whiteBg).toBeInTheDocument();
+
+    // Verify MouseFollowGradient overlay is rendered
+    const gradientOverlay = container.querySelector('.pointer-events-none');
+    expect(gradientOverlay).toBeInTheDocument();
+    expect(gradientOverlay).toHaveClass('absolute');
+    expect(gradientOverlay).toHaveClass('inset-0');
+    expect(gradientOverlay).toHaveClass('transition-opacity');
+
+    // Gradient should be in hover mode (initially opacity: 0)
+    const overlay = gradientOverlay as HTMLElement;
+    expect(overlay?.style.opacity).toBe('0');
+  });
+
   it('renders gradient design enhancements', () => {
     const { container } = renderLogin();
 
     // Verify icon container with gradient glow is present
     const iconGlowElements = container.querySelectorAll('.bg-gradient-icon-glow');
     expect(iconGlowElements.length).toBeGreaterThan(0);
-
-    // Verify form card has gradient glow effect
-    const formGlowElements = container.querySelectorAll('.bg-gradient-form-glow');
-    expect(formGlowElements.length).toBeGreaterThan(0);
 
     // Verify submit button has gradient and shadow classes
     const submitButton = screen.getByRole('button', { name: /login/i });

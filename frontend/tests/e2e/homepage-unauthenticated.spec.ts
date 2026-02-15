@@ -27,8 +27,8 @@ test.describe('Homepage - Non-Authenticated Users', () => {
   test('Features section is visible with 3 benefit cards', async ({ page }) => {
     await page.goto('/');
 
-    // Verify Features section is visible
-    const featuresSection = page.locator('section.bg-dark-surface').first();
+    // Verify Features section is visible (white background with border)
+    const featuresSection = page.locator('section.bg-white.border-t.border-gray-200');
     await expect(featuresSection).toBeVisible();
 
     // Verify all 3 feature cards

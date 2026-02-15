@@ -9,12 +9,13 @@ test.describe('Auth - Registration Form Validation', () => {
     // Click submit without filling any fields
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await expect(page.getByText('Name is required')).toBeVisible();
-    await expect(page.getByText('Email is required')).toBeVisible();
-    await expect(page.getByText('Password is required')).toBeVisible();
+    // Add timeout for validation errors to appear
+    await expect(page.getByText('Name is required', { exact: true })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Email is required', { exact: true })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Password is required', { exact: true })).toBeVisible({ timeout: 5000 });
     await expect(
-      page.getByText('Please confirm your password'),
-    ).toBeVisible();
+      page.getByText('Please confirm your password', { exact: true }),
+    ).toBeVisible({ timeout: 5000 });
   });
 
   test('shows password length validation error', async ({ page }) => {
@@ -28,8 +29,8 @@ test.describe('Auth - Registration Form Validation', () => {
     await page.getByRole('button', { name: /create account/i }).click();
 
     await expect(
-      page.getByText('Password must be at least 6 characters'),
-    ).toBeVisible();
+      page.getByText('Password must be at least 6 characters', { exact: true }),
+    ).toBeVisible({ timeout: 5000 });
   });
 
   test('shows passwords do not match error', async ({ page }) => {
@@ -42,7 +43,7 @@ test.describe('Auth - Registration Form Validation', () => {
 
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await expect(page.getByText('Passwords do not match')).toBeVisible();
+    await expect(page.getByText('Passwords do not match', { exact: true })).toBeVisible({ timeout: 5000 });
   });
 });
 
@@ -54,8 +55,8 @@ test.describe('Auth - Login Form Validation', () => {
 
     await page.getByRole('button', { name: /login/i }).click();
 
-    await expect(page.getByText('Email is required')).toBeVisible();
-    await expect(page.getByText('Password is required')).toBeVisible();
+    await expect(page.getByText('Email is required', { exact: true })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText('Password is required', { exact: true })).toBeVisible({ timeout: 5000 });
   });
 
   test('shows invalid email error for malformed email', async ({ page }) => {
@@ -67,8 +68,8 @@ test.describe('Auth - Login Form Validation', () => {
     await page.getByRole('button', { name: /login/i }).click();
 
     await expect(
-      page.getByText('Please enter a valid email address'),
-    ).toBeVisible();
+      page.getByText('Please enter a valid email address', { exact: true }),
+    ).toBeVisible({ timeout: 5000 });
   });
 
   test('login with invalid credentials shows error message', async ({

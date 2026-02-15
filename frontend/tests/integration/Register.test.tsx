@@ -380,6 +380,25 @@ describe('Register Page', () => {
     });
   });
 
+  it('renders white background with mouse-follow gradient on registration form', () => {
+    const { container } = renderRegister();
+
+    // Verify white background is present
+    const whiteBg = container.querySelector('.bg-white');
+    expect(whiteBg).toBeInTheDocument();
+
+    // Verify MouseFollowGradient overlay is rendered
+    const gradientOverlay = container.querySelector('.pointer-events-none');
+    expect(gradientOverlay).toBeInTheDocument();
+    expect(gradientOverlay).toHaveClass('absolute');
+    expect(gradientOverlay).toHaveClass('inset-0');
+    expect(gradientOverlay).toHaveClass('transition-opacity');
+
+    // Gradient should be in hover mode (initially opacity: 0)
+    const overlay = gradientOverlay as HTMLElement;
+    expect(overlay?.style.opacity).toBe('0');
+  });
+
   it('renders gradient design enhancements on registration form', () => {
     const { container } = renderRegister();
 
@@ -387,17 +406,13 @@ describe('Register Page', () => {
     const iconGlowElements = container.querySelectorAll('.bg-gradient-icon-glow');
     expect(iconGlowElements.length).toBeGreaterThan(0);
 
-    // Verify form card has gradient glow effect
-    const formGlowElements = container.querySelectorAll('.bg-gradient-form-glow');
-    expect(formGlowElements.length).toBeGreaterThan(0);
-
     // Verify submit button has gradient and shadow classes
     const submitButton = screen.getByRole('button', { name: /create account/i });
     expect(submitButton.className).toContain('shadow-xl');
     expect(submitButton.className).toContain('shadow-orange');
   });
 
-  it('success state displays gradient enhancements', async () => {
+  it('success state displays gradient enhancements and mouse-follow gradient', async () => {
     const user = userEvent.setup();
 
     server.use(
@@ -446,9 +461,13 @@ describe('Register Page', () => {
       ).toBeInTheDocument();
     });
 
-    // Verify success gradient glow background is present
-    const successGlowElements = container.querySelectorAll('.bg-gradient-success-glow');
-    expect(successGlowElements.length).toBeGreaterThan(0);
+    // Verify white background is still present in success state
+    const whiteBg = container.querySelector('.bg-white');
+    expect(whiteBg).toBeInTheDocument();
+
+    // Verify MouseFollowGradient overlay is still rendered in success state
+    const gradientOverlay = container.querySelector('.pointer-events-none');
+    expect(gradientOverlay).toBeInTheDocument();
 
     // Verify success icon with gradient background
     const successIconElements = container.querySelectorAll('.bg-gradient-success-icon');

@@ -2,10 +2,11 @@ import { test, expect } from '@playwright/test';
 
 test.describe('All Products Page', () => {
   test('loads and displays products from the API', async ({ page }) => {
+    // Note: /products redirects to / (home page)
     await page.goto('/products');
 
-    // Wait for the page heading
-    await expect(page.getByRole('heading', { name: 'All Products' })).toBeVisible();
+    // Verify we're redirected to home page
+    await page.waitForURL('/', { timeout: 5000 });
 
     // Wait for at least one product card to appear (products have "View Details" links)
     await expect(page.getByText('View Details').first()).toBeVisible({ timeout: 10000 });
@@ -22,13 +23,18 @@ test.describe('All Products Page', () => {
     const timestamp = Date.now();
     const testEmail = `allprodcat+${timestamp}@example.com`;
     const testPassword = 'password123';
+    const testUsername = `catfilter${timestamp}`;
 
     await page.getByLabel(/full name/i).fill('Cat Filter User');
+    await page.getByLabel(/username/i).fill(testUsername);
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
+    // Wait for success screen to appear and click "Go to Login" button
+    await expect(page.getByRole('heading', { name: 'Check Your Email' })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
     await page.waitForURL(/\/login/, { timeout: 10000 });
 
     await page.getByLabel(/email address/i).fill(testEmail);
@@ -57,9 +63,12 @@ test.describe('All Products Page', () => {
     await page.getByRole('button', { name: /create product/i }).click();
     await page.waitForURL(/\/products\//, { timeout: 15000 });
 
-    // Navigate to all products page
+    // Navigate to all products page (redirects to home when authenticated)
     await page.goto('/products');
-    await expect(page.getByRole('heading', { name: 'All Products' })).toBeVisible();
+    await page.waitForURL('/', { timeout: 5000 });
+
+    // For authenticated users, the home page shows "All Products" heading
+    await expect(page.getByRole('heading', { name: 'All Products' })).toBeVisible({ timeout: 10000 });
 
     // Wait for products to load
     await expect(page.getByText(/Showing \d+ of \d+ products/)).toBeVisible({ timeout: 10000 });
@@ -82,13 +91,18 @@ test.describe('All Products Page', () => {
     const timestamp = Date.now();
     const testEmail = `allprodsearch+${timestamp}@example.com`;
     const testPassword = 'password123';
+    const testUsername = `searchtest${timestamp}`;
 
     await page.getByLabel(/full name/i).fill('Search Test User');
+    await page.getByLabel(/username/i).fill(testUsername);
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
+    // Wait for success screen to appear and click "Go to Login" button
+    await expect(page.getByRole('heading', { name: 'Check Your Email' })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
     await page.waitForURL(/\/login/, { timeout: 10000 });
 
     await page.getByLabel(/email address/i).fill(testEmail);
@@ -156,16 +170,13 @@ test.describe('All Products Page', () => {
     await expect(page.getByText('Clear Filters')).not.toBeVisible();
   });
 
-  test('Home page displays featured products from the API', async ({ page }) => {
+  test('Home page displays products from the API', async ({ page }) => {
     await page.goto('/');
-
-    // Wait for the "Featured Products" section heading
-    await expect(page.getByRole('heading', { name: 'Featured Products' })).toBeVisible();
 
     // Wait for at least one product card to appear
     await expect(page.getByText('View Details').first()).toBeVisible({ timeout: 10000 });
 
-    // The "View All Products" button should be visible
-    await expect(page.getByRole('button', { name: /view all products/i })).toBeVisible();
+    // Verify the "Showing X of Y products" text appears
+    await expect(page.getByText(/Showing \d+ of \d+ products/)).toBeVisible();
   });
 });

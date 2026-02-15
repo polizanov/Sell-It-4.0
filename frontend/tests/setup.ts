@@ -26,6 +26,20 @@ class MockIntersectionObserver implements IntersectionObserver {
 }
 global.IntersectionObserver = MockIntersectionObserver;
 
+// Mock matchMedia which is not available in jsdom.
+// Required by components that use the useMouseGradient hook.
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => true,
+  }),
+});
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());

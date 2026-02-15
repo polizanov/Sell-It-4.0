@@ -196,7 +196,7 @@ describe('Home Page — Product Listing', () => {
     expect(screen.getByText('Browse Products')).toBeInTheDocument();
   });
 
-  it('renders features section with gradient styles for non-authenticated users', async () => {
+  it('renders features section with white background for non-authenticated users', async () => {
     server.use(
       http.get(`${API_BASE}/products`, () => {
         return HttpResponse.json({
@@ -243,13 +243,9 @@ describe('Home Page — Product Listing', () => {
     expect(screen.getByText('Safe and secure platform for all your transactions')).toBeInTheDocument();
     expect(screen.getByText('Join thousands of buyers and sellers today')).toBeInTheDocument();
 
-    // Verify gradient classes are applied to feature cards
-    const gradientCard1 = container.querySelector('.bg-gradient-feature-glow-1');
-    const gradientCard2 = container.querySelector('.bg-gradient-feature-glow-2');
-    const gradientCard3 = container.querySelector('.bg-gradient-feature-glow-3');
-    expect(gradientCard1).toBeInTheDocument();
-    expect(gradientCard2).toBeInTheDocument();
-    expect(gradientCard3).toBeInTheDocument();
+    // Verify features section has white background
+    const featuresSection = container.querySelector('.bg-white');
+    expect(featuresSection).toBeInTheDocument();
 
     // Verify icon containers with gradient backgrounds exist
     const iconGlowElements = container.querySelectorAll('.bg-gradient-icon-glow');
@@ -258,6 +254,101 @@ describe('Home Page — Product Listing', () => {
     // Verify animation classes are applied
     const fadeInUpElements = container.querySelectorAll('.animate-fade-in-up');
     expect(fadeInUpElements.length).toBe(3); // Three feature cards
+  });
+
+  it('renders MouseFollowGradient in hero section with always mode', async () => {
+    server.use(
+      http.get(`${API_BASE}/products`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Products retrieved successfully',
+          data: {
+            products: featuredProducts,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalProducts: 4,
+              limit: 12,
+              hasMore: false,
+            },
+          },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+        });
+      }),
+    );
+
+    const { container } = renderHome();
+
+    // Wait for page to fully render
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    // Verify hero section exists
+    expect(screen.getByText('Welcome to')).toBeInTheDocument();
+
+    // Verify gradient overlay is rendered (pointer-events-none indicates the gradient overlay)
+    const gradientOverlays = container.querySelectorAll('.pointer-events-none');
+    expect(gradientOverlays.length).toBeGreaterThan(0);
+
+    // Hero gradient should be visible immediately (always mode, opacity: 1)
+    const heroSection = container.querySelector('.bg-gradient-hero');
+    expect(heroSection).toBeInTheDocument();
+
+    // The gradient overlay in always mode should be visible
+    const heroGradientOverlay = heroSection?.querySelector('.pointer-events-none') as HTMLElement;
+    expect(heroGradientOverlay).toBeTruthy();
+    expect(heroGradientOverlay?.style.opacity).toBe('1');
+  });
+
+  it('renders MouseFollowGradient in product section with hover mode', async () => {
+    server.use(
+      http.get(`${API_BASE}/products`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Products retrieved successfully',
+          data: {
+            products: featuredProducts,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalProducts: 4,
+              limit: 12,
+              hasMore: false,
+            },
+          },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+        });
+      }),
+    );
+
+    const { container } = renderHome();
+
+    // Wait for page to fully render
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    // Verify product section exists
+    const productSection = container.querySelector('.bg-dark-bg');
+    expect(productSection).toBeInTheDocument();
+
+    // The product section gradient should be in hover mode (initially opacity: 0)
+    const productGradientOverlay = productSection?.querySelector('.pointer-events-none') as HTMLElement;
+    expect(productGradientOverlay).toBeTruthy();
+    expect(productGradientOverlay?.style.opacity).toBe('0');
   });
 
   it('hides hero and features sections for authenticated users', async () => {

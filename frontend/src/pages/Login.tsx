@@ -5,6 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
+import { MouseFollowGradient } from '../components/common/MouseFollowGradient';
 import { useAuthStore } from '../store/authStore';
 import { authService } from '../services/authService';
 import type { ApiError } from '../types';
@@ -90,77 +91,83 @@ const Login = () => {
   };
 
   return (
-    <PageContainer>
-      <div className="max-w-md mx-auto">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-icon-glow rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-            </svg>
-          </div>
-          <h1 className="text-4xl font-bold text-text-primary mb-3">
-            Welcome Back
-          </h1>
-          <p className="text-text-secondary text-lg">
-            Login to your Sell-It account
-          </p>
-        </div>
-
-        <div className="relative">
-          <div className="absolute -inset-0.5 bg-gradient-form-glow rounded-2xl blur-xl opacity-30"></div>
-          <Card className="relative bg-dark-surface backdrop-blur-sm border-2 border-dark-border hover:border-orange/30 transition-all duration-500">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {errors.general && (
-              <div className="bg-red-500/10 border border-red-500 rounded-lg p-4 text-red-500 text-sm">
-                {errors.general}
+    <div className="min-h-screen relative bg-white">
+      <MouseFollowGradient
+        activationMode="hover"
+        gradientColor="rgba(255, 87, 34, 0.08)"
+        gradientSize={70}
+        disableOnMobile={true}
+      >
+        <PageContainer className="relative z-10">
+          <div className="max-w-md mx-auto">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-gradient-icon-glow rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-10 h-10 text-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
               </div>
-            )}
+              <h1 className="text-4xl font-bold text-gray-900 mb-3">
+                Welcome Back
+              </h1>
+              <p className="text-gray-600 text-lg">
+                Login to your Sell-It account
+              </p>
+            </div>
 
-            <Input
-              type="email"
-              label="Email Address"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              error={errors.email}
-              required
-            />
+            <Card className="bg-white border-gray-200 hover:border-orange/30 shadow-xl transition-all duration-500">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {errors.general && (
+                  <div className="bg-red-500/10 border border-red-500 rounded-lg p-4 text-red-600 text-sm">
+                    {errors.general}
+                  </div>
+                )}
 
-            <Input
-              type="password"
-              label="Password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              error={errors.password}
-              required
-            />
+                <Input
+                  type="text"
+                  label="Email Address"
+                  placeholder="you@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  error={errors.email}
+                  variant="light"
+                />
 
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              fullWidth
-              gradient={true}
-              disabled={isSubmitting}
-              className="shadow-xl shadow-orange/40 hover:shadow-2xl hover:shadow-orange/50 transition-shadow duration-300"
-            >
-              {isSubmitting ? 'Logging in...' : 'Login'}
-            </Button>
-          </form>
+                <Input
+                  type="password"
+                  label="Password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  error={errors.password}
+                  variant="light"
+                />
 
-          <div className="mt-6 text-center">
-            <p className="text-text-secondary">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-orange hover:text-orange-hover font-medium transition-colors">
-                Register here
-              </Link>
-            </p>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="md"
+                  fullWidth
+                  gradient={true}
+                  disabled={isSubmitting}
+                  className="shadow-xl shadow-orange/40 hover:shadow-2xl hover:shadow-orange/50 transition-shadow duration-300"
+                >
+                  {isSubmitting ? 'Logging in...' : 'Login'}
+                </Button>
+              </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-gray-600">
+                  Don't have an account?{' '}
+                  <Link to="/register" className="text-orange hover:text-orange-hover font-medium transition-colors">
+                    Register here
+                  </Link>
+                </p>
+              </div>
+            </Card>
           </div>
-          </Card>
-        </div>
-      </div>
-    </PageContainer>
+        </PageContainer>
+      </MouseFollowGradient>
+    </div>
   );
 };
 
