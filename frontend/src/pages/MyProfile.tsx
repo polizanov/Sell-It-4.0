@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { PageContainer } from '../components/layout/PageContainer';
+import { MouseFollowGradient } from '../components/common/MouseFollowGradient';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { ProductGrid } from '../components/products/ProductGrid';
@@ -112,6 +113,13 @@ const MyProfile = () => {
   const productCount = pagination?.totalProducts ?? 0;
 
   return (
+    <div className="relative overflow-hidden min-h-screen flex flex-col">
+      <MouseFollowGradient
+        activationMode="always"
+        gradientColor="rgba(255, 87, 34, 0.12)"
+        gradientSize={60}
+        className="flex-1"
+      >
     <PageContainer>
       <div className="space-y-8">
         {/* Profile Header */}
@@ -236,6 +244,8 @@ const MyProfile = () => {
         </div>
       </div>
     </PageContainer>
+      </MouseFollowGradient>
+    </div>
   );
 };
 

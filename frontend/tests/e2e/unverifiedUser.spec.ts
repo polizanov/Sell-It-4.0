@@ -11,7 +11,7 @@ const testUser = {
   name: 'Unverified E2E User',
   username: `unverifede2e${uniqueSuffix}`,
   email: `unverifede2e${uniqueSuffix}@example.com`,
-  password: 'password123',
+  password: 'Password123!',
 };
 
 test.describe('Unverified User Restrictions', () => {
@@ -30,6 +30,11 @@ test.describe('Unverified User Restrictions', () => {
       const body = await registerRes.json();
       expect(body.success).toBe(true);
     }
+
+    // In test mode, users are auto-verified. Unverify for this test.
+    await page.request.post('/api/auth/test-set-verified', {
+      data: { email: testUser.email, isVerified: false }
+    });
 
     // Login as unverified user
     const loginRes = await page.request.post('/api/auth/login', {

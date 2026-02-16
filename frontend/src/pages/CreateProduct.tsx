@@ -127,7 +127,7 @@ const CreateProduct = () => {
         </div>
 
         <Card>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="space-y-6">
             {errors.general && (
               <div className="bg-red-500/10 border border-red-500 rounded-lg p-4 text-red-500 text-sm">
                 {errors.general}
@@ -145,11 +145,12 @@ const CreateProduct = () => {
             />
 
             <div className="w-full">
-              <label className="block text-sm font-medium text-text-secondary mb-2">
+              <label htmlFor="description" className="block text-sm font-medium text-text-secondary mb-2">
                 Description
                 <span className="text-orange ml-1">*</span>
               </label>
               <textarea
+                id="description"
                 className={`w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent transition-all duration-200 resize-y min-h-[120px] ${
                   errors.description ? 'border-red-500 focus:ring-red-500' : ''
                 }`}

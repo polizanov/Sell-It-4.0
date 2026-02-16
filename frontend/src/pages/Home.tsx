@@ -258,11 +258,12 @@ const Home = () => {
       )}
 
       {/* Full Product Listing - ALWAYS VISIBLE */}
-      <section className="relative bg-dark-bg overflow-hidden">
+      <section className="relative bg-dark-bg overflow-hidden min-h-screen flex flex-col">
         <MouseFollowGradient
           activationMode="always"
           gradientColor="rgba(255, 87, 34, 0.12)"
           gradientSize={60}
+          className="flex-1"
         >
           <PageContainer className="py-20 md:py-32 relative z-10">
             {/* Page header for authenticated users only */}

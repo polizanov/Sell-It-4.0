@@ -52,7 +52,7 @@ describe('Product Endpoints', () => {
       name: 'Product Test User',
       username: 'producttestuser',
       email: 'productuser@example.com',
-      password: 'password123',
+      password: 'Password123!',
     });
 
     // Verify the user directly in the database
@@ -64,7 +64,7 @@ describe('Product Endpoints', () => {
     // Login to get an auth token
     const loginRes = await request(app).post('/api/auth/login').send({
       email: 'productuser@example.com',
-      password: 'password123',
+      password: 'Password123!',
     });
 
     authToken = loginRes.body.data.token;
@@ -681,7 +681,7 @@ describe('Product Endpoints', () => {
         name: 'Empty User',
         username: 'emptyuser',
         email: 'emptyuser@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
       await User.updateOne(
         { email: 'emptyuser@example.com' },
@@ -962,7 +962,7 @@ describe('Product Endpoints', () => {
         name: 'Other User',
         username: 'otheruser',
         email: 'otheruser@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       await User.updateOne(
@@ -972,7 +972,7 @@ describe('Product Endpoints', () => {
 
       const loginRes = await request(app).post('/api/auth/login').send({
         email: 'otheruser@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       const otherToken = loginRes.body.data.token;
@@ -1235,7 +1235,7 @@ describe('Product Endpoints', () => {
           name: 'Delete Other User',
           username: 'deleteotheruser',
           email: 'deleteother@example.com',
-          password: 'password123',
+          password: 'Password123!',
         });
 
         await User.updateOne(
@@ -1246,7 +1246,7 @@ describe('Product Endpoints', () => {
 
       const loginRes = await request(app).post('/api/auth/login').send({
         email: 'deleteother@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       otherUserToken = loginRes.body.data.token;

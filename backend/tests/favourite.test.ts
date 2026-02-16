@@ -54,7 +54,7 @@ describe('Favourite Endpoints', () => {
       name: 'User A',
       username: 'usera',
       email: 'usera@example.com',
-      password: 'password123',
+      password: 'Password123!',
     });
 
     // Register userB (favouriter)
@@ -62,7 +62,7 @@ describe('Favourite Endpoints', () => {
       name: 'User B',
       username: 'userb',
       email: 'userb@example.com',
-      password: 'password123',
+      password: 'Password123!',
     });
 
     // Verify both users
@@ -78,7 +78,7 @@ describe('Favourite Endpoints', () => {
     // Login userA
     const loginA = await request(app).post('/api/auth/login').send({
       email: 'usera@example.com',
-      password: 'password123',
+      password: 'Password123!',
     });
     tokenA = loginA.body.data.token;
     userAId = loginA.body.data.id;
@@ -86,7 +86,7 @@ describe('Favourite Endpoints', () => {
     // Login userB
     const loginB = await request(app).post('/api/auth/login').send({
       email: 'userb@example.com',
-      password: 'password123',
+      password: 'Password123!',
     });
     tokenB = loginB.body.data.token;
     userBId = loginB.body.data.id;

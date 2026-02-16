@@ -20,8 +20,8 @@ test.describe('Navigation - Desktop and Mobile', () => {
       const allProductsLink = navbar.getByRole('link', { name: /^all products$/i });
       await expect(allProductsLink).not.toBeVisible();
 
-      // Verify "Home" link exists
-      await expect(navbar.getByRole('link', { name: /^home$/i })).toBeVisible();
+      // Verify Logo link exists (serves as home link)
+      await expect(navbar.getByRole('link', { name: /sell-it/i })).toBeVisible();
 
       // Verify "Login" and "Register" links exist for unauthenticated users
       await expect(navbar.getByRole('link', { name: /login/i })).toBeVisible();
@@ -36,7 +36,7 @@ test.describe('Navigation - Desktop and Mobile', () => {
       const random = Math.floor(Math.random() * 100000);
       const testEmail = `navdesktop${timestamp}${random}@example.com`;
       const testUsername = `navdesktop${timestamp}${random}`;
-      const testPassword = 'password123';
+      const testPassword = 'Password123!';
 
       await page.goto('/register');
 
@@ -50,8 +50,6 @@ test.describe('Navigation - Desktop and Mobile', () => {
       // Wait for success message and click "Go to Login"
       await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
       await page.getByRole('link', { name: /go to login/i }).click();
-
-      await page.waitForURL(/\/login/, { timeout: 10000 });
 
       await page.getByLabel(/email address/i).fill(testEmail);
       await page.getByLabel(/password/i).fill(testPassword);
@@ -68,23 +66,25 @@ test.describe('Navigation - Desktop and Mobile', () => {
       await expect(allProductsLink).not.toBeVisible();
 
       // Verify authenticated user links exist
-      await expect(navbar.getByRole('link', { name: /^home$/i })).toBeVisible();
+      await expect(navbar.getByRole('link', { name: /sell-it/i })).toBeVisible();
       await expect(navbar.getByRole('link', { name: /my profile/i })).toBeVisible();
       await expect(navbar.getByRole('button', { name: /logout/i })).toBeVisible();
 
-      // Unverified users don't see Create Product or My Favourites links
+      // Verified users see My Favourites (auto-verified in test mode)
+      await expect(navbar.getByRole('link', { name: /my favourites/i })).toBeVisible();
+
+      // Create Product is not a nav link (it's a FAB button)
       await expect(navbar.getByRole('link', { name: /create product/i })).not.toBeVisible();
-      await expect(navbar.getByRole('link', { name: /my favourites/i })).not.toBeVisible();
     });
 
-    test('"Home" link works correctly', async ({ page }) => {
+    test('Logo link navigates to home page', async ({ page }) => {
       await page.goto('/login');
 
       const navbar = page.locator('nav.hidden.md\\:flex');
-      const homeLink = navbar.getByRole('link', { name: /^home$/i });
+      const logoLink = navbar.getByRole('link', { name: /sell-it/i });
 
-      // Click Home link
-      await homeLink.click();
+      // Click Logo link
+      await logoLink.click();
 
       // Should navigate to home page
       await expect(page).toHaveURL('/');
@@ -113,9 +113,6 @@ test.describe('Navigation - Desktop and Mobile', () => {
       const allProductsLink = menuPanel.getByRole('link', { name: /^all products$/i });
       await expect(allProductsLink).not.toBeVisible();
 
-      // Verify "Home" link exists
-      await expect(menuPanel.getByRole('link', { name: /^home$/i })).toBeVisible();
-
       // Verify "Login" and "Register" links exist for unauthenticated users
       await expect(menuPanel.getByRole('link', { name: /login/i })).toBeVisible();
       await expect(menuPanel.getByRole('link', { name: /register/i })).toBeVisible();
@@ -127,7 +124,7 @@ test.describe('Navigation - Desktop and Mobile', () => {
       const random = Math.floor(Math.random() * 100000);
       const testEmail = `navmobile${timestamp}${random}@example.com`;
       const testUsername = `navmobile${timestamp}${random}`;
-      const testPassword = 'password123';
+      const testPassword = 'Password123!';
 
       await page.goto('/register');
 
@@ -141,8 +138,6 @@ test.describe('Navigation - Desktop and Mobile', () => {
       // Wait for success message and click "Go to Login"
       await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
       await page.getByRole('link', { name: /go to login/i }).click();
-
-      await page.waitForURL(/\/login/, { timeout: 10000 });
 
       await page.getByLabel(/email address/i).fill(testEmail);
       await page.getByLabel(/password/i).fill(testPassword);
@@ -164,13 +159,14 @@ test.describe('Navigation - Desktop and Mobile', () => {
       await expect(allProductsLink).not.toBeVisible();
 
       // Verify authenticated user links exist
-      await expect(menuPanel.getByRole('link', { name: /^home$/i })).toBeVisible();
       await expect(menuPanel.getByRole('link', { name: /my profile/i })).toBeVisible();
       await expect(menuPanel.getByRole('button', { name: /logout/i })).toBeVisible();
 
-      // Unverified users don't see Create Product or My Favourites links
+      // Verified users see My Favourites (auto-verified in test mode)
+      await expect(menuPanel.getByRole('link', { name: /my favourites/i })).toBeVisible();
+
+      // Create Product is not a nav link (it's a FAB button)
       await expect(menuPanel.getByRole('link', { name: /create product/i })).not.toBeVisible();
-      await expect(menuPanel.getByRole('link', { name: /my favourites/i })).not.toBeVisible();
     });
 
     test('Mobile menu opens and closes correctly', async ({ page }) => {
@@ -206,18 +202,40 @@ test.describe('Navigation - Desktop and Mobile', () => {
       await expect(menuPanel).toBeVisible();
       await expect(menuPanel).not.toHaveClass(/-translate-x-full/);
 
-      // Click "Home" link
-      const homeLink = menuPanel.getByRole('link', { name: /^home$/i });
-      await homeLink.click();
+      // Click "Login" link (available for unauthenticated users)
+      const loginLink = menuPanel.getByRole('link', { name: /login/i });
+      await loginLink.click();
 
       // Menu should slide out
       await expect(menuPanel).toHaveClass(/-translate-x-full/);
-
-      // Should be on home page
-      await expect(page).toHaveURL('/');
     });
 
-    test('"Home" link works correctly in mobile menu', async ({ page }) => {
+    test('Logo link navigates to home from mobile', async ({ page }) => {
+      await page.goto('/login');
+
+      // Click the Logo in the mobile top bar (not inside the slide-in menu)
+      const topBar = page.locator('div.md\\:hidden div.fixed.top-0');
+      const logoLink = topBar.getByRole('link', { name: /sell-it/i });
+      await logoLink.click();
+
+      // Should navigate to home page
+      await expect(page).toHaveURL('/');
+    });
+  });
+
+  test.describe('Navigation State Highlighting', () => {
+    test('Login link is highlighted when on login page (desktop)', async ({ page }) => {
+      await page.goto('/login');
+
+      // Desktop navbar - verify Login link has active styling
+      const desktopLoginLink = page.locator('nav.hidden.md\\:flex').getByRole('link', { name: /^login$/i });
+      await expect(desktopLoginLink).toHaveClass(/text-orange/);
+      await expect(desktopLoginLink).toHaveClass(/bg-orange\/10/);
+    });
+
+    test('Login link is highlighted when on login page (mobile)', async ({ page }) => {
+      // Set mobile viewport
+      await page.setViewportSize({ width: 375, height: 667 });
       await page.goto('/login');
 
       // Open mobile menu
@@ -227,32 +245,10 @@ test.describe('Navigation - Desktop and Mobile', () => {
       const menuPanel = page.locator('div.fixed.top-0.left-0.bottom-0');
       await expect(menuPanel).toBeVisible();
 
-      // Click Home link
-      const homeLink = menuPanel.getByRole('link', { name: /^home$/i });
-      await homeLink.click();
-
-      // Should navigate to home page
-      await expect(page).toHaveURL('/');
-    });
-  });
-
-  test.describe('Navigation State Highlighting', () => {
-    test('Home link is highlighted when on home page', async ({ page }) => {
-      await page.goto('/');
-
-      // Desktop navbar - target the specific "Home" link, not the logo
-      const desktopHomeLink = page.locator('nav.hidden.md\\:flex').getByRole('link', { name: /^home$/i });
-      await expect(desktopHomeLink).toHaveClass(/text-orange/);
-      await expect(desktopHomeLink).toHaveClass(/bg-orange\/10/);
-    });
-
-    test('Login link is highlighted when on login page', async ({ page }) => {
-      await page.goto('/login');
-
-      // Desktop navbar - use getByRole for specificity
-      const desktopLoginLink = page.locator('nav.hidden.md\\:flex').getByRole('link', { name: /^login$/i });
-      await expect(desktopLoginLink).toHaveClass(/text-orange/);
-      await expect(desktopLoginLink).toHaveClass(/bg-orange\/10/);
+      // Verify Login link has active styling in mobile menu
+      const mobileLoginLink = menuPanel.getByRole('link', { name: /^login$/i });
+      await expect(mobileLoginLink).toHaveClass(/text-orange/);
+      await expect(mobileLoginLink).toHaveClass(/bg-orange\/10/);
     });
   });
 });

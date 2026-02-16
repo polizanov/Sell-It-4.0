@@ -8,7 +8,7 @@ test.describe('Favourites', () => {
     await page.goto('/register');
 
     const userAEmail = `favownera+${timestamp}@example.com`;
-    const userAPassword = 'password123';
+    const userAPassword = 'Password123!';
 
     await page.getByLabel(/full name/i).fill('Favourite Owner A');
     await page.getByLabel(/username/i).fill(`favownera${timestamp}`);
@@ -17,7 +17,8 @@ test.describe('Favourites', () => {
     await page.getByLabel(/confirm password/i).fill(userAPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(userAEmail);
     await page.getByLabel(/password/i).fill(userAPassword);
@@ -39,7 +40,7 @@ test.describe('Favourites', () => {
     await fileInput.setInputFiles({
       name: 'test-product.jpg',
       mimeType: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data'),
+      buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01]),
     });
 
     await page.getByRole('button', { name: /create product/i }).click();
@@ -55,7 +56,7 @@ test.describe('Favourites', () => {
     await page.goto('/register');
 
     const userBEmail = `favuserb+${timestamp}@example.com`;
-    const userBPassword = 'password123';
+    const userBPassword = 'Password123!';
 
     await page.getByLabel(/full name/i).fill('Favourite User B');
     await page.getByLabel(/username/i).fill(`favuserb${timestamp}`);
@@ -64,7 +65,8 @@ test.describe('Favourites', () => {
     await page.getByLabel(/confirm password/i).fill(userBPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(userBEmail);
     await page.getByLabel(/password/i).fill(userBPassword);
@@ -78,10 +80,15 @@ test.describe('Favourites', () => {
     // Wait for product to load
     await expect(page.getByText('Fav Test Product')).toBeVisible({ timeout: 10000 });
 
-    // Click the heart button to add to favourites
+    // Click the heart button to add to favourites and wait for API response
     const addButton = page.getByRole('button', { name: /add to favourites/i });
     await expect(addButton).toBeVisible({ timeout: 10000 });
-    await addButton.click();
+
+    const [favouriteResponse] = await Promise.all([
+      page.waitForResponse((resp) => resp.url().includes('/api/favourites') && resp.status() === 201),
+      addButton.click(),
+    ]);
+    expect(favouriteResponse.ok()).toBeTruthy();
 
     // Verify heart becomes filled
     await expect(
@@ -102,7 +109,7 @@ test.describe('Favourites', () => {
     await page.goto('/register');
 
     const userAEmail = `unfavownera+${timestamp}@example.com`;
-    const userAPassword = 'password123';
+    const userAPassword = 'Password123!';
 
     await page.getByLabel(/full name/i).fill('Unfav Owner A');
     await page.getByLabel(/username/i).fill(`unfavownera${timestamp}`);
@@ -111,7 +118,8 @@ test.describe('Favourites', () => {
     await page.getByLabel(/confirm password/i).fill(userAPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(userAEmail);
     await page.getByLabel(/password/i).fill(userAPassword);
@@ -133,7 +141,7 @@ test.describe('Favourites', () => {
     await fileInput.setInputFiles({
       name: 'test-product.jpg',
       mimeType: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data'),
+      buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01]),
     });
 
     await page.getByRole('button', { name: /create product/i }).click();
@@ -147,7 +155,7 @@ test.describe('Favourites', () => {
     await page.goto('/register');
 
     const userBEmail = `unfavuserb+${timestamp}@example.com`;
-    const userBPassword = 'password123';
+    const userBPassword = 'Password123!';
 
     await page.getByLabel(/full name/i).fill('Unfav User B');
     await page.getByLabel(/username/i).fill(`unfavuserb${timestamp}`);
@@ -156,7 +164,8 @@ test.describe('Favourites', () => {
     await page.getByLabel(/confirm password/i).fill(userBPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(userBEmail);
     await page.getByLabel(/password/i).fill(userBPassword);
@@ -194,7 +203,7 @@ test.describe('Favourites', () => {
     await page.goto('/register');
 
     const ownerEmail = `favowner+${timestamp}@example.com`;
-    const ownerPassword = 'password123';
+    const ownerPassword = 'Password123!';
 
     await page.getByLabel(/full name/i).fill('Owner User');
     await page.getByLabel(/username/i).fill(`favowner${timestamp}`);
@@ -203,7 +212,8 @@ test.describe('Favourites', () => {
     await page.getByLabel(/confirm password/i).fill(ownerPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(ownerEmail);
     await page.getByLabel(/password/i).fill(ownerPassword);
@@ -225,7 +235,7 @@ test.describe('Favourites', () => {
     await fileInput.setInputFiles({
       name: 'test-product.jpg',
       mimeType: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data'),
+      buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01]),
     });
 
     await page.getByRole('button', { name: /create product/i }).click();

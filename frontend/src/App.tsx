@@ -5,6 +5,7 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { VerifiedRoute } from './components/auth/VerifiedRoute';
 import { VerificationBanner } from './components/common/VerificationBanner';
 import { CreateProductFAB } from './components/common/CreateProductFAB';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { useAuthStore } from './store/authStore';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -15,6 +16,7 @@ import ProductDetail from './pages/ProductDetail';
 import UserProfile from './pages/UserProfile';
 import MyFavourites from './pages/MyFavourites';
 import EditProduct from './pages/EditProduct';
+import CreateProduct from './pages/CreateProduct';
 
 function App() {
   useEffect(() => {
@@ -23,11 +25,12 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen flex flex-col bg-dark-bg text-white">
-        <Navigation />
-        <VerificationBanner />
-        <main className="flex-1">
-          <Routes>
+      <ErrorBoundary>
+        <div className="min-h-screen flex flex-col bg-dark-bg text-white">
+          <Navigation />
+          <VerificationBanner />
+          <main className="flex-1">
+            <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -51,7 +54,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/create-product" element={<Navigate to="/" replace />} />
+            <Route
+              path="/create-product"
+              element={
+                <VerifiedRoute>
+                  <CreateProduct />
+                </VerifiedRoute>
+              }
+            />
             <Route
               path="/favourites"
               element={
@@ -60,11 +70,12 @@ function App() {
                 </VerifiedRoute>
               }
             />
-          </Routes>
-        </main>
-        <Footer />
-        <CreateProductFAB />
-      </div>
+            </Routes>
+          </main>
+          <Footer />
+          <CreateProductFAB />
+        </div>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

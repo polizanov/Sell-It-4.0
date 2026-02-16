@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Thumbs, Keyboard } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
 import { PageContainer } from '../components/layout/PageContainer';
+import { MouseFollowGradient } from '../components/common/MouseFollowGradient';
 import { Button } from '../components/common/Button';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { EditProductModal } from '../components/product/EditProductModal';
@@ -240,7 +241,13 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg">
+    <div className="min-h-screen bg-dark-bg relative overflow-hidden">
+      <MouseFollowGradient
+        activationMode="always"
+        gradientColor="rgba(255, 87, 34, 0.12)"
+        gradientSize={60}
+        className="flex-1"
+      >
       <PageContainer className="py-8">
         {/* Back to Products Link */}
         <Link
@@ -489,6 +496,7 @@ const ProductDetail = () => {
           </div>
         </div>
       </PageContainer>
+      </MouseFollowGradient>
 
       <ConfirmDialog
         isOpen={showDeleteDialog}

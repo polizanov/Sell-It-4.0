@@ -29,7 +29,7 @@ test.describe('Auth - Registration Form Validation', () => {
     await page.getByRole('button', { name: /create account/i }).click();
 
     await expect(
-      page.getByText('Password must be at least 6 characters', { exact: true }),
+      page.getByText('Password must be at least 8 characters', { exact: true }),
     ).toBeVisible({ timeout: 5000 });
   });
 
@@ -38,7 +38,7 @@ test.describe('Auth - Registration Form Validation', () => {
 
     await page.getByLabel(/full name/i).fill('Test User');
     await page.getByLabel(/email address/i).fill('test@example.com');
-    await page.getByLabel(/^password/i).fill('password123');
+    await page.getByLabel(/^password/i).fill('Password123!');
     await page.getByLabel(/confirm password/i).fill('differentpassword');
 
     await page.getByRole('button', { name: /create account/i }).click();
@@ -63,7 +63,7 @@ test.describe('Auth - Login Form Validation', () => {
     await page.goto('/login');
 
     await page.getByLabel(/email address/i).fill('notanemail');
-    await page.getByLabel(/password/i).fill('password123');
+    await page.getByLabel(/password/i).fill('Password123!');
 
     await page.getByRole('button', { name: /login/i }).click();
 

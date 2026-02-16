@@ -40,7 +40,7 @@ describe('Register Page', () => {
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
     // Use getByPlaceholderText to distinguish between Password and Confirm Password
     expect(
-      screen.getByPlaceholderText('At least 6 characters'),
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
     ).toBeInTheDocument();
     expect(
       screen.getByPlaceholderText('Re-enter your password'),
@@ -94,12 +94,12 @@ describe('Register Page', () => {
       'test@example.com',
     );
     await user.type(
-      screen.getByPlaceholderText('At least 6 characters'),
-      'password123',
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
     );
     await user.type(
       screen.getByPlaceholderText('Re-enter your password'),
-      'password123',
+      'Password123!',
     );
 
     // Use fireEvent.submit to bypass native required on name field
@@ -116,12 +116,12 @@ describe('Register Page', () => {
     await user.type(screen.getByLabelText(/username/i), 'testuser');
     await user.type(screen.getByLabelText(/email address/i), 'invalid-email');
     await user.type(
-      screen.getByPlaceholderText('At least 6 characters'),
-      'password123',
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
     );
     await user.type(
       screen.getByPlaceholderText('Re-enter your password'),
-      'password123',
+      'Password123!',
     );
 
     submitForm();
@@ -131,7 +131,7 @@ describe('Register Page', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows "Password must be at least 6 characters" for short password', async () => {
+  it('shows "Password must be at least 8 characters" for short password', async () => {
     const user = userEvent.setup();
     renderRegister();
 
@@ -142,7 +142,7 @@ describe('Register Page', () => {
       'test@example.com',
     );
     await user.type(
-      screen.getByPlaceholderText('At least 6 characters'),
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
       '12345',
     );
     await user.type(
@@ -153,7 +153,7 @@ describe('Register Page', () => {
     submitForm();
 
     expect(
-      screen.getByText('Password must be at least 6 characters'),
+      screen.getByText('Password must be at least 8 characters'),
     ).toBeInTheDocument();
   });
 
@@ -168,8 +168,8 @@ describe('Register Page', () => {
       'test@example.com',
     );
     await user.type(
-      screen.getByPlaceholderText('At least 6 characters'),
-      'password123',
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
     );
     await user.type(
       screen.getByPlaceholderText('Re-enter your password'),
@@ -191,12 +191,12 @@ describe('Register Page', () => {
       'test@example.com',
     );
     await user.type(
-      screen.getByPlaceholderText('At least 6 characters'),
-      'password123',
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
     );
     await user.type(
       screen.getByPlaceholderText('Re-enter your password'),
-      'password123',
+      'Password123!',
     );
 
     submitForm();
@@ -215,12 +215,12 @@ describe('Register Page', () => {
       'test@example.com',
     );
     await user.type(
-      screen.getByPlaceholderText('At least 6 characters'),
-      'password123',
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
     );
     await user.type(
       screen.getByPlaceholderText('Re-enter your password'),
-      'password123',
+      'Password123!',
     );
 
     submitForm();
@@ -260,12 +260,12 @@ describe('Register Page', () => {
       'newuser@example.com',
     );
     await user.type(
-      screen.getByPlaceholderText('At least 6 characters'),
-      'password123',
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
     );
     await user.type(
       screen.getByPlaceholderText('Re-enter your password'),
-      'password123',
+      'Password123!',
     );
 
     const submitButton = screen.getByRole('button', {
@@ -314,12 +314,12 @@ describe('Register Page', () => {
       'test@example.com',
     );
     await user.type(
-      screen.getByPlaceholderText('At least 6 characters'),
-      'password123',
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
     );
     await user.type(
       screen.getByPlaceholderText('Re-enter your password'),
-      'password123',
+      'Password123!',
     );
 
     const submitButton = screen.getByRole('button', {
@@ -360,12 +360,12 @@ describe('Register Page', () => {
       'existing@example.com',
     );
     await user.type(
-      screen.getByPlaceholderText('At least 6 characters'),
-      'password123',
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
     );
     await user.type(
       screen.getByPlaceholderText('Re-enter your password'),
-      'password123',
+      'Password123!',
     );
 
     const submitButton = screen.getByRole('button', {
@@ -442,12 +442,12 @@ describe('Register Page', () => {
       'newuser@example.com',
     );
     await user.type(
-      screen.getByPlaceholderText('At least 6 characters'),
-      'password123',
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
     );
     await user.type(
       screen.getByPlaceholderText('Re-enter your password'),
-      'password123',
+      'Password123!',
     );
 
     const submitButton = screen.getByRole('button', {

@@ -72,8 +72,17 @@ const Register = () => {
     if (!formData.password) {
       newErrors.password = 'Password is required';
       hasErrors = true;
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+      hasErrors = true;
+    } else if (!/[A-Z]/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one uppercase letter';
+      hasErrors = true;
+    } else if (!/[0-9]/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one number';
+      hasErrors = true;
+    } else if (!/[^a-zA-Z0-9]/.test(formData.password)) {
+      newErrors.password = 'Password must contain at least one special character';
       hasErrors = true;
     }
 
@@ -217,7 +226,7 @@ const Register = () => {
                 <Input
                   type="password"
                   label="Password"
-                  placeholder="At least 6 characters"
+                  placeholder="8+ chars, uppercase, number, special char"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   error={errors.password}

@@ -8,15 +8,17 @@ test.describe('Product Detail Page', () => {
 
     const timestamp = Date.now();
     const testEmail = `detailuser+${timestamp}@example.com`;
-    const testPassword = 'password123';
+    const testPassword = 'Password123!';
 
     await page.getByLabel(/full name/i).fill('Detail Test User');
+    await page.getByLabel(/username/i).fill(`detailuser${timestamp}`);
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
@@ -39,7 +41,7 @@ test.describe('Product Detail Page', () => {
     await fileInput.setInputFiles({
       name: 'test-product.jpg',
       mimeType: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data'),
+      buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01]),
     });
 
     await page.getByRole('button', { name: /create product/i }).click();
@@ -75,6 +77,7 @@ test.describe('Product Detail Page', () => {
     // Click the "Back to Products" button
     await page.getByRole('button', { name: /back to products/i }).click();
 
-    await expect(page).toHaveURL(/\/products$/);
+    // /products redirects to / (home page)
+    await expect(page).toHaveURL('/');
   });
 });

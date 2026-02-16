@@ -8,6 +8,7 @@ export interface IUser extends Document {
   password: string;
   isVerified: boolean;
   verificationToken?: string;
+  verificationTokenExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -42,7 +43,7 @@ const userSchema = new Schema<IUser>(
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: [6, 'Password must be at least 6 characters'],
+      minlength: [8, 'Password must be at least 8 characters'],
     },
     isVerified: {
       type: Boolean,
@@ -50,6 +51,9 @@ const userSchema = new Schema<IUser>(
     },
     verificationToken: {
       type: String,
+    },
+    verificationTokenExpiry: {
+      type: Date,
     },
   },
   {

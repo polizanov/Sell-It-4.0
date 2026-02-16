@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router';
 import { AxiosError } from 'axios';
 import { PageContainer } from '../components/layout/PageContainer';
+import { MouseFollowGradient } from '../components/common/MouseFollowGradient';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { ProductGrid } from '../components/products/ProductGrid';
@@ -165,113 +166,122 @@ const UserProfile = () => {
   const productCount = pagination?.totalProducts ?? 0;
 
   return (
-    <PageContainer>
-      <div className="space-y-8">
-        {/* Profile Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-2">
-            Seller Profile
-          </h1>
-        </div>
-
-        {/* User Information Card */}
-        <Card>
-          <div className="flex items-start gap-6 flex-col sm:flex-row">
-            <div className="w-24 h-24 rounded-full bg-orange flex items-center justify-center flex-shrink-0">
-              <span className="text-3xl font-bold text-white">{initials}</span>
+    <div className="relative overflow-hidden min-h-screen flex flex-col">
+      <MouseFollowGradient
+        activationMode="always"
+        gradientColor="rgba(255, 87, 34, 0.12)"
+        gradientSize={60}
+        className="flex-1"
+      >
+        <PageContainer>
+          <div className="space-y-8">
+            {/* Profile Header */}
+            <div>
+              <h1 className="text-3xl font-bold text-text-primary mb-2">
+                Seller Profile
+              </h1>
             </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">
-                {userInfo.name}
-              </h2>
-              <p className="text-text-secondary mb-1">
-                @{userInfo.username}
-              </p>
-              <p className="text-text-muted text-sm">
-                Member since{' '}
-                {new Date(userInfo.memberSince).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </p>
-            </div>
-          </div>
-        </Card>
 
-        {/* Divider */}
-        <div className="border-t border-dark-border"></div>
-
-        {/* User Products Section */}
-        <div>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-text-primary mb-1">
-              Products
-            </h2>
-            <p className="text-text-secondary">
-              {productCount} {productCount === 1 ? 'listing' : 'listings'}
-            </p>
-          </div>
-
-          {products.length > 0 ? (
-            <ProductGrid products={products} />
-          ) : (
+            {/* User Information Card */}
             <Card>
-              <div className="text-center py-12">
-                <svg
-                  className="w-20 h-20 text-text-muted mx-auto mb-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                  />
-                </svg>
-                <h3 className="text-xl font-semibold text-text-secondary mb-2">
-                  No Products Found
-                </h3>
-                <p className="text-text-muted">
-                  This user hasn't listed any products yet.
-                </p>
+              <div className="flex items-start gap-6 flex-col sm:flex-row">
+                <div className="w-24 h-24 rounded-full bg-orange flex items-center justify-center flex-shrink-0">
+                  <span className="text-3xl font-bold text-white">{initials}</span>
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-text-primary mb-1">
+                    {userInfo.name}
+                  </h2>
+                  <p className="text-text-secondary mb-1">
+                    @{userInfo.username}
+                  </p>
+                  <p className="text-text-muted text-sm">
+                    Member since{' '}
+                    {new Date(userInfo.memberSince).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </p>
+                </div>
               </div>
             </Card>
-          )}
 
-          {/* Infinite Scroll Sentinel */}
-          <div ref={sentinelRef} />
+            {/* Divider */}
+            <div className="border-t border-dark-border"></div>
 
-          {/* Loading More Spinner */}
-          {isLoadingMore && (
-            <div className="flex justify-center py-8">
-              <svg
-                className="animate-spin h-8 w-8 text-orange"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
+            {/* User Products Section */}
+            <div>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-text-primary mb-1">
+                  Products
+                </h2>
+                <p className="text-text-secondary">
+                  {productCount} {productCount === 1 ? 'listing' : 'listings'}
+                </p>
+              </div>
+
+              {products.length > 0 ? (
+                <ProductGrid products={products} />
+              ) : (
+                <Card>
+                  <div className="text-center py-12">
+                    <svg
+                      className="w-20 h-20 text-text-muted mx-auto mb-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                      />
+                    </svg>
+                    <h3 className="text-xl font-semibold text-text-secondary mb-2">
+                      No Products Found
+                    </h3>
+                    <p className="text-text-muted">
+                      This user hasn't listed any products yet.
+                    </p>
+                  </div>
+                </Card>
+              )}
+
+              {/* Infinite Scroll Sentinel */}
+              <div ref={sentinelRef} />
+
+              {/* Loading More Spinner */}
+              {isLoadingMore && (
+                <div className="flex justify-center py-8">
+                  <svg
+                    className="animate-spin h-8 w-8 text-orange"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
-    </PageContainer>
+          </div>
+        </PageContainer>
+      </MouseFollowGradient>
+    </div>
   );
 };
 

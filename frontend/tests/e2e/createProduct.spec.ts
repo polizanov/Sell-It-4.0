@@ -21,16 +21,18 @@ test.describe('Create Product', () => {
 
     const timestamp = Date.now();
     const testEmail = `testuser+${timestamp}@example.com`;
-    const testPassword = 'password123';
+    const testPassword = 'Password123!';
 
     await page.getByLabel(/full name/i).fill('Test User');
+    await page.getByLabel(/username/i).fill(`testuser${timestamp}`);
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    // Wait for registration success and navigate to login
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    // Wait for registration success and click "Go to Login"
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
@@ -61,16 +63,18 @@ test.describe('Create Product', () => {
 
     const timestamp = Date.now();
     const testEmail = `testuser+${timestamp}@example.com`;
-    const testPassword = 'password123';
+    const testPassword = 'Password123!';
 
     await page.getByLabel(/full name/i).fill('Test User');
+    await page.getByLabel(/username/i).fill(`testuser${timestamp}`);
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    // Wait for registration and navigate to login
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    // Wait for registration success and click "Go to Login"
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
@@ -89,7 +93,7 @@ test.describe('Create Product', () => {
     await expect(page.getByLabel(/price/i)).toBeVisible();
     await expect(page.getByLabel(/category/i)).toBeVisible();
     await expect(page.getByLabel(/condition/i)).toBeVisible();
-    await expect(page.getByText(/product images/i)).toBeVisible();
+    await expect(page.getByLabel(/add image/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /create product/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /cancel/i })).toBeVisible();
   });

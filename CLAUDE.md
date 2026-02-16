@@ -28,14 +28,23 @@ npm run build -w frontend      # TypeScript check + Vite build -> dist/
 npm run test -w backend                              # Jest tests (requires MongoDB)
 npm run test -w frontend                             # Vitest tests
 npm run test:e2e -w frontend                         # Playwright E2E (auto-starts both servers)
+npm run test:watch -w backend                        # Jest watch mode
+npm run test:watch -w frontend                       # Vitest watch mode
 npx jest tests/auth.test.ts -w backend               # Single backend test file
 npx vitest run tests/unit/authStore.test.ts -w frontend  # Single frontend test file
+npx playwright install chromium -w frontend          # First-time setup for E2E tests
 ```
 
 ### Lint
 ```bash
 npm run lint -w backend        # ESLint backend
 npm run lint -w frontend       # ESLint frontend
+```
+
+### Other
+```bash
+npm run preview -w frontend    # Preview production build locally
+npm run start -w backend       # Run compiled production build
 ```
 
 ## Architecture

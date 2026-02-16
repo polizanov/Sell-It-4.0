@@ -30,7 +30,7 @@ export const MouseFollowGradient = ({
   });
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div ref={containerRef} className={`relative flex flex-col ${className}`}>
       {/* Gradient overlay */}
       <div
         className="absolute inset-0 pointer-events-none transition-opacity duration-300"
@@ -40,7 +40,7 @@ export const MouseFollowGradient = ({
         }}
       />
       {/* Content */}
-      <div className="relative z-10">{children}</div>
+      <div className="relative z-10 flex-1">{children}</div>
     </div>
   );
 };

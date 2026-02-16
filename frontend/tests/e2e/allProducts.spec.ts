@@ -2,6 +2,29 @@ import { test, expect } from '@playwright/test';
 
 test.describe('All Products Page', () => {
   test('loads and displays products from the API', async ({ page }) => {
+    // Seed a product so the page has something to display
+    const ts = Date.now();
+    const email = `seedprod${ts}@example.com`;
+    const password = 'Password123!';
+    await page.request.post('/api/auth/register', {
+      data: { name: 'Seed User', username: `seed${ts}`, email, password },
+    });
+    const loginRes = await page.request.post('/api/auth/login', {
+      data: { email, password },
+    });
+    const { data: { token } } = await loginRes.json();
+    await page.request.post('/api/products', {
+      headers: { Authorization: `Bearer ${token}` },
+      multipart: {
+        title: 'Seeded Product For Listing',
+        description: 'A product seeded via API for the all-products test',
+        price: '25.00',
+        category: 'Electronics',
+        condition: 'New',
+        images: { name: 'test.jpg', mimeType: 'image/jpeg', buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]) },
+      },
+    });
+
     // Note: /products redirects to / (home page)
     await page.goto('/products');
 
@@ -22,7 +45,7 @@ test.describe('All Products Page', () => {
 
     const timestamp = Date.now();
     const testEmail = `allprodcat+${timestamp}@example.com`;
-    const testPassword = 'password123';
+    const testPassword = 'Password123!';
     const testUsername = `catfilter${timestamp}`;
 
     await page.getByLabel(/full name/i).fill('Cat Filter User');
@@ -35,7 +58,6 @@ test.describe('All Products Page', () => {
     // Wait for success screen to appear and click "Go to Login" button
     await expect(page.getByRole('heading', { name: 'Check Your Email' })).toBeVisible({ timeout: 10000 });
     await page.getByRole('link', { name: /go to login/i }).click();
-    await page.waitForURL(/\/login/, { timeout: 10000 });
 
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
@@ -57,7 +79,7 @@ test.describe('All Products Page', () => {
     await fileInput.setInputFiles({
       name: 'filter-test.jpg',
       mimeType: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data'),
+      buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01]),
     });
 
     await page.getByRole('button', { name: /create product/i }).click();
@@ -90,7 +112,7 @@ test.describe('All Products Page', () => {
 
     const timestamp = Date.now();
     const testEmail = `allprodsearch+${timestamp}@example.com`;
-    const testPassword = 'password123';
+    const testPassword = 'Password123!';
     const testUsername = `searchtest${timestamp}`;
 
     await page.getByLabel(/full name/i).fill('Search Test User');
@@ -103,7 +125,6 @@ test.describe('All Products Page', () => {
     // Wait for success screen to appear and click "Go to Login" button
     await expect(page.getByRole('heading', { name: 'Check Your Email' })).toBeVisible({ timeout: 10000 });
     await page.getByRole('link', { name: /go to login/i }).click();
-    await page.waitForURL(/\/login/, { timeout: 10000 });
 
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
@@ -126,7 +147,7 @@ test.describe('All Products Page', () => {
     await fileInput.setInputFiles({
       name: 'search-test.jpg',
       mimeType: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data'),
+      buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01]),
     });
 
     await page.getByRole('button', { name: /create product/i }).click();
@@ -171,6 +192,29 @@ test.describe('All Products Page', () => {
   });
 
   test('Home page displays products from the API', async ({ page }) => {
+    // Seed a product so the page has something to display
+    const ts = Date.now();
+    const email = `seedhome${ts}@example.com`;
+    const password = 'Password123!';
+    await page.request.post('/api/auth/register', {
+      data: { name: 'Home Seed User', username: `seedhome${ts}`, email, password },
+    });
+    const loginRes = await page.request.post('/api/auth/login', {
+      data: { email, password },
+    });
+    const { data: { token } } = await loginRes.json();
+    await page.request.post('/api/products', {
+      headers: { Authorization: `Bearer ${token}` },
+      multipart: {
+        title: 'Seeded Product For Home',
+        description: 'A product seeded via API for the home page test',
+        price: '30.00',
+        category: 'Books',
+        condition: 'Good',
+        images: { name: 'test.jpg', mimeType: 'image/jpeg', buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]) },
+      },
+    });
+
     await page.goto('/');
 
     // Wait for at least one product card to appear

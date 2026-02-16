@@ -50,7 +50,7 @@ describe('requireVerified Middleware', () => {
       name: 'Verified User',
       username: 'verifieduser',
       email: 'verified@example.com',
-      password: 'password123',
+      password: 'Password123!',
     });
     await User.updateOne(
       { email: 'verified@example.com' },
@@ -58,20 +58,24 @@ describe('requireVerified Middleware', () => {
     );
     const verifiedLogin = await request(app).post('/api/auth/login').send({
       email: 'verified@example.com',
-      password: 'password123',
+      password: 'Password123!',
     });
     verifiedToken = verifiedLogin.body.data.token;
 
-    // Register an unverified user
+    // Register an unverified user (auto-verified in test mode, so explicitly unset)
     await request(app).post('/api/auth/register').send({
       name: 'Unverified User',
       username: 'unverifieduser',
       email: 'unverified@example.com',
-      password: 'password123',
+      password: 'Password123!',
     });
+    await User.updateOne(
+      { email: 'unverified@example.com' },
+      { $set: { isVerified: false } },
+    );
     const unverifiedLogin = await request(app).post('/api/auth/login').send({
       email: 'unverified@example.com',
-      password: 'password123',
+      password: 'Password123!',
     });
     unverifiedToken = unverifiedLogin.body.data.token;
 

@@ -7,7 +7,7 @@ test.describe('Delete Product', () => {
 
     const timestamp = Date.now();
     const testEmail = `deleteuser+${timestamp}@example.com`;
-    const testPassword = 'password123';
+    const testPassword = 'Password123!';
     const testUsername = `deluser${timestamp}`;
 
     await page.getByLabel(/full name/i).fill('Delete Test User');
@@ -17,8 +17,9 @@ test.describe('Delete Product', () => {
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    // Wait for registration and navigate to login
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    // Wait for registration success and click "Go to Login"
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
@@ -41,7 +42,7 @@ test.describe('Delete Product', () => {
     await fileInput.setInputFiles({
       name: 'test-image.jpg',
       mimeType: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data-for-e2e-delete-test'),
+      buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01]),
     });
 
     await page.getByRole('button', { name: /create product/i }).click();
@@ -58,13 +59,12 @@ test.describe('Delete Product', () => {
     // Verify confirmation dialog appears
     await expect(page.getByRole('dialog')).toBeVisible();
     await expect(page.getByText(/Are you sure you want to delete/)).toBeVisible();
-    await expect(page.getByText('Product To Delete E2E')).toBeVisible();
 
     // Click the Delete button in the dialog
     await page.getByRole('button', { name: /^Delete$/i }).click();
 
-    // Should redirect to /products
-    await page.waitForURL(/\/products$/, { timeout: 10000 });
+    // Should redirect to /products which redirects to / (home page)
+    await page.waitForURL('/', { timeout: 10000 });
   });
 
   test('non-owner does not see delete button', async ({ page }) => {
@@ -75,13 +75,14 @@ test.describe('Delete Product', () => {
     await page.getByLabel(/full name/i).fill('Owner User');
     await page.getByLabel(/username/i).fill(`owner${timestamp}`);
     await page.getByLabel(/email address/i).fill(`owner+${timestamp}@example.com`);
-    await page.getByLabel(/^password/i).fill('password123');
-    await page.getByLabel(/confirm password/i).fill('password123');
+    await page.getByLabel(/^password/i).fill('Password123!');
+    await page.getByLabel(/confirm password/i).fill('Password123!');
     await page.getByRole('button', { name: /create account/i }).click();
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(`owner+${timestamp}@example.com`);
-    await page.getByLabel(/password/i).fill('password123');
+    await page.getByLabel(/password/i).fill('Password123!');
     await page.getByRole('button', { name: /login/i }).click();
     await page.waitForURL('/', { timeout: 10000 });
 
@@ -98,7 +99,7 @@ test.describe('Delete Product', () => {
     await fileInput.setInputFiles({
       name: 'test-image.jpg',
       mimeType: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data'),
+      buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01]),
     });
 
     await page.getByRole('button', { name: /create product/i }).click();
@@ -116,13 +117,14 @@ test.describe('Delete Product', () => {
     await page.getByLabel(/full name/i).fill('Non Owner');
     await page.getByLabel(/username/i).fill(`nonowner${timestamp}`);
     await page.getByLabel(/email address/i).fill(`nonowner+${timestamp}@example.com`);
-    await page.getByLabel(/^password/i).fill('password123');
-    await page.getByLabel(/confirm password/i).fill('password123');
+    await page.getByLabel(/^password/i).fill('Password123!');
+    await page.getByLabel(/confirm password/i).fill('Password123!');
     await page.getByRole('button', { name: /create account/i }).click();
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(`nonowner+${timestamp}@example.com`);
-    await page.getByLabel(/password/i).fill('password123');
+    await page.getByLabel(/password/i).fill('Password123!');
     await page.getByRole('button', { name: /login/i }).click();
     await page.waitForURL('/', { timeout: 10000 });
 

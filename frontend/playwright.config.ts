@@ -7,6 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
+  globalTeardown: './tests/e2e/global-teardown.ts',
   use: {
     baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
@@ -19,7 +20,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'npm run dev -w backend',
+      command: 'NODE_ENV=test MONGODB_URI=mongodb://localhost:27017/sellit40_test npm run dev -w backend',
       url: 'http://localhost:5005/api/health',
       reuseExistingServer: !process.env.CI,
       cwd: '..',

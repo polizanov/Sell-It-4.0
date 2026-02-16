@@ -7,6 +7,7 @@ import { uploadToCloudinary } from '../middleware/upload';
 import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../types';
 import { User } from '../models/User';
+import { mapProductToResponse } from '../utils/productHelpers';
 
 const SORT_OPTIONS: Record<string, Record<string, 1 | -1>> = {
   newest: { createdAt: -1 },
@@ -15,6 +16,61 @@ const SORT_OPTIONS: Record<string, Record<string, 1 | -1>> = {
   price_desc: { price: -1 },
 };
 
+// Categories cache with TTL
+let categoriesCache: { data: string[], timestamp: number } | null = null;
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Get all products with pagination and filtering
+ *
+ * @route GET /api/products
+ * @param {number} page - Page number (default: 1)
+ * @param {number} limit - Items per page (default: 12, max: 50)
+ * @param {string} search - Search term for title/description (uses text index)
+ * @param {string} category - Filter by category
+ * @param {string} sort - Sort option (newest, oldest, price_asc, price_desc)
+ *
+ * @returns {Object} response
+ * @returns {boolean} response.success - Operation success status
+ * @returns {string} response.message - Response message
+ * @returns {Object} response.data - Product data
+ * @returns {Array<Product>} response.data.products - Array of product objects
+ * @returns {Object} response.data.pagination - Pagination metadata
+ * @returns {number} response.data.pagination.currentPage - Current page number
+ * @returns {number} response.data.pagination.totalPages - Total number of pages
+ * @returns {number} response.data.pagination.totalProducts - Total product count
+ * @returns {number} response.data.pagination.limit - Items per page
+ * @returns {boolean} response.data.pagination.hasMore - Whether more pages exist
+ *
+ * @example
+ * // Request: GET /api/products?page=1&limit=20&category=Electronics&sort=newest
+ * // Response:
+ * {
+ *   "success": true,
+ *   "message": "Products retrieved successfully",
+ *   "data": {
+ *     "products": [{
+ *       "id": "123",
+ *       "title": "iPhone 15",
+ *       "description": "Brand new",
+ *       "price": 999.99,
+ *       "images": ["url1"],
+ *       "category": "Electronics",
+ *       "condition": "New",
+ *       "seller": { "id": "456", "username": "john", "email": "john@example.com" },
+ *       "createdAt": "2024-01-01T00:00:00Z",
+ *       "updatedAt": "2024-01-01T00:00:00Z"
+ *     }],
+ *     "pagination": {
+ *       "currentPage": 1,
+ *       "totalPages": 5,
+ *       "totalProducts": 100,
+ *       "limit": 20,
+ *       "hasMore": true
+ *     }
+ *   }
+ * }
+ */
 export const getAllProducts = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const page = Math.max(Number(req.query.page) || 1, 1);
   const limit = Math.min(Math.max(Number(req.query.limit) || 12, 1), 50);
@@ -29,8 +85,8 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response): 
   }
 
   if (search) {
-    const regex = new RegExp(search, 'i');
-    filter.$or = [{ title: regex }, { description: regex }];
+    // Use text index for better performance and security (prevents ReDoS)
+    filter.$text = { $search: search };
   }
 
   const sortOption = SORT_OPTIONS[sort] || SORT_OPTIONS.newest;
@@ -47,17 +103,7 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response): 
     success: true,
     message: 'Products retrieved successfully',
     data: {
-      products: products.map((product) => ({
-        id: product._id,
-        title: product.title,
-        description: product.description,
-        price: product.price,
-        images: product.images,
-        category: product.category,
-        condition: product.condition,
-        seller: product.seller,
-        createdAt: product.createdAt,
-      })),
+      products: products.map(mapProductToResponse),
       pagination: {
         currentPage: page,
         totalPages,
@@ -69,6 +115,45 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response): 
   });
 });
 
+/**
+ * Create a new product
+ *
+ * @route POST /api/products
+ * @access Protected - Requires authentication
+ * @param {string} title - Product title (3-100 characters)
+ * @param {string} description - Product description (10-2000 characters)
+ * @param {number} price - Product price (minimum 0.01)
+ * @param {string} category - Product category (max 50 characters)
+ * @param {string} condition - Product condition (New, Like New, Good, Fair)
+ * @param {File[]} images - Product images (1-5 images, max 5MB each, JPEG/PNG/WebP)
+ *
+ * @returns {Object} response
+ * @returns {boolean} response.success - Operation success status
+ * @returns {string} response.message - Response message
+ * @returns {Product} response.data - Created product object
+ *
+ * @example
+ * // Request: POST /api/products (multipart/form-data)
+ * // Headers: { Authorization: "Bearer <token>" }
+ * // Body: { title, description, price, category, condition, images }
+ * // Response:
+ * {
+ *   "success": true,
+ *   "message": "Product created successfully",
+ *   "data": {
+ *     "id": "123",
+ *     "title": "iPhone 15",
+ *     "description": "Brand new iPhone",
+ *     "price": 999.99,
+ *     "images": ["cloudinary-url"],
+ *     "category": "Electronics",
+ *     "condition": "New",
+ *     "seller": { "id": "456", "username": "john", "email": "john@example.com" },
+ *     "createdAt": "2024-01-01T00:00:00Z",
+ *     "updatedAt": "2024-01-01T00:00:00Z"
+ *   }
+ * }
+ */
 export const createProduct = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const { title, description, price, category, condition } = req.body;
   const files = req.files as Express.Multer.File[];
@@ -96,23 +181,31 @@ export const createProduct = asyncHandler(async (req: AuthRequest, res: Response
   res.status(201).json({
     success: true,
     message: 'Product created successfully',
-    data: {
-      id: product._id,
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      images: product.images,
-      category: product.category,
-      condition: product.condition,
-      seller: product.seller,
-      createdAt: product.createdAt,
-    },
+    data: mapProductToResponse(product),
   });
 });
 
 export const getCategories = asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
+  const now = Date.now();
+  const isTestEnv = process.env.NODE_ENV === 'test';
+
+  // Skip cache in test environment to avoid stale data between tests
+  if (!isTestEnv && categoriesCache && (now - categoriesCache.timestamp) < CACHE_TTL) {
+    res.json({
+      success: true,
+      message: 'Categories retrieved successfully',
+      data: categoriesCache.data
+    });
+    return;
+  }
+
+  // Refresh cache
   const categories = await Product.distinct('category');
   categories.sort((a: string, b: string) => a.localeCompare(b));
+
+  if (!isTestEnv) {
+    categoriesCache = { data: categories, timestamp: now };
+  }
 
   res.json({
     success: true,
@@ -121,6 +214,40 @@ export const getCategories = asyncHandler(async (_req: AuthRequest, res: Respons
   });
 });
 
+/**
+ * Get a single product by ID
+ *
+ * @route GET /api/products/:id
+ * @param {string} id - Product ID (MongoDB ObjectId)
+ *
+ * @returns {Object} response
+ * @returns {boolean} response.success - Operation success status
+ * @returns {string} response.message - Response message
+ * @returns {Product} response.data - Product object with populated seller info
+ *
+ * @throws {400} Invalid product ID
+ * @throws {404} Product not found
+ *
+ * @example
+ * // Request: GET /api/products/507f1f77bcf86cd799439011
+ * // Response:
+ * {
+ *   "success": true,
+ *   "message": "Product retrieved successfully",
+ *   "data": {
+ *     "id": "507f1f77bcf86cd799439011",
+ *     "title": "iPhone 15",
+ *     "description": "Brand new",
+ *     "price": 999.99,
+ *     "images": ["url"],
+ *     "category": "Electronics",
+ *     "condition": "New",
+ *     "seller": { "id": "456", "username": "john", "email": "john@example.com" },
+ *     "createdAt": "2024-01-01T00:00:00Z",
+ *     "updatedAt": "2024-01-01T00:00:00Z"
+ *   }
+ * }
+ */
 export const getProductById = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
@@ -137,17 +264,7 @@ export const getProductById = asyncHandler(async (req: Request, res: Response): 
   res.json({
     success: true,
     message: 'Product retrieved successfully',
-    data: {
-      id: product._id,
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      images: product.images,
-      category: product.category,
-      condition: product.condition,
-      seller: product.seller,
-      createdAt: product.createdAt,
-    },
+    data: mapProductToResponse(product),
   });
 });
 
@@ -209,17 +326,7 @@ export const updateProduct = asyncHandler(async (req: AuthRequest, res: Response
   res.json({
     success: true,
     message: 'Product updated successfully',
-    data: {
-      id: product._id,
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      images: product.images,
-      category: product.category,
-      condition: product.condition,
-      seller: product.seller,
-      createdAt: product.createdAt,
-    },
+    data: mapProductToResponse(product),
   });
 });
 
@@ -255,17 +362,7 @@ export const getUserProducts = asyncHandler(async (req: Request, res: Response):
         username: user.username,
         memberSince: user.createdAt,
       },
-      products: products.map((product) => ({
-        id: product._id,
-        title: product.title,
-        description: product.description,
-        price: product.price,
-        images: product.images,
-        category: product.category,
-        condition: product.condition,
-        seller: product.seller,
-        createdAt: product.createdAt,
-      })),
+      products: products.map(mapProductToResponse),
       pagination: {
         currentPage: page,
         totalPages,

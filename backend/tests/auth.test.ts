@@ -22,6 +22,7 @@ import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../src/app';
 import { User } from '../src/models/User';
+import * as emailService from '../src/services/emailService';
 
 describe('Auth Endpoints', () => {
   // Shared state across sequential tests
@@ -45,7 +46,7 @@ describe('Auth Endpoints', () => {
         name: 'Test User',
         username: 'testuser',
         email: 'test@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(201);
@@ -69,19 +70,19 @@ describe('Auth Endpoints', () => {
         name: 'Bad Email',
         username: 'bademail',
         email: 'not-an-email',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
     });
 
-    it('should return 400 for password shorter than 6 characters', async () => {
+    it('should return 400 for password shorter than 8 characters', async () => {
       const res = await request(app).post('/api/auth/register').send({
         name: 'Short Pass',
         username: 'shortpass',
         email: 'short@example.com',
-        password: '12345',
+        password: 'Pass1!',
       });
 
       expect(res.status).toBe(400);
@@ -93,7 +94,7 @@ describe('Auth Endpoints', () => {
         name: 'A',
         username: 'shortname',
         email: 'shortname@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(400);
@@ -105,7 +106,7 @@ describe('Auth Endpoints', () => {
         name: 'Test User Dupe',
         username: 'testuserdupe',
         email: 'test@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(400);
@@ -118,7 +119,7 @@ describe('Auth Endpoints', () => {
         name: 'Short Username',
         username: 'ab',
         email: 'shortusername@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(400);
@@ -130,7 +131,7 @@ describe('Auth Endpoints', () => {
         name: 'Invalid Username',
         username: 'test-user',
         email: 'invalidusername@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(400);
@@ -142,7 +143,7 @@ describe('Auth Endpoints', () => {
         name: 'Duplicate Username',
         username: 'testuser',
         email: 'dupeusername@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(400);
@@ -156,18 +157,32 @@ describe('Auth Endpoints', () => {
   // --------------------------------------------------------------------------
   describe('GET /api/auth/verify-email/:token', () => {
     it('should verify email with a valid verification token', async () => {
-      // Retrieve the verification token directly from the database
-      const user = await User.findOne({ email: 'test@example.com' });
-      expect(user).not.toBeNull();
-      expect(user!.verificationToken).toBeDefined();
+      // Since tokens are now hashed, we need to create a test user with both plain and hashed tokens
+      const crypto = require('crypto');
+      const plainToken = crypto.randomBytes(32).toString('hex');
+      const hashedToken = crypto.createHash('sha256').update(plainToken).digest('hex');
+
+      // Update the test user with the verification token and expiry
+      await User.findOneAndUpdate(
+        { email: 'test@example.com' },
+        {
+          verificationToken: hashedToken,
+          verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+          isVerified: false
+        }
+      );
 
       const res = await request(app).get(
-        `/api/auth/verify-email/${user!.verificationToken}`,
+        `/api/auth/verify-email/${plainToken}`,
       );
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.message).toMatch(/verified/i);
+
+      // Verify the user is now marked as verified in the database
+      const user = await User.findOne({ email: 'test@example.com' });
+      expect(user?.isVerified).toBe(true);
     });
 
     it('should return 400 for an invalid verification token', async () => {
@@ -187,7 +202,7 @@ describe('Auth Endpoints', () => {
     it('should login a verified user with correct credentials', async () => {
       const res = await request(app).post('/api/auth/login').send({
         email: 'test@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(200);
@@ -215,7 +230,7 @@ describe('Auth Endpoints', () => {
     it('should return 401 for a non-existent email', async () => {
       const res = await request(app).post('/api/auth/login').send({
         email: 'nonexistent@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(401);
@@ -223,17 +238,21 @@ describe('Auth Endpoints', () => {
     });
 
     it('should allow an unverified user to login with isVerified=false', async () => {
-      // Register a new user (unverified by default)
+      // Register a new user (auto-verified in test mode, so explicitly unset)
       await request(app).post('/api/auth/register').send({
         name: 'Unverified User',
         username: 'unverifieduser',
         email: 'unverified@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
+      await User.updateOne(
+        { email: 'unverified@example.com' },
+        { $set: { isVerified: false } },
+      );
 
       const res = await request(app).post('/api/auth/login').send({
         email: 'unverified@example.com',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(200);
@@ -252,7 +271,7 @@ describe('Auth Endpoints', () => {
     it('should return 400 for invalid email format', async () => {
       const res = await request(app).post('/api/auth/login').send({
         email: 'not-an-email',
-        password: 'password123',
+        password: 'Password123!',
       });
 
       expect(res.status).toBe(400);

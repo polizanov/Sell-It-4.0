@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router';
 import { Card } from '../common/Card';
 import type { Product } from '../../types';
@@ -6,7 +7,7 @@ interface ProductCardProps {
   product: Product;
 }
 
-export const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCardComponent = ({ product }: ProductCardProps) => {
   return (
     <Link to={`/products/${product.id}`} className="block group">
       <Card hover className="h-full transition-all duration-300 group-hover:bg-gradient-card-hover">
@@ -17,6 +18,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               <img
                 src={product.images[0]}
                 alt={product.title}
+                loading="lazy"
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               {/* Image count badge */}
@@ -93,3 +95,5 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     </Link>
   );
 };
+
+export const ProductCard = memo(ProductCardComponent);

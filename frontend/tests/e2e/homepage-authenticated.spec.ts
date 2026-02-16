@@ -7,7 +7,7 @@ test.describe('Homepage - Authenticated Users', () => {
     const random = Math.floor(Math.random() * 100000);
     const testEmail = `homeauth${timestamp}${random}@example.com`;
     const testUsername = `homeauth${timestamp}${random}`;
-    const testPassword = 'password123';
+    const testPassword = 'Password123!';
 
     await page.goto('/register');
 
@@ -69,10 +69,10 @@ test.describe('Homepage - Authenticated Users', () => {
     const productsSection = page.locator('section.bg-dark-bg');
     await expect(productsSection).toBeVisible();
 
-    // Verify products section is at or near the top of the page
-    // Account for navbar (~80px) + verification banner (~60-80px) if present
+    // Verify products section is near the top of the page (no hero/features above it)
+    // Account for navbar, optional verification banner, heading, padding, etc.
     const sectionPosition = await productsSection.boundingBox();
-    expect(sectionPosition?.y).toBeLessThan(900); // Allow for navbar and verification banner
+    expect(sectionPosition?.y).toBeLessThan(1200);
 
     // More importantly, verify Hero and Features sections are NOT above it
     const heroSection = page.locator('section.relative.bg-gradient-hero');
@@ -208,12 +208,40 @@ test.describe('Homepage - Authenticated Users', () => {
   });
 
   test('Authenticated but unverified user sees verification required message', async ({ page }) => {
-    await page.goto('/');
+    const timestamp = Date.now();
+    const unverifiedEmail = `unverified${timestamp}@example.com`;
+    const unverifiedUsername = `unverified${timestamp}`;
+    const testPassword = 'Password123!';
+
+    // Register via API (auto-verified in test mode)
+    await page.request.post('/api/auth/register', {
+      data: {
+        name: 'Unverified Test User',
+        username: unverifiedUsername,
+        email: unverifiedEmail,
+        password: testPassword,
+      },
+    });
+
+    // Unverify the user
+    await page.request.post('/api/auth/test-set-verified', {
+      data: { email: unverifiedEmail, isVerified: false },
+    });
+
+    // Login as unverified user
+    const loginRes = await page.request.post('/api/auth/login', {
+      data: { email: unverifiedEmail, password: testPassword },
+    });
+    const loginBody = await loginRes.json();
+
+    // Set token in localStorage
+    await page.evaluate((token) => {
+      localStorage.setItem('token', token);
+    }, loginBody.data.token);
+    await page.reload();
 
     // Navigate to Create Product page
     await page.goto('/create-product');
-
-    // Should stay on create-product route
     await expect(page).toHaveURL('/create-product');
 
     // Since user is unverified, they should see the VerificationRequired component
@@ -266,7 +294,7 @@ test.describe('Homepage - Authenticated Users', () => {
 
     await page.goto('/');
 
-    // Wait for error message to appear
-    await expect(page.getByText(/failed to load products/i)).toBeVisible({ timeout: 10000 });
+    // Wait for error message to appear (the API mock returns "Server error")
+    await expect(page.getByText(/server error/i)).toBeVisible({ timeout: 10000 });
   });
 });

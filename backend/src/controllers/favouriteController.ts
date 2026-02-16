@@ -137,7 +137,12 @@ export const getFavourites = asyncHandler(
 
 export const getFavouriteIds = asyncHandler(
   async (req: AuthRequest, res: Response): Promise<void> => {
-    const favourites = await Favourite.find({ user: req.user!.userId }).select('product').lean();
+    // Limit to 1000 most recent favorites to prevent memory issues
+    const favourites = await Favourite.find({ user: req.user!.userId })
+      .sort({ createdAt: -1 })
+      .limit(1000)
+      .select('product')
+      .lean();
 
     const productIds = favourites.map((fav) => fav.product.toString());
 

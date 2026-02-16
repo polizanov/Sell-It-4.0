@@ -9,7 +9,7 @@ test.describe('Edit Product', () => {
 
     const timestamp = Date.now();
     const testEmail = `edituser+${timestamp}@example.com`;
-    const testPassword = 'password123';
+    const testPassword = 'Password123!';
     const testUsername = `edituser${timestamp}`;
 
     await page.getByLabel(/full name/i).fill('Edit Test User');
@@ -19,8 +19,9 @@ test.describe('Edit Product', () => {
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    // Wait for registration and navigate to login
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    // Wait for registration success and click "Go to Login"
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
@@ -44,7 +45,7 @@ test.describe('Edit Product', () => {
     await fileInput.setInputFiles({
       name: 'test-image.jpg',
       mimeType: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data-for-e2e-test'),
+      buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01]),
     });
 
     await page.getByRole('button', { name: /create product/i }).click();
@@ -56,33 +57,34 @@ test.describe('Edit Product', () => {
     await expect(page.getByText('Original E2E Product')).toBeVisible();
     await expect(page.getByText('$99.99')).toBeVisible();
 
-    // The owner should see the Edit Product button
-    const editButton = page.getByText('Edit Product');
+    // The owner should see the Edit Product icon button
+    const editButton = page.getByLabel('Edit product');
     await expect(editButton).toBeVisible();
 
-    // Click the Edit Product button
+    // Click the Edit Product icon button to open modal
     await editButton.click();
 
-    // Should navigate to the edit page
-    await page.waitForURL(/\/products\/.*\/edit/, { timeout: 10000 });
+    // Wait for the edit modal to appear
+    const modal = page.getByRole('dialog');
+    await expect(modal).toBeVisible({ timeout: 5000 });
 
     // Verify the form is pre-filled
-    await expect(page.getByLabel(/product title/i)).toHaveValue('Original E2E Product');
-    await expect(page.getByLabel(/price/i)).toHaveValue('99.99');
+    await expect(modal.getByLabel(/product title/i)).toHaveValue('Original E2E Product');
+    await expect(modal.getByLabel(/price/i)).toHaveValue('99.99');
 
     // Update the product
-    await page.getByLabel(/product title/i).clear();
-    await page.getByLabel(/product title/i).fill('Updated E2E Product');
+    await modal.getByLabel(/product title/i).clear();
+    await modal.getByLabel(/product title/i).fill('Updated E2E Product');
 
-    await page.getByLabel(/price/i).clear();
-    await page.getByLabel(/price/i).fill('149.99');
+    await modal.getByLabel(/price/i).clear();
+    await modal.getByLabel(/price/i).fill('149.99');
 
-    await page.getByRole('button', { name: /save changes/i }).click();
+    await modal.getByRole('button', { name: /save changes/i }).click();
 
-    // Wait for navigation back to the product detail page
-    await page.waitForURL(/\/products\/(?!.*\/edit)/, { timeout: 10000 });
+    // Wait for modal to close and product detail to refresh
+    await expect(modal).not.toBeVisible({ timeout: 10000 });
 
-    // Verify the updated data is displayed
+    // Verify the updated data is displayed on the product detail page
     await expect(page.getByText('Updated E2E Product')).toBeVisible();
     await expect(page.getByText('$149.99')).toBeVisible();
   });

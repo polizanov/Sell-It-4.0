@@ -9,7 +9,7 @@ test.describe('User Profile', () => {
     const testName = 'Seller Test User';
     const testUsername = `sellertest${timestamp}`;
     const testEmail = `sellertest+${timestamp}@example.com`;
-    const testPassword = 'password123';
+    const testPassword = 'Password123!';
 
     await page.getByLabel(/full name/i).fill(testName);
     await page.getByLabel(/username/i).fill(testUsername);
@@ -18,7 +18,8 @@ test.describe('User Profile', () => {
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    await page.waitForURL(/\/login/, { timeout: 10000 });
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible({ timeout: 10000 });
+    await page.getByRole('link', { name: /go to login/i }).click();
 
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
@@ -33,7 +34,7 @@ test.describe('User Profile', () => {
     await page.getByLabel(/product title/i).fill('Test Profile Product');
     await page.getByLabel(/description/i).fill('A product for testing the seller profile link');
     await page.getByLabel(/price/i).fill('99.99');
-    await page.getByLabel(/category/i).selectOption('Electronics');
+    await page.getByLabel(/category/i).fill('Electronics');
     await page.getByLabel(/condition/i).selectOption('New');
 
     // Upload a test image
@@ -41,7 +42,7 @@ test.describe('User Profile', () => {
     await fileInput.setInputFiles({
       name: 'test.jpg',
       mimeType: 'image/jpeg',
-      buffer: Buffer.from('fake-image-data'),
+      buffer: Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01]),
     });
 
     await page.getByRole('button', { name: /create product/i }).click();
@@ -54,7 +55,7 @@ test.describe('User Profile', () => {
 
     // Should navigate to seller profile
     await expect(page).toHaveURL(new RegExp(`/profile/${testUsername}`));
-    await expect(page.getByText('Seller Profile')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Seller Profile' })).toBeVisible();
   });
 
   test('Shows User Not Found for non-existent username', async ({ page }) => {

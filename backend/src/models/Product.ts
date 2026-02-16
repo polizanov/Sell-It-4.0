@@ -66,7 +66,12 @@ const productSchema = new Schema<IProduct>(
   },
 );
 
+// Text index for search functionality
+productSchema.index({ title: 'text', description: 'text' });
+
+// Compound indexes for common query patterns
 productSchema.index({ createdAt: -1 });
+productSchema.index({ price: 1, createdAt: -1 });
 productSchema.index({ category: 1, createdAt: -1 });
 productSchema.index({ seller: 1, createdAt: -1 });
 
