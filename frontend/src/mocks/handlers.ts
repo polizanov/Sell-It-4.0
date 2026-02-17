@@ -8,9 +8,12 @@ const users: Array<{
   name: string;
   username: string;
   email: string;
+  phone: string;
   password: string;
   isVerified: boolean;
+  isPhoneVerified: boolean;
   verificationToken?: string;
+  phoneVerificationCode?: string;
 }> = [];
 
 // In-memory favourites for mock
@@ -228,6 +231,7 @@ export const handlers = [
       name: string;
       username: string;
       email: string;
+      phone: string;
       password: string;
     };
 
@@ -254,13 +258,22 @@ export const handlers = [
       );
     }
 
+    if (body.phone && users.some((u) => u.phone === body.phone)) {
+      return HttpResponse.json(
+        { success: false, message: 'Phone number is already in use' },
+        { status: 400 },
+      );
+    }
+
     const user = {
       id: String(users.length + 1),
       name: body.name,
       username: usernameLower,
       email: body.email,
+      phone: body.phone || '',
       password: body.password,
       isVerified: false,
+      isPhoneVerified: false,
       verificationToken: 'mock-verification-token',
     };
     users.push(user);
@@ -270,7 +283,14 @@ export const handlers = [
         success: true,
         message:
           'Registration successful. Please check your email to verify your account.',
-        data: { id: user.id, name: user.name, username: user.username, email: user.email },
+        data: {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          email: user.email,
+          phone: user.phone,
+          isPhoneVerified: user.isPhoneVerified,
+        },
       },
       { status: 201 },
     );
@@ -299,6 +319,8 @@ export const handlers = [
         username: user.username,
         email: user.email,
         isVerified: user.isVerified,
+        phone: user.phone,
+        isPhoneVerified: user.isPhoneVerified,
         token: 'mock-jwt-token',
       },
     });
@@ -346,6 +368,8 @@ export const handlers = [
             username: user.username,
             email: user.email,
             isVerified: user.isVerified,
+            phone: user.phone,
+            isPhoneVerified: user.isPhoneVerified,
           },
         });
       }
@@ -363,6 +387,8 @@ export const handlers = [
             username: user.username,
             email: user.email,
             isVerified: user.isVerified,
+            phone: user.phone,
+            isPhoneVerified: user.isPhoneVerified,
           },
         });
       }
@@ -372,6 +398,71 @@ export const handlers = [
       { success: false, message: 'Not authorized' },
       { status: 401 },
     );
+  }),
+
+  http.post(`${API_BASE}/auth/send-phone-verification`, ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const token = authHeader.split(' ')[1];
+    const user = users.find((u) =>
+      token === 'mock-jwt-token' ? u.isVerified : token === 'mock-jwt-token-unverified' ? !u.isVerified : false,
+    );
+
+    if (!user) {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Verification code sent to your phone',
+    });
+  }),
+
+  http.post(`${API_BASE}/auth/verify-phone`, async ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const token = authHeader.split(' ')[1];
+    const user = users.find((u) =>
+      token === 'mock-jwt-token' ? u.isVerified : token === 'mock-jwt-token-unverified' ? !u.isVerified : false,
+    );
+
+    if (!user) {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const body = (await request.json()) as { code: string };
+
+    if (body.code !== '123456') {
+      return HttpResponse.json(
+        { success: false, message: 'Invalid verification code' },
+        { status: 400 },
+      );
+    }
+
+    user.isPhoneVerified = true;
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Phone number verified successfully',
+    });
   }),
 
   http.get(`${API_BASE}/favourites/ids`, ({ request }) => {

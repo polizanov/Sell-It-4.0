@@ -4,7 +4,7 @@ import { MemoryRouter, Routes, Route } from 'react-router';
 import { VerifiedRoute } from '../../src/components/auth/VerifiedRoute';
 import { useAuthStore } from '../../src/store/authStore';
 
-const renderRoute = (initialEntries = ['/protected']) => {
+const renderRoute = (initialEntries = ['/protected'], requirePhone = false) => {
   return render(
     <MemoryRouter initialEntries={initialEntries}>
       <Routes>
@@ -12,7 +12,7 @@ const renderRoute = (initialEntries = ['/protected']) => {
         <Route
           path="/protected"
           element={
-            <VerifiedRoute>
+            <VerifiedRoute requirePhone={requirePhone}>
               <div>Protected Content</div>
             </VerifiedRoute>
           }
@@ -44,9 +44,9 @@ describe('VerifiedRoute', () => {
     expect(screen.getByText('Login Page')).toBeInTheDocument();
   });
 
-  it('shows VerificationRequired when authenticated but not verified', () => {
+  it('shows VerificationRequired when authenticated but not email-verified', () => {
     useAuthStore.setState({
-      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: false },
+      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: false, phone: '+359888123456', isPhoneVerified: false },
       token: 'mock-jwt-token',
       isAuthenticated: true,
       isLoading: false,
@@ -59,15 +59,54 @@ describe('VerifiedRoute', () => {
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 
-  it('renders children when authenticated and verified', () => {
+  it('renders children when authenticated and email-verified (without requirePhone)', () => {
     useAuthStore.setState({
-      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: true },
+      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: true, phone: '+359888123456', isPhoneVerified: true },
       token: 'mock-jwt-token',
       isAuthenticated: true,
       isLoading: false,
     });
 
     renderRoute();
+    expect(screen.getByText('Protected Content')).toBeInTheDocument();
+  });
+
+  it('without requirePhone, passes when only email verified (even if phone unverified)', () => {
+    useAuthStore.setState({
+      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: true, phone: '+359888123456', isPhoneVerified: false },
+      token: 'mock-jwt-token',
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    renderRoute();
+    expect(screen.getByText('Protected Content')).toBeInTheDocument();
+  });
+
+  it('requirePhone prop blocks when isPhoneVerified is false', () => {
+    useAuthStore.setState({
+      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: true, phone: '+359888123456', isPhoneVerified: false },
+      token: 'mock-jwt-token',
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    renderRoute(['/protected'], true);
+    expect(
+      screen.getByRole('heading', { name: /phone verification required/i }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+  });
+
+  it('requirePhone prop passes when both email and phone are verified', () => {
+    useAuthStore.setState({
+      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: true, phone: '+359888123456', isPhoneVerified: true },
+      token: 'mock-jwt-token',
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    renderRoute(['/protected'], true);
     expect(screen.getByText('Protected Content')).toBeInTheDocument();
   });
 });

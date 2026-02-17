@@ -362,7 +362,7 @@ describe('Home Page — Product Listing', () => {
 
   it('hides hero and features sections for authenticated users', async () => {
     useAuthStore.setState({
-      user: { id: '1', name: 'Test User', username: 'testuser', email: 'test@example.com', isVerified: true },
+      user: { id: '1', name: 'Test User', username: 'testuser', email: 'test@example.com', isVerified: true, phone: '+359888123456', isPhoneVerified: true },
       token: 'mock-token',
       isAuthenticated: true,
       isLoading: false,

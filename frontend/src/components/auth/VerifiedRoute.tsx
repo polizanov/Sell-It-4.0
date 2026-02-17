@@ -5,9 +5,10 @@ import { VerificationRequired } from '../common/VerificationRequired';
 
 interface VerifiedRouteProps {
   children: ReactNode;
+  requirePhone?: boolean;
 }
 
-export const VerifiedRoute = ({ children }: VerifiedRouteProps) => {
+export const VerifiedRoute = ({ children, requirePhone = false }: VerifiedRouteProps) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
   const user = useAuthStore((state) => state.user);
@@ -26,6 +27,10 @@ export const VerifiedRoute = ({ children }: VerifiedRouteProps) => {
 
   if (user?.isVerified === false) {
     return <VerificationRequired />;
+  }
+
+  if (requirePhone && user?.isPhoneVerified === false) {
+    return <VerificationRequired type="phone" />;
   }
 
   return <>{children}</>;

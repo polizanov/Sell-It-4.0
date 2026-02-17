@@ -18,6 +18,12 @@ jest.mock('../src/services/emailService', () => ({
   sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Mock the SMS service to prevent real SMS from being sent during tests.
+jest.mock('../src/services/smsService', () => ({
+  sendVerificationSMS: jest.fn().mockResolvedValue(undefined),
+  generateOTP: jest.fn().mockReturnValue('123456'),
+}));
+
 // Mock the Cloudinary upload to prevent real uploads during tests.
 jest.mock('../src/middleware/upload', () => {
   const actual = jest.requireActual('../src/middleware/upload');
@@ -55,6 +61,7 @@ describe('Favourite Endpoints', () => {
       username: 'usera',
       email: 'usera@example.com',
       password: 'Password123!',
+      phone: '+16465555001',
     });
 
     // Register userB (favouriter)
@@ -63,6 +70,7 @@ describe('Favourite Endpoints', () => {
       username: 'userb',
       email: 'userb@example.com',
       password: 'Password123!',
+      phone: '+16465555002',
     });
 
     // Verify both users

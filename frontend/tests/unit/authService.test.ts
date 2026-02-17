@@ -40,6 +40,7 @@ describe('authService', () => {
         name: 'Test User',
         username: 'testuser',
         email: 'test@example.com',
+        phone: '+359888123456',
         password: 'password123',
       });
 
@@ -67,6 +68,7 @@ describe('authService', () => {
           name: 'Test User',
           username: 'testuser',
           email: 'existing@example.com',
+          phone: '+359888123456',
           password: 'password123',
         });
         // Should not reach here
@@ -184,6 +186,121 @@ describe('authService', () => {
         expect(axiosError.response.data.message).toBe(
           'Invalid or expired verification token',
         );
+      }
+    });
+  });
+
+  describe('sendPhoneVerification', () => {
+    it('calls POST /api/auth/send-phone-verification and returns success', async () => {
+      localStorage.setItem('token', 'mock-jwt-token');
+
+      server.use(
+        http.post(`${API_BASE}/auth/send-phone-verification`, ({ request }) => {
+          const authHeader = request.headers.get('Authorization');
+          if (authHeader === 'Bearer mock-jwt-token') {
+            return HttpResponse.json({
+              success: true,
+              message: 'Verification code sent to your phone',
+            });
+          }
+          return HttpResponse.json(
+            { success: false, message: 'Not authorized' },
+            { status: 401 },
+          );
+        }),
+      );
+
+      const response = await authService.sendPhoneVerification();
+
+      expect(response.data.success).toBe(true);
+      expect(response.data.message).toBe('Verification code sent to your phone');
+    });
+
+    it('returns 401 when no token is set', async () => {
+      server.use(
+        http.post(`${API_BASE}/auth/send-phone-verification`, () => {
+          return HttpResponse.json(
+            { success: false, message: 'Not authorized' },
+            { status: 401 },
+          );
+        }),
+      );
+
+      try {
+        await authService.sendPhoneVerification();
+        expect.fail('Expected request to throw');
+      } catch (error: unknown) {
+        const axiosError = error as {
+          response: { status: number; data: { message: string } };
+        };
+        expect(axiosError.response.status).toBe(401);
+      }
+    });
+  });
+
+  describe('verifyPhone', () => {
+    it('calls POST /api/auth/verify-phone with code and returns success', async () => {
+      localStorage.setItem('token', 'mock-jwt-token');
+
+      server.use(
+        http.post(`${API_BASE}/auth/verify-phone`, async ({ request }) => {
+          const authHeader = request.headers.get('Authorization');
+          if (authHeader !== 'Bearer mock-jwt-token') {
+            return HttpResponse.json(
+              { success: false, message: 'Not authorized' },
+              { status: 401 },
+            );
+          }
+
+          const body = (await request.json()) as { code: string };
+          if (body.code === '123456') {
+            return HttpResponse.json({
+              success: true,
+              message: 'Phone number verified successfully',
+            });
+          }
+
+          return HttpResponse.json(
+            { success: false, message: 'Invalid verification code' },
+            { status: 400 },
+          );
+        }),
+      );
+
+      const response = await authService.verifyPhone('123456');
+
+      expect(response.data.success).toBe(true);
+      expect(response.data.message).toBe('Phone number verified successfully');
+    });
+
+    it('returns error for invalid code', async () => {
+      localStorage.setItem('token', 'mock-jwt-token');
+
+      server.use(
+        http.post(`${API_BASE}/auth/verify-phone`, async ({ request }) => {
+          const body = (await request.json()) as { code: string };
+          if (body.code !== '123456') {
+            return HttpResponse.json(
+              { success: false, message: 'Invalid verification code' },
+              { status: 400 },
+            );
+          }
+          return HttpResponse.json({
+            success: true,
+            message: 'Phone number verified successfully',
+          });
+        }),
+      );
+
+      try {
+        await authService.verifyPhone('000000');
+        expect.fail('Expected request to throw');
+      } catch (error: unknown) {
+        const axiosError = error as {
+          response: { status: number; data: { message: string } };
+        };
+        expect(axiosError.response.status).toBe(400);
+        expect(axiosError.response.data.message).toBe('Invalid verification code');
       }
     });
   });

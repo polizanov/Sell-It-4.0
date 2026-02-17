@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router';
 import { http, HttpResponse } from 'msw';
 import VerifyEmail from '../../src/pages/VerifyEmail';
+import { useAuthStore } from '../../src/store/authStore';
 import { server } from '../../src/mocks/server';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -20,6 +21,12 @@ const renderVerifyEmail = (url: string) => {
 describe('VerifyEmail Page', () => {
   beforeEach(() => {
     localStorage.clear();
+    useAuthStore.setState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
   });
 
   it('shows loading spinner initially when token is provided', () => {
@@ -136,5 +143,45 @@ describe('VerifyEmail Page', () => {
     });
 
     expect(screen.getByText('Token has expired')).toBeInTheDocument();
+  });
+
+  it('shows phone verification note on success when authenticated with unverified phone', async () => {
+    // Set up authenticated user with unverified phone
+    useAuthStore.setState({
+      user: {
+        id: '1',
+        name: 'Test User',
+        username: 'testuser',
+        email: 'test@example.com',
+        isVerified: false,
+        phone: '+359888123456',
+        isPhoneVerified: false,
+      },
+      token: 'mock-jwt-token',
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    server.use(
+      http.get(`${API_BASE}/auth/verify-email/:token`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Email verified successfully',
+        });
+      }),
+    );
+
+    renderVerifyEmail('/verify-email?token=mock-verification-token');
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /email verified!/i }),
+      ).toBeInTheDocument();
+    });
+
+    // Should show the phone verification note
+    expect(
+      screen.getByText(/you also need to verify your phone number/i),
+    ).toBeInTheDocument();
   });
 });

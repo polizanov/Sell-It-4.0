@@ -74,6 +74,8 @@ const Login = () => {
             username: data.username,
             email: data.email,
             isVerified: data.isVerified,
+            phone: data.phone,
+            isPhoneVerified: data.isPhoneVerified,
           },
           data.token
         );

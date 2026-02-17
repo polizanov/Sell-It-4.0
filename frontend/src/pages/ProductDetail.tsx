@@ -205,9 +205,10 @@ const ProductDetail = () => {
   }
 
   const isVerified = user?.isVerified !== false;
+  const isPhoneVerified = user?.isPhoneVerified !== false;
   const isOwner = isAuthenticated && user?.id === product?.sellerId;
   const showFavouriteButton = isAuthenticated && isVerified && !isOwner && product !== null;
-  const showOwnerActions = isOwner && isVerified;
+  const showOwnerActions = isOwner && isVerified && isPhoneVerified;
   const isFavourited = product ? isFavourite(product.id) : false;
 
   const handleToggleFavourite = async () => {
@@ -402,6 +403,11 @@ const ProductDetail = () => {
               {isAuthenticated && !isVerified && (
                 <p className="text-amber-300 text-sm mt-2">
                   Verify your email to {isOwner ? 'manage this product' : 'add products to favourites'}.
+                </p>
+              )}
+              {isAuthenticated && isVerified && !isPhoneVerified && isOwner && (
+                <p className="text-amber-300 text-sm mt-2">
+                  Verify your phone number to manage this product.
                 </p>
               )}
               <div className="text-4xl font-bold text-orange mb-4">

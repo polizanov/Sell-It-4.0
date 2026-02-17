@@ -1,4 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+/**
+ * Helper to fill the phone number in the PhoneInput component.
+ * Selects Bulgaria (+359) from the country dropdown, then fills the national number.
+ */
+async function fillPhone(page: Page, nationalNumber: string) {
+  const phoneInput = page.locator('.PhoneInputInput');
+  await phoneInput.click();
+  await phoneInput.fill('');
+  await phoneInput.pressSequentially(`+359${nationalNumber}`, { delay: 50 });
+}
 
 test.describe('Homepage - Authenticated Users', () => {
   test.beforeEach(async ({ page }) => {
@@ -14,6 +25,8 @@ test.describe('Homepage - Authenticated Users', () => {
     await page.getByLabel(/full name/i).fill('Home Auth User');
     await page.getByLabel(/username/i).fill(testUsername);
     await page.getByLabel(/email address/i).fill(testEmail);
+    // Use unique phone number based on timestamp to avoid conflicts across tests
+    await fillPhone(page, `88${String(timestamp).slice(-7)}`);
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
@@ -221,12 +234,13 @@ test.describe('Homepage - Authenticated Users', () => {
         username: unverifiedUsername,
         email: unverifiedEmail,
         password: testPassword,
+        phone: `+35988${String(timestamp).slice(-7)}`,
       },
     });
 
-    // Unverify the user
+    // Unverify the user (both email and phone)
     await page.request.post('/api/auth/test-set-verified', {
-      data: { email: unverifiedEmail, isVerified: false },
+      data: { email: unverifiedEmail, isVerified: false, isPhoneVerified: false },
     });
 
     // Login as unverified user
@@ -245,7 +259,7 @@ test.describe('Homepage - Authenticated Users', () => {
     await page.goto('/create-product');
     await expect(page).toHaveURL('/create-product');
 
-    // Since user is unverified, they should see the VerificationRequired component
+    // Since user is unverified (email), they should see the VerificationRequired component
     await expect(page.getByRole('heading', { name: /email verification required/i })).toBeVisible();
   });
 
@@ -454,6 +468,7 @@ test.describe('Condition Counts in Filter Sidebar', () => {
         username: `condcounts${ts}${random}`,
         email,
         password,
+        phone: `+35987${String(ts).slice(-7)}`,
       },
     });
 

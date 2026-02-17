@@ -207,7 +207,9 @@ const MyProfile = () => {
                 <p className="text-text-muted">
                   {user?.isVerified === false
                     ? 'Verify your email to start listing products.'
-                    : "You haven't listed any products yet. Use the floating button to create your first listing!"}
+                    : user?.isPhoneVerified === false
+                      ? 'Verify your phone to start listing products.'
+                      : "You haven't listed any products yet. Use the floating button to create your first listing!"}
                 </p>
               </div>
             </Card>

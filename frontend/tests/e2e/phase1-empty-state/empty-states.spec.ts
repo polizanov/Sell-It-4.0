@@ -39,14 +39,16 @@ test.describe('Home (authenticated, no products)', () => {
     const password = 'Password123!';
 
     // Register via API
-    await page.request.post('/api/auth/register', {
+    const registerRes = await page.request.post('/api/auth/register', {
       data: {
         name: 'Empty Auth User',
         username: `emptyauth${ts}`,
         email,
         password,
+        phone: `+35988${String(ts).slice(-7)}`,
       },
     });
+    expect(registerRes.ok()).toBeTruthy();
 
     // Login via API
     const loginRes = await page.request.post('/api/auth/login', {
@@ -74,17 +76,20 @@ test.describe('My Favourites (no favourites)', () => {
 
   test.beforeEach(async ({ page }) => {
     const ts = Date.now();
-    const email = `emptyfav${ts}@example.com`;
+    const random = Math.floor(Math.random() * 10000);
+    const email = `emptyfav${ts}${random}@example.com`;
     const password = 'Password123!';
 
-    await page.request.post('/api/auth/register', {
+    const registerRes = await page.request.post('/api/auth/register', {
       data: {
         name: 'Empty Fav User',
-        username: `emptyfav${ts}`,
+        username: `emptyfav${ts}${random}`,
         email,
         password,
+        phone: `+35989${String(ts).slice(-7)}`,
       },
     });
+    expect(registerRes.ok()).toBeTruthy();
 
     const loginRes = await page.request.post('/api/auth/login', {
       data: { email, password },
@@ -133,14 +138,16 @@ test.describe('My Profile (no products)', () => {
     const email = `emptyprofile${ts}@example.com`;
     const password = 'Password123!';
 
-    await page.request.post('/api/auth/register', {
+    const registerRes = await page.request.post('/api/auth/register', {
       data: {
         name: 'Empty Profile User',
         username: `emptyprofile${ts}`,
         email,
         password,
+        phone: `+35987${String(ts).slice(-7)}`,
       },
     });
+    expect(registerRes.ok()).toBeTruthy();
 
     const loginRes = await page.request.post('/api/auth/login', {
       data: { email, password },
@@ -168,18 +175,20 @@ test.describe('My Profile (no products)', () => {
     const email = `unverifiedprofile${ts}@example.com`;
     const password = 'Password123!';
 
-    await page.request.post('/api/auth/register', {
+    const registerRes = await page.request.post('/api/auth/register', {
       data: {
         name: 'Unverified Profile User',
         username: `unverifiedprofile${ts}`,
         email,
         password,
+        phone: `+35988${String(ts + 1).slice(-7)}`,
       },
     });
+    expect(registerRes.ok()).toBeTruthy();
 
-    // Set user as unverified
+    // Set user as unverified (email and phone)
     await page.request.post('/api/auth/test-set-verified', {
-      data: { email, isVerified: false },
+      data: { email, isVerified: false, isPhoneVerified: false },
     });
 
     const loginRes = await page.request.post('/api/auth/login', {

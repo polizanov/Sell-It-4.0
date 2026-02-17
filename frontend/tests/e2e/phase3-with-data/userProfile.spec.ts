@@ -1,4 +1,14 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+/**
+ * Helper to fill the phone number in the PhoneInput component.
+ */
+async function fillPhone(page: Page, nationalNumber: string) {
+  const phoneInput = page.locator('.PhoneInputInput');
+  await phoneInput.click();
+  await phoneInput.fill('');
+  await phoneInput.pressSequentially(`+359${nationalNumber}`, { delay: 50 });
+}
 
 test.describe('User Profile', () => {
   test('Contact Seller navigates to seller profile', async ({ page }) => {
@@ -14,6 +24,7 @@ test.describe('User Profile', () => {
     await page.getByLabel(/full name/i).fill(testName);
     await page.getByLabel(/username/i).fill(testUsername);
     await page.getByLabel(/email address/i).fill(testEmail);
+    await fillPhone(page, '888700001');
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();

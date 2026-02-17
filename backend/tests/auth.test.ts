@@ -18,6 +18,12 @@ jest.mock('../src/services/emailService', () => ({
   sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Mock the SMS service to prevent real SMS from being sent during tests.
+jest.mock('../src/services/smsService', () => ({
+  sendVerificationSMS: jest.fn().mockResolvedValue(undefined),
+  generateOTP: jest.fn().mockReturnValue('123456'),
+}));
+
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../src/app';
@@ -47,6 +53,7 @@ describe('Auth Endpoints', () => {
         username: 'testuser',
         email: 'test@example.com',
         password: 'Password123!',
+        phone: '+12025551001',
       });
 
       expect(res.status).toBe(201);
@@ -56,6 +63,8 @@ describe('Auth Endpoints', () => {
       expect(res.body.data.name).toBe('Test User');
       expect(res.body.data.username).toBe('testuser');
       expect(res.body.data.email).toBe('test@example.com');
+      expect(res.body.data.phone).toBe('+12025551001');
+      expect(res.body.data.isPhoneVerified).toBe(true);
     });
 
     it('should return 400 when required fields are missing', async () => {
@@ -71,6 +80,7 @@ describe('Auth Endpoints', () => {
         username: 'bademail',
         email: 'not-an-email',
         password: 'Password123!',
+        phone: '+12025551002',
       });
 
       expect(res.status).toBe(400);
@@ -83,6 +93,7 @@ describe('Auth Endpoints', () => {
         username: 'shortpass',
         email: 'short@example.com',
         password: 'Pass1!',
+        phone: '+12025551003',
       });
 
       expect(res.status).toBe(400);
@@ -95,6 +106,7 @@ describe('Auth Endpoints', () => {
         username: 'shortname',
         email: 'shortname@example.com',
         password: 'Password123!',
+        phone: '+12025551004',
       });
 
       expect(res.status).toBe(400);
@@ -107,6 +119,7 @@ describe('Auth Endpoints', () => {
         username: 'testuserdupe',
         email: 'test@example.com',
         password: 'Password123!',
+        phone: '+12025551005',
       });
 
       expect(res.status).toBe(400);
@@ -120,6 +133,7 @@ describe('Auth Endpoints', () => {
         username: 'ab',
         email: 'shortusername@example.com',
         password: 'Password123!',
+        phone: '+12025551006',
       });
 
       expect(res.status).toBe(400);
@@ -132,6 +146,7 @@ describe('Auth Endpoints', () => {
         username: 'test-user',
         email: 'invalidusername@example.com',
         password: 'Password123!',
+        phone: '+12025551007',
       });
 
       expect(res.status).toBe(400);
@@ -144,11 +159,39 @@ describe('Auth Endpoints', () => {
         username: 'testuser',
         email: 'dupeusername@example.com',
         password: 'Password123!',
+        phone: '+12025551008',
       });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toMatch(/already exists|username/i);
+    });
+
+    it('should return 400 for invalid phone format', async () => {
+      const res = await request(app).post('/api/auth/register').send({
+        name: 'Bad Phone',
+        username: 'badphone',
+        email: 'badphone@example.com',
+        password: 'Password123!',
+        phone: '12345',
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should return 400 when registering with a duplicate phone number', async () => {
+      const res = await request(app).post('/api/auth/register').send({
+        name: 'Dupe Phone',
+        username: 'dupephone',
+        email: 'dupephone@example.com',
+        password: 'Password123!',
+        phone: '+12025551001', // Same phone as the first registered user
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/already exists.*phone/i);
     });
   });
 
@@ -209,9 +252,11 @@ describe('Auth Endpoints', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data).toHaveProperty('token');
       expect(res.body.data.isVerified).toBe(true);
+      expect(res.body.data.isPhoneVerified).toBe(true);
       expect(res.body.data.name).toBe('Test User');
       expect(res.body.data.username).toBe('testuser');
       expect(res.body.data.email).toBe('test@example.com');
+      expect(res.body.data.phone).toBe('+12025551001');
 
       // Save the token for the GET /me tests
       authToken = res.body.data.token;
@@ -244,6 +289,7 @@ describe('Auth Endpoints', () => {
         username: 'unverifieduser',
         email: 'unverified@example.com',
         password: 'Password123!',
+        phone: '+12025551009',
       });
       await User.updateOne(
         { email: 'unverified@example.com' },
@@ -259,6 +305,7 @@ describe('Auth Endpoints', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data).toHaveProperty('token');
       expect(res.body.data.isVerified).toBe(false);
+      expect(res.body.data).toHaveProperty('isPhoneVerified');
     });
 
     it('should return 400 when required fields are missing', async () => {
@@ -295,6 +342,8 @@ describe('Auth Endpoints', () => {
       expect(res.body.data).toHaveProperty('username', 'testuser');
       expect(res.body.data).toHaveProperty('email', 'test@example.com');
       expect(res.body.data).toHaveProperty('isVerified', true);
+      expect(res.body.data).toHaveProperty('phone', '+12025551001');
+      expect(res.body.data).toHaveProperty('isPhoneVerified', true);
     });
 
     it('should return 401 when no token is provided', async () => {

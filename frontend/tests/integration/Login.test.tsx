@@ -147,6 +147,8 @@ describe('Login Page', () => {
             username: 'testuser',
             email: 'test@example.com',
             isVerified: true,
+            phone: '+359888123456',
+            isPhoneVerified: true,
             token: 'mock-jwt-token',
           },
         });
@@ -190,6 +192,8 @@ describe('Login Page', () => {
             username: 'testuser',
             email: 'test@example.com',
             isVerified: true,
+            phone: '+359888123456',
+            isPhoneVerified: true,
             token: 'mock-jwt-token',
           },
         });

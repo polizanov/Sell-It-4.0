@@ -27,9 +27,11 @@ describe('authStore', () => {
       const mockUser = {
         id: '1',
         name: 'Test User',
-      username: 'testuser',
+        username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
+        phone: '+359888123456',
+        isPhoneVerified: true,
       };
 
       useAuthStore.getState().login(mockUser, 'test-token');
@@ -48,6 +50,8 @@ describe('authStore', () => {
         username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
+        phone: '+359888123456',
+        isPhoneVerified: true,
       };
 
       useAuthStore.getState().login(mockUser, 'test-token');
@@ -65,6 +69,8 @@ describe('authStore', () => {
         username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
+        phone: '+359888123456',
+        isPhoneVerified: true,
       };
       useAuthStore.getState().login(mockUser, 'test-token');
 
@@ -95,6 +101,8 @@ describe('authStore', () => {
         username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
+        phone: '+359888123456',
+        isPhoneVerified: true,
       };
 
       useAuthStore.getState().setUser(mockUser);
@@ -126,6 +134,8 @@ describe('authStore', () => {
                 username: 'testuser',
                 email: 'test@example.com',
                 isVerified: true,
+                phone: '+359888123456',
+                isPhoneVerified: true,
               },
             });
           }
@@ -145,9 +155,48 @@ describe('authStore', () => {
         username: 'testuser',
         email: 'test@example.com',
         isVerified: true,
+        phone: '+359888123456',
+        isPhoneVerified: true,
       });
       expect(state.isAuthenticated).toBe(true);
       expect(state.isLoading).toBe(false);
+    });
+
+    it('sets isPhoneVerified and phone from /me response', async () => {
+      localStorage.setItem('token', 'mock-jwt-token');
+      useAuthStore.setState({ isLoading: true });
+
+      server.use(
+        http.get(`${API_BASE}/auth/me`, ({ request }) => {
+          const authHeader = request.headers.get('Authorization');
+          if (authHeader === 'Bearer mock-jwt-token') {
+            return HttpResponse.json({
+              success: true,
+              message: 'User profile retrieved',
+              data: {
+                id: '2',
+                name: 'Phone User',
+                username: 'phoneuser',
+                email: 'phone@example.com',
+                isVerified: true,
+                phone: '+359888999888',
+                isPhoneVerified: false,
+              },
+            });
+          }
+          return HttpResponse.json(
+            { success: false, message: 'Not authorized' },
+            { status: 401 },
+          );
+        }),
+      );
+
+      await useAuthStore.getState().initializeAuth();
+
+      const state = useAuthStore.getState();
+      expect(state.user?.phone).toBe('+359888999888');
+      expect(state.user?.isPhoneVerified).toBe(false);
+      expect(state.isAuthenticated).toBe(true);
     });
 
     it('clears state and localStorage when token is invalid or expired', async () => {

@@ -1,4 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+/**
+ * Helper to fill the phone number in the PhoneInput component.
+ * Selects Bulgaria (+359) from the country dropdown, then fills the national number.
+ */
+async function fillPhone(page: Page, nationalNumber: string) {
+  const phoneInput = page.locator('.PhoneInputInput');
+  await phoneInput.click();
+  await phoneInput.fill('');
+  await phoneInput.pressSequentially(`+359${nationalNumber}`, { delay: 50 });
+}
 
 test.describe('Favourites', () => {
   test('User can favourite a product and see it on My Favourites page', async ({ page }) => {
@@ -13,6 +24,7 @@ test.describe('Favourites', () => {
     await page.getByLabel(/full name/i).fill('Favourite Owner A');
     await page.getByLabel(/username/i).fill(`favownera${timestamp}`);
     await page.getByLabel(/email address/i).fill(userAEmail);
+    await fillPhone(page, '888400001');
     await page.getByLabel(/^password/i).fill(userAPassword);
     await page.getByLabel(/confirm password/i).fill(userAPassword);
     await page.getByRole('button', { name: /create account/i }).click();
@@ -61,6 +73,7 @@ test.describe('Favourites', () => {
     await page.getByLabel(/full name/i).fill('Favourite User B');
     await page.getByLabel(/username/i).fill(`favuserb${timestamp}`);
     await page.getByLabel(/email address/i).fill(userBEmail);
+    await fillPhone(page, '888400002');
     await page.getByLabel(/^password/i).fill(userBPassword);
     await page.getByLabel(/confirm password/i).fill(userBPassword);
     await page.getByRole('button', { name: /create account/i }).click();
@@ -114,6 +127,7 @@ test.describe('Favourites', () => {
     await page.getByLabel(/full name/i).fill('Unfav Owner A');
     await page.getByLabel(/username/i).fill(`unfavownera${timestamp}`);
     await page.getByLabel(/email address/i).fill(userAEmail);
+    await fillPhone(page, '888400003');
     await page.getByLabel(/^password/i).fill(userAPassword);
     await page.getByLabel(/confirm password/i).fill(userAPassword);
     await page.getByRole('button', { name: /create account/i }).click();
@@ -160,6 +174,7 @@ test.describe('Favourites', () => {
     await page.getByLabel(/full name/i).fill('Unfav User B');
     await page.getByLabel(/username/i).fill(`unfavuserb${timestamp}`);
     await page.getByLabel(/email address/i).fill(userBEmail);
+    await fillPhone(page, '888400004');
     await page.getByLabel(/^password/i).fill(userBPassword);
     await page.getByLabel(/confirm password/i).fill(userBPassword);
     await page.getByRole('button', { name: /create account/i }).click();
@@ -208,6 +223,7 @@ test.describe('Favourites', () => {
     await page.getByLabel(/full name/i).fill('Owner User');
     await page.getByLabel(/username/i).fill(`favowner${timestamp}`);
     await page.getByLabel(/email address/i).fill(ownerEmail);
+    await fillPhone(page, '888400005');
     await page.getByLabel(/^password/i).fill(ownerPassword);
     await page.getByLabel(/confirm password/i).fill(ownerPassword);
     await page.getByRole('button', { name: /create account/i }).click();

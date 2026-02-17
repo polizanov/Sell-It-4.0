@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import { User } from '../models/User';
 import { env } from '../config/environment';
 import { sendVerificationEmail } from '../services/emailService';
+import { generateOTP, sendVerificationSMS } from '../services/smsService';
 import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../types';
 
@@ -50,7 +51,7 @@ const generateToken = (userId: string, email: string): string => {
  * }
  */
 export const register = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
-  const { name, username, email, password } = req.body;
+  const { name, username, email, password, phone } = req.body;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -60,6 +61,11 @@ export const register = asyncHandler(async (req: AuthRequest, res: Response): Pr
   const existingUsername = await User.findOne({ username: username.toLowerCase() });
   if (existingUsername) {
     throw new AppError('Username is already taken', 400);
+  }
+
+  const existingPhone = await User.findOne({ phone });
+  if (existingPhone) {
+    throw new AppError('User already exists with this phone number', 400);
   }
 
   // In test environment, auto-verify users to simplify E2E testing
@@ -72,22 +78,32 @@ export const register = asyncHandler(async (req: AuthRequest, res: Response): Pr
       username,
       email,
       password,
+      phone,
       isVerified: true,
+      isPhoneVerified: true,
     });
   } else {
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const hashedToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+
+    // Generate phone OTP
+    const phoneOTP = generateOTP();
+    const hashedPhoneOTP = crypto.createHash('sha256').update(phoneOTP).digest('hex');
 
     user = await User.create({
       name,
       username,
       email,
       password,
+      phone,
       verificationToken: hashedToken,
       verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+      phoneVerificationCode: hashedPhoneOTP,
+      phoneVerificationExpiry: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
     });
 
     await sendVerificationEmail(email, verificationToken);
+    await sendVerificationSMS(phone, phoneOTP);
   }
 
   res.status(201).json({
@@ -98,6 +114,8 @@ export const register = asyncHandler(async (req: AuthRequest, res: Response): Pr
       name: user.name,
       username: user.username,
       email: user.email,
+      phone: user.phone,
+      isPhoneVerified: user.isPhoneVerified,
     },
   });
 });
@@ -162,7 +180,9 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response): Promi
       name: user.name,
       username: user.username,
       email: user.email,
+      phone: user.phone,
       isVerified: user.isVerified,
+      isPhoneVerified: user.isPhoneVerified,
       token,
     },
   });
@@ -182,7 +202,9 @@ export const getMe = asyncHandler(async (req: AuthRequest, res: Response): Promi
       name: user.name,
       username: user.username,
       email: user.email,
+      phone: user.phone,
       isVerified: user.isVerified,
+      isPhoneVerified: user.isPhoneVerified,
     },
   });
 });
@@ -213,6 +235,75 @@ export const verifyEmail = asyncHandler(async (req: AuthRequest, res: Response):
     message: 'Email verified successfully',
   });
 });
+
+export const sendPhoneVerification = asyncHandler(
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const user = await User.findById(req.user!.userId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    if (user.isPhoneVerified) {
+      throw new AppError('Phone number is already verified', 400);
+    }
+
+    // Generate OTP, hash with SHA-256, store with 10-minute expiry
+    const code = generateOTP();
+    const hashedCode = crypto.createHash('sha256').update(code).digest('hex');
+
+    user.phoneVerificationCode = hashedCode;
+    user.phoneVerificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    await user.save();
+
+    await sendVerificationSMS(user.phone, code);
+
+    res.json({
+      success: true,
+      message: 'Verification code sent to your phone',
+    });
+  },
+);
+
+export const verifyPhone = asyncHandler(
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const { code } = req.body;
+
+    const user = await User.findById(req.user!.userId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    if (user.isPhoneVerified) {
+      throw new AppError('Phone number is already verified', 400);
+    }
+
+    if (!user.phoneVerificationCode || !user.phoneVerificationExpiry) {
+      throw new AppError('No verification code found. Please request a new one.', 400);
+    }
+
+    // Check if code has expired
+    if (user.phoneVerificationExpiry < new Date()) {
+      throw new AppError('Verification code has expired. Please request a new one.', 400);
+    }
+
+    // Hash input code with SHA-256 and compare with stored hash
+    const hashedCode = crypto.createHash('sha256').update(code).digest('hex');
+    if (hashedCode !== user.phoneVerificationCode) {
+      throw new AppError('Invalid verification code', 400);
+    }
+
+    // Mark phone as verified and clear verification fields
+    user.isPhoneVerified = true;
+    user.phoneVerificationCode = undefined;
+    user.phoneVerificationExpiry = undefined;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Phone verified successfully',
+    });
+  },
+);
 
 export const resendVerificationEmail = asyncHandler(async (req: AuthRequest, res: Response): Promise<void> => {
   const { email } = req.body;

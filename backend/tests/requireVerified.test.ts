@@ -15,6 +15,11 @@ jest.mock('../src/services/emailService', () => ({
   sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
+jest.mock('../src/services/smsService', () => ({
+  sendVerificationSMS: jest.fn().mockResolvedValue(undefined),
+  generateOTP: jest.fn().mockReturnValue('123456'),
+}));
+
 jest.mock('../src/middleware/upload', () => {
   const actual = jest.requireActual('../src/middleware/upload');
   return {
@@ -51,6 +56,7 @@ describe('requireVerified Middleware', () => {
       username: 'verifieduser',
       email: 'verified@example.com',
       password: 'Password123!',
+      phone: '+13105553001',
     });
     await User.updateOne(
       { email: 'verified@example.com' },
@@ -68,6 +74,7 @@ describe('requireVerified Middleware', () => {
       username: 'unverifieduser',
       email: 'unverified@example.com',
       password: 'Password123!',
+      phone: '+13105553002',
     });
     await User.updateOne(
       { email: 'unverified@example.com' },
@@ -246,6 +253,84 @@ describe('requireVerified Middleware', () => {
         .set('Authorization', `Bearer ${unverifiedToken}`)
         .field('title', 'Now Verified Product')
         .field('description', 'Product created after email verification')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+    });
+  });
+
+  // --------------------------------------------------------------------------
+  // Phone verification (requirePhoneVerified) on product routes
+  // --------------------------------------------------------------------------
+  describe('Phone verification on product routes (requirePhoneVerified)', () => {
+    let emailVerifiedOnlyToken: string;
+
+    beforeAll(async () => {
+      // Register a user with auto-verified email and phone (test mode)
+      await request(app).post('/api/auth/register').send({
+        name: 'Email Only User',
+        username: 'emailonlyuser',
+        email: 'emailonly@example.com',
+        password: 'Password123!',
+        phone: '+13105553003',
+      });
+
+      // Set email verified but phone NOT verified via test-set-verified endpoint
+      await request(app).post('/api/auth/test-set-verified').send({
+        email: 'emailonly@example.com',
+        isVerified: true,
+        isPhoneVerified: false,
+      });
+
+      const loginRes = await request(app).post('/api/auth/login').send({
+        email: 'emailonly@example.com',
+        password: 'Password123!',
+      });
+      emailVerifiedOnlyToken = loginRes.body.data.token;
+    });
+
+    it('should return 403 when email-verified but phone-NOT-verified user creates a product', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${emailVerifiedOnlyToken}`)
+        .field('title', 'Phone Not Verified Product')
+        .field('description', 'Trying to create product without phone verification')
+        .field('price', '29.99')
+        .field('category', 'Electronics')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/verify your phone/i);
+    });
+
+    it('should allow email-verified + phone-NOT-verified user to GET favourites (phone not required)', async () => {
+      const res = await request(app)
+        .get('/api/favourites')
+        .set('Authorization', `Bearer ${emailVerifiedOnlyToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+    });
+
+    it('should allow product creation when both email and phone are verified', async () => {
+      // Verify phone via test-set-verified endpoint
+      await request(app).post('/api/auth/test-set-verified').send({
+        email: 'emailonly@example.com',
+        isVerified: true,
+        isPhoneVerified: true,
+      });
+
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${emailVerifiedOnlyToken}`)
+        .field('title', 'Both Verified Product')
+        .field('description', 'Product created with both email and phone verified')
         .field('price', '29.99')
         .field('category', 'Electronics')
         .field('condition', 'New')

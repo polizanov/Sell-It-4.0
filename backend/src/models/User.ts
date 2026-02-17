@@ -6,9 +6,13 @@ export interface IUser extends Document {
   username: string;
   email: string;
   password: string;
+  phone: string;
   isVerified: boolean;
+  isPhoneVerified: boolean;
   verificationToken?: string;
   verificationTokenExpiry?: Date;
+  phoneVerificationCode?: string;
+  phoneVerificationExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -45,7 +49,17 @@ const userSchema = new Schema<IUser>(
       required: [true, 'Password is required'],
       minlength: [8, 'Password must be at least 8 characters'],
     },
+    phone: {
+      type: String,
+      required: [true, 'Phone number is required'],
+      unique: true,
+      trim: true,
+    },
     isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isPhoneVerified: {
       type: Boolean,
       default: false,
     },
@@ -53,6 +67,12 @@ const userSchema = new Schema<IUser>(
       type: String,
     },
     verificationTokenExpiry: {
+      type: Date,
+    },
+    phoneVerificationCode: {
+      type: String,
+    },
+    phoneVerificationExpiry: {
       type: Date,
     },
   },

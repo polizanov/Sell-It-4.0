@@ -65,9 +65,14 @@ const VerifyEmail = () => {
                 <h1 className="text-3xl font-bold text-text-primary mb-4">
                   Email Verified!
                 </h1>
-                <p className="text-text-secondary mb-8">
+                <p className={`text-text-secondary ${isAuthenticated && user?.isPhoneVerified === false ? 'mb-4' : 'mb-8'}`}>
                   Your email has been successfully verified. You now have full access to all features.
                 </p>
+                {isAuthenticated && user?.isPhoneVerified === false && (
+                  <p className="text-amber-300 text-sm mb-8">
+                    You also need to verify your phone number to create products.
+                  </p>
+                )}
                 <Link
                   to={isAuthenticated ? '/' : '/login'}
                   className="inline-block bg-orange text-white hover:bg-orange-hover font-medium px-6 py-3 rounded-lg transition-colors"

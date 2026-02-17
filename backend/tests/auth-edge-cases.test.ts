@@ -16,6 +16,12 @@ jest.mock('../src/services/emailService', () => ({
   sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Mock the SMS service
+jest.mock('../src/services/smsService', () => ({
+  sendVerificationSMS: jest.fn().mockResolvedValue(undefined),
+  generateOTP: jest.fn().mockReturnValue('123456'),
+}));
+
 import request from 'supertest';
 import mongoose from 'mongoose';
 import app from '../src/app';
@@ -47,6 +53,7 @@ describe('Auth Edge Cases', () => {
         username: 'testuser',
         email: 'test@example.com',
         password: 'Password123!',
+        phone: '+12125552001',
         verificationToken: hashedToken,
         verificationTokenExpiry: new Date(Date.now() - 1000), // Expired 1 second ago
       });
@@ -68,6 +75,7 @@ describe('Auth Edge Cases', () => {
         username: 'testuser2',
         email: 'test2@example.com',
         password: 'Password123!',
+        phone: '+12125552002',
         verificationToken: hashedToken,
         verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // Valid for 24 hours
       });
@@ -98,6 +106,7 @@ describe('Auth Edge Cases', () => {
         username: 'verifieduser',
         email: 'verified@example.com',
         password: 'Password123!',
+        phone: '+12125552003',
         isVerified: true,
       });
 
@@ -116,6 +125,7 @@ describe('Auth Edge Cases', () => {
         username: 'ratelimituser',
         email: 'ratelimit@example.com',
         password: 'Password123!',
+        phone: '+12125552004',
         isVerified: false,
       });
 
@@ -154,6 +164,7 @@ describe('Auth Edge Cases', () => {
           username: 'testuser',
           email: 'test@example.com',
           password: 'password123!',
+          phone: '+12125552005',
         })
         .expect(400);
 
@@ -168,6 +179,7 @@ describe('Auth Edge Cases', () => {
           username: 'testuser',
           email: 'test@example.com',
           password: 'Password!',
+          phone: '+12125552006',
         })
         .expect(400);
 
@@ -182,6 +194,7 @@ describe('Auth Edge Cases', () => {
           username: 'testuser',
           email: 'test@example.com',
           password: 'Password123',
+          phone: '+12125552007',
         })
         .expect(400);
 
@@ -196,6 +209,7 @@ describe('Auth Edge Cases', () => {
           username: 'testuser',
           email: 'test@example.com',
           password: 'Pass1!',
+          phone: '+12125552008',
         })
         .expect(400);
 

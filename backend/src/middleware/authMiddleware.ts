@@ -37,5 +37,21 @@ export const requireVerified = asyncHandler(
     }
 
     next();
-  }
+  },
+);
+
+export const requirePhoneVerified = asyncHandler(
+  async (req: AuthRequest, _res: Response, next: NextFunction): Promise<void> => {
+    const user = await User.findById(req.user!.userId);
+
+    if (!user) {
+      throw new AppError('User not found', 401);
+    }
+
+    if (!user.isPhoneVerified) {
+      throw new AppError('Please verify your phone number to perform this action', 403);
+    }
+
+    next();
+  },
 );

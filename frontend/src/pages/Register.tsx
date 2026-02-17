@@ -1,8 +1,10 @@
 import { useState, FormEvent } from 'react';
 import { Link } from 'react-router';
 import { AxiosError } from 'axios';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
+import { PhoneInput } from '../components/common/PhoneInput';
 import { Button } from '../components/common/Button';
 import { MouseFollowGradient } from '../components/common/MouseFollowGradient';
 import { authService } from '../services/authService';
@@ -13,6 +15,7 @@ const Register = () => {
     name: '',
     username: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
@@ -20,6 +23,7 @@ const Register = () => {
     name: '',
     username: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
     general: '',
@@ -36,11 +40,11 @@ const Register = () => {
     e.preventDefault();
 
     // Reset errors
-    setErrors({ name: '', username: '', email: '', password: '', confirmPassword: '', general: '' });
+    setErrors({ name: '', username: '', email: '', phone: '', password: '', confirmPassword: '', general: '' });
 
     // Validation
     let hasErrors = false;
-    const newErrors = { name: '', username: '', email: '', password: '', confirmPassword: '', general: '' };
+    const newErrors = { name: '', username: '', email: '', phone: '', password: '', confirmPassword: '', general: '' };
 
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
@@ -66,6 +70,14 @@ const Register = () => {
       hasErrors = true;
     } else if (!validateEmail(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
+      hasErrors = true;
+    }
+
+    if (!formData.phone) {
+      newErrors.phone = 'Phone number is required';
+      hasErrors = true;
+    } else if (!isValidPhoneNumber(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number';
       hasErrors = true;
     }
 
@@ -106,6 +118,7 @@ const Register = () => {
         name: formData.name,
         username: formData.username,
         email: formData.email,
+        phone: formData.phone,
         password: formData.password,
       });
 
@@ -143,8 +156,11 @@ const Register = () => {
                   <h1 className="text-4xl font-bold text-gray-900 mb-4">
                     Check Your Email
                   </h1>
-                  <p className="text-gray-600 text-lg mb-8 leading-relaxed">
+                  <p className="text-gray-600 text-lg mb-4 leading-relaxed">
                     We've sent a verification link to your email. Please check your inbox and click the link to verify your account.
+                  </p>
+                  <p className="text-gray-500 text-sm mb-8 leading-relaxed">
+                    You'll also need to verify your phone number after logging in.
                   </p>
                   <Link
                     to="/login"
@@ -220,6 +236,14 @@ const Register = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   error={errors.email}
+                  variant="light"
+                />
+
+                <PhoneInput
+                  label="Phone Number"
+                  value={formData.phone}
+                  onChange={(value) => setFormData({ ...formData, phone: value || '' })}
+                  error={errors.phone}
                   variant="light"
                 />
 

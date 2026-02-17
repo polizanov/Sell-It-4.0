@@ -18,6 +18,12 @@ jest.mock('../src/services/emailService', () => ({
   sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Mock the SMS service to prevent real SMS from being sent during tests.
+jest.mock('../src/services/smsService', () => ({
+  sendVerificationSMS: jest.fn().mockResolvedValue(undefined),
+  generateOTP: jest.fn().mockReturnValue('123456'),
+}));
+
 // Mock the Cloudinary upload to prevent real uploads during tests.
 jest.mock('../src/middleware/upload', () => {
   const actual = jest.requireActual('../src/middleware/upload');
@@ -53,6 +59,7 @@ describe('Product Endpoints', () => {
       username: 'producttestuser',
       email: 'productuser@example.com',
       password: 'Password123!',
+      phone: '+14155554001',
     });
 
     // Verify the user directly in the database
@@ -812,6 +819,7 @@ describe('Product Endpoints', () => {
         username: 'emptyuser',
         email: 'emptyuser@example.com',
         password: 'Password123!',
+        phone: '+14155554002',
       });
       await User.updateOne(
         { email: 'emptyuser@example.com' },
@@ -862,7 +870,7 @@ describe('Product Endpoints', () => {
   });
 
   // --------------------------------------------------------------------------
-  // GET /api/products — Performance Tests
+  // GET /api/products -- Performance Tests
   // --------------------------------------------------------------------------
   describe('GET /api/products (performance)', () => {
     beforeAll(async () => {
@@ -1093,6 +1101,7 @@ describe('Product Endpoints', () => {
         username: 'otheruser',
         email: 'otheruser@example.com',
         password: 'Password123!',
+        phone: '+14155554003',
       });
 
       await User.updateOne(
@@ -1366,6 +1375,7 @@ describe('Product Endpoints', () => {
           username: 'deleteotheruser',
           email: 'deleteother@example.com',
           password: 'Password123!',
+          phone: '+14155554004',
         });
 
         await User.updateOne(

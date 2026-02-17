@@ -5,6 +5,7 @@ interface RegisterData {
   name: string;
   username: string;
   email: string;
+  phone: string;
   password: string;
 }
 
@@ -25,4 +26,10 @@ export const authService = {
 
   getMe: () =>
     api.get<AuthResponse>('/auth/me'),
+
+  sendPhoneVerification: () =>
+    api.post<{ success: boolean; message: string }>('/auth/send-phone-verification'),
+
+  verifyPhone: (code: string) =>
+    api.post<{ success: boolean; message: string }>('/auth/verify-phone', { code }),
 };

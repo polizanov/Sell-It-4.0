@@ -4,6 +4,8 @@ export interface User {
   username: string;
   email: string;
   isVerified?: boolean;
+  phone?: string;
+  isPhoneVerified?: boolean;
 }
 
 export interface AuthResponse {
@@ -15,6 +17,8 @@ export interface AuthResponse {
     username: string;
     email: string;
     isVerified?: boolean;
+    phone?: string;
+    isPhoneVerified?: boolean;
     token?: string;
   };
 }

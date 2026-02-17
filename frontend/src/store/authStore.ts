@@ -48,6 +48,8 @@ export const useAuthStore = create<AuthState>((set) => ({
             username: data.username,
             email: data.email,
             isVerified: data.isVerified,
+            phone: data.phone,
+            isPhoneVerified: data.isPhoneVerified,
           },
           isAuthenticated: true,
           isLoading: false,

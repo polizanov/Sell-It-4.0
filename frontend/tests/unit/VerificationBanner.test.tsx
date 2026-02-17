@@ -29,9 +29,9 @@ describe('VerificationBanner', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('does not render when user is verified', () => {
+  it('does not render when user is fully verified (email and phone)', () => {
     useAuthStore.setState({
-      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: true },
+      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: true, phone: '+359888123456', isPhoneVerified: true },
       token: 'mock-jwt-token',
       isAuthenticated: true,
       isLoading: false,
@@ -41,9 +41,9 @@ describe('VerificationBanner', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('renders warning banner for unverified authenticated user', () => {
+  it('renders warning banner for email-unverified authenticated user', () => {
     useAuthStore.setState({
-      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: false },
+      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: false, phone: '+359888123456', isPhoneVerified: true },
       token: 'mock-jwt-token',
       isAuthenticated: true,
       isLoading: false,
@@ -56,7 +56,7 @@ describe('VerificationBanner', () => {
 
   it('can be dismissed by clicking the X button', async () => {
     useAuthStore.setState({
-      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: false },
+      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: false, phone: '+359888123456', isPhoneVerified: true },
       token: 'mock-jwt-token',
       isAuthenticated: true,
       isLoading: false,
@@ -69,5 +69,31 @@ describe('VerificationBanner', () => {
     await userEvent.click(dismissButton);
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('shows banner when isPhoneVerified is false but isVerified is true', () => {
+    useAuthStore.setState({
+      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: true, phone: '+359888123456', isPhoneVerified: false },
+      token: 'mock-jwt-token',
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    renderBanner();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText(/your phone number is not verified/i)).toBeInTheDocument();
+  });
+
+  it('shows combined message when both email and phone are unverified', () => {
+    useAuthStore.setState({
+      user: { id: '1', name: 'Test', username: 'test', email: 'test@example.com', isVerified: false, phone: '+359888123456', isPhoneVerified: false },
+      token: 'mock-jwt-token',
+      isAuthenticated: true,
+      isLoading: false,
+    });
+
+    renderBanner();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.getByText(/your email and phone number are not verified/i)).toBeInTheDocument();
   });
 });

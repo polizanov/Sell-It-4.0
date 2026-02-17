@@ -1,4 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+/**
+ * Helper to fill the phone number in the PhoneInput component.
+ * Selects Bulgaria (+359) from the country dropdown, then fills the national number.
+ */
+async function fillPhone(page: Page, nationalNumber: string) {
+  const phoneInput = page.locator('.PhoneInputInput');
+  await phoneInput.click();
+  await phoneInput.fill('');
+  await phoneInput.pressSequentially(`+359${nationalNumber}`, { delay: 50 });
+}
 
 test.describe('Edit Product', () => {
   test('owner can edit their product and see updated data on the product detail page', async ({
@@ -15,6 +26,7 @@ test.describe('Edit Product', () => {
     await page.getByLabel(/full name/i).fill('Edit Test User');
     await page.getByLabel(/username/i).fill(testUsername);
     await page.getByLabel(/email address/i).fill(testEmail);
+    await fillPhone(page, '888200001');
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();

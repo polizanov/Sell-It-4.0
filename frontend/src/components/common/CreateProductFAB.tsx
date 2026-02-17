@@ -1,21 +1,41 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { CreateProductModal } from '../product/CreateProductModal';
+import { VerifyPromptModal } from '../auth/VerifyPromptModal';
+import { PhoneVerificationModal } from '../auth/PhoneVerificationModal';
 
 export const CreateProductFAB = () => {
   const { isAuthenticated, user } = useAuthStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVerifyPopupOpen, setIsVerifyPopupOpen] = useState(false);
+  const [isPhoneVerifyModalOpen, setIsPhoneVerifyModalOpen] = useState(false);
 
-  // Only show FAB for authenticated and verified users
-  if (!isAuthenticated || user?.isVerified === false) {
+  // Only show FAB for authenticated users
+  if (!isAuthenticated) {
     return null;
   }
+
+  const handleClick = () => {
+    const isFullyVerified =
+      user?.isVerified !== false && user?.isPhoneVerified !== false;
+
+    if (isFullyVerified) {
+      setIsModalOpen(true);
+    } else {
+      setIsVerifyPopupOpen(true);
+    }
+  };
+
+  const handleVerifyPhone = () => {
+    setIsVerifyPopupOpen(false);
+    setIsPhoneVerifyModalOpen(true);
+  };
 
   return (
     <>
       {/* Floating Action Button */}
       <button
-        onClick={() => setIsModalOpen(true)}
+        onClick={handleClick}
         className="fixed bottom-8 left-8 md:bottom-8 md:left-8 z-50 w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-cta shadow-fab hover:shadow-fab-hover hover:scale-110 transition-all duration-300 ease-out flex items-center justify-center group focus:outline-none focus:ring-4 focus:ring-orange focus:ring-offset-4 focus:ring-offset-dark-bg"
         aria-label="Create new product listing"
         aria-haspopup="dialog"
@@ -35,10 +55,25 @@ export const CreateProductFAB = () => {
         </svg>
       </button>
 
-      {/* Modal */}
+      {/* Create Product Modal */}
       <CreateProductModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      {/* Verify Prompt Modal */}
+      <VerifyPromptModal
+        isOpen={isVerifyPopupOpen}
+        onClose={() => setIsVerifyPopupOpen(false)}
+        needsEmail={user?.isVerified === false}
+        needsPhone={user?.isPhoneVerified === false}
+        onVerifyPhone={handleVerifyPhone}
+      />
+
+      {/* Phone Verification Modal */}
+      <PhoneVerificationModal
+        isOpen={isPhoneVerifyModalOpen}
+        onClose={() => setIsPhoneVerifyModalOpen(false)}
       />
     </>
   );

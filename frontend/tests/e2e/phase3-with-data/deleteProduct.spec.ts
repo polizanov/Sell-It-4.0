@@ -1,4 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+/**
+ * Helper to fill the phone number in the PhoneInput component.
+ * Selects Bulgaria (+359) from the country dropdown, then fills the national number.
+ */
+async function fillPhone(page: Page, nationalNumber: string) {
+  const phoneInput = page.locator('.PhoneInputInput');
+  await phoneInput.click();
+  await phoneInput.fill('');
+  await phoneInput.pressSequentially(`+359${nationalNumber}`, { delay: 50 });
+}
 
 test.describe('Delete Product', () => {
   test('owner can delete their product and is redirected to products page', async ({ page }) => {
@@ -13,6 +24,7 @@ test.describe('Delete Product', () => {
     await page.getByLabel(/full name/i).fill('Delete Test User');
     await page.getByLabel(/username/i).fill(testUsername);
     await page.getByLabel(/email address/i).fill(testEmail);
+    await fillPhone(page, '888300001');
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
@@ -75,6 +87,7 @@ test.describe('Delete Product', () => {
     await page.getByLabel(/full name/i).fill('Owner User');
     await page.getByLabel(/username/i).fill(`owner${timestamp}`);
     await page.getByLabel(/email address/i).fill(`owner+${timestamp}@example.com`);
+    await fillPhone(page, '888300002');
     await page.getByLabel(/^password/i).fill('Password123!');
     await page.getByLabel(/confirm password/i).fill('Password123!');
     await page.getByRole('button', { name: /create account/i }).click();
@@ -117,6 +130,7 @@ test.describe('Delete Product', () => {
     await page.getByLabel(/full name/i).fill('Non Owner');
     await page.getByLabel(/username/i).fill(`nonowner${timestamp}`);
     await page.getByLabel(/email address/i).fill(`nonowner+${timestamp}@example.com`);
+    await fillPhone(page, '888300003');
     await page.getByLabel(/^password/i).fill('Password123!');
     await page.getByLabel(/confirm password/i).fill('Password123!');
     await page.getByRole('button', { name: /create account/i }).click();

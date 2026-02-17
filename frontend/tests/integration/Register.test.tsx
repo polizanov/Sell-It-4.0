@@ -32,12 +32,13 @@ describe('Register Page', () => {
     localStorage.clear();
   });
 
-  it('renders register form with name, username, email, password, and confirm password fields', () => {
+  it('renders register form with name, username, email, phone, password, and confirm password fields', () => {
     renderRegister();
 
     expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^phone number$/i)).toBeInTheDocument();
     // Use getByPlaceholderText to distinguish between Password and Confirm Password
     expect(
       screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
@@ -78,6 +79,7 @@ describe('Register Page', () => {
     expect(screen.getByText('Name is required')).toBeInTheDocument();
     expect(screen.getByText('Username is required')).toBeInTheDocument();
     expect(screen.getByText('Email is required')).toBeInTheDocument();
+    expect(screen.getByText('Phone number is required')).toBeInTheDocument();
     expect(screen.getByText('Password is required')).toBeInTheDocument();
     expect(
       screen.getByText('Please confirm your password'),
@@ -204,6 +206,62 @@ describe('Register Page', () => {
     expect(screen.getByText('Username is required')).toBeInTheDocument();
   });
 
+  it('shows "Phone number is required" when phone is empty', async () => {
+    const user = userEvent.setup();
+    renderRegister();
+
+    await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(
+      screen.getByLabelText(/email address/i),
+      'test@example.com',
+    );
+    // Do not fill phone
+    await user.type(
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
+    );
+    await user.type(
+      screen.getByPlaceholderText('Re-enter your password'),
+      'Password123!',
+    );
+
+    submitForm();
+
+    expect(screen.getByText('Phone number is required')).toBeInTheDocument();
+  });
+
+  it('shows "Please enter a valid phone number" for invalid phone input', async () => {
+    const user = userEvent.setup();
+    renderRegister();
+
+    await user.type(screen.getByLabelText(/full name/i), 'Test User');
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(
+      screen.getByLabelText(/email address/i),
+      'test@example.com',
+    );
+    // Type an invalid phone number directly into the phone input field
+    // The PhoneInput component uses react-phone-number-input which manages the input
+    // We need to find the actual input inside the phone input wrapper and type into it
+    const phoneInput = screen.getByLabelText(/^phone number$/i);
+    await user.type(phoneInput, '123');
+    await user.type(
+      screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
+      'Password123!',
+    );
+    await user.type(
+      screen.getByPlaceholderText('Re-enter your password'),
+      'Password123!',
+    );
+
+    submitForm();
+
+    expect(
+      screen.getByText('Please enter a valid phone number'),
+    ).toBeInTheDocument();
+  });
+
   it('shows validation error for username with invalid characters', async () => {
     const user = userEvent.setup();
     renderRegister();
@@ -244,6 +302,8 @@ describe('Register Page', () => {
               name: 'Test User',
               username: 'testuser',
               email: 'newuser@example.com',
+              phone: '+359888123456',
+              isPhoneVerified: false,
             },
           },
           { status: 201 },
@@ -259,6 +319,7 @@ describe('Register Page', () => {
       screen.getByLabelText(/email address/i),
       'newuser@example.com',
     );
+    await user.type(screen.getByLabelText(/^phone number$/i), '888123456');
     await user.type(
       screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
       'Password123!',
@@ -298,7 +359,7 @@ describe('Register Page', () => {
           {
             success: true,
             message: 'Registration successful.',
-            data: { id: '1', name: 'Test User', username: 'testuser', email: 'test@example.com' },
+            data: { id: '1', name: 'Test User', username: 'testuser', email: 'test@example.com', phone: '+359888123456', isPhoneVerified: false },
           },
           { status: 201 },
         );
@@ -313,6 +374,7 @@ describe('Register Page', () => {
       screen.getByLabelText(/email address/i),
       'test@example.com',
     );
+    await user.type(screen.getByLabelText(/^phone number$/i), '888123456');
     await user.type(
       screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
       'Password123!',
@@ -359,6 +421,7 @@ describe('Register Page', () => {
       screen.getByLabelText(/email address/i),
       'existing@example.com',
     );
+    await user.type(screen.getByLabelText(/^phone number$/i), '888123456');
     await user.type(
       screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
       'Password123!',
@@ -426,6 +489,8 @@ describe('Register Page', () => {
               name: 'Test User',
               username: 'testuser',
               email: 'newuser@example.com',
+              phone: '+359888123456',
+              isPhoneVerified: false,
             },
           },
           { status: 201 },
@@ -441,6 +506,7 @@ describe('Register Page', () => {
       screen.getByLabelText(/email address/i),
       'newuser@example.com',
     );
+    await user.type(screen.getByLabelText(/^phone number$/i), '888123456');
     await user.type(
       screen.getByPlaceholderText('8+ chars, uppercase, number, special char'),
       'Password123!',

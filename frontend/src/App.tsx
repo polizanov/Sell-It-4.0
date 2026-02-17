@@ -39,7 +39,7 @@ function App() {
             <Route
               path="/products/:id/edit"
               element={
-                <VerifiedRoute>
+                <VerifiedRoute requirePhone>
                   <EditProduct />
                 </VerifiedRoute>
               }
@@ -57,7 +57,7 @@ function App() {
             <Route
               path="/create-product"
               element={
-                <VerifiedRoute>
+                <VerifiedRoute requirePhone>
                   <CreateProduct />
                 </VerifiedRoute>
               }

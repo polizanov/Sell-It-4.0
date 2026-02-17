@@ -21,9 +21,11 @@
     "express-rate-limit": "^7.5.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
+    "libphonenumber-js": "^1.12.37",
     "mongoose": "^8.9.5",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.16",
+    "twilio": "^5.12.1",
     "winston": "^3.17.0",
     "zod": "^3.24.1"
   },

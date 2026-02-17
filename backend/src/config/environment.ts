@@ -16,6 +16,9 @@ const envSchema = z.object({
   CLIENT_URL: z.string().url().default('http://localhost:5173'),
   ALLOWED_ORIGINS: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_PHONE_NUMBER: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

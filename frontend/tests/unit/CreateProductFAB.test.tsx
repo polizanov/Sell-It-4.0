@@ -44,6 +44,8 @@ describe('CreateProductFAB', () => {
           username: 'testuser',
           email: 'test@example.com',
           isVerified: true,
+          phone: '+359888123456',
+          isPhoneVerified: true,
         },
         token: 'mock-jwt-token',
         isLoading: false,
@@ -61,7 +63,7 @@ describe('CreateProductFAB', () => {
       expect(fabButton).toBeInTheDocument();
     });
 
-    it('hides FAB for unverified users (isVerified: false)', () => {
+    it('shows FAB for all authenticated users (including unverified)', () => {
       vi.mocked(useAuthStore).mockReturnValue({
         isAuthenticated: true,
         user: {
@@ -70,6 +72,8 @@ describe('CreateProductFAB', () => {
           username: 'testuser',
           email: 'test@example.com',
           isVerified: false,
+          phone: '+359888123456',
+          isPhoneVerified: false,
         },
         token: 'mock-jwt-token',
         isLoading: false,
@@ -79,13 +83,12 @@ describe('CreateProductFAB', () => {
         initializeAuth: vi.fn(),
       });
 
-      const { container } = renderFAB();
+      renderFAB();
 
-      const fabButton = screen.queryByRole('button', {
+      const fabButton = screen.getByRole('button', {
         name: /create new product listing/i,
       });
-      expect(fabButton).not.toBeInTheDocument();
-      expect(container.firstChild).toBeNull();
+      expect(fabButton).toBeInTheDocument();
     });
 
     it('hides FAB for unauthenticated users', () => {
@@ -134,6 +137,83 @@ describe('CreateProductFAB', () => {
     });
   });
 
+  describe('Phone verification gating', () => {
+    it('clicking FAB when phone-unverified shows verify prompt popup', async () => {
+      vi.mocked(useAuthStore).mockReturnValue({
+        isAuthenticated: true,
+        user: {
+          id: '1',
+          name: 'Test User',
+          username: 'testuser',
+          email: 'test@example.com',
+          isVerified: true,
+          phone: '+359888123456',
+          isPhoneVerified: false,
+        },
+        token: 'mock-jwt-token',
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        setUser: vi.fn(),
+        initializeAuth: vi.fn(),
+      });
+
+      const user = userEvent.setup();
+      renderFAB();
+
+      const fabButton = screen.getByRole('button', {
+        name: /create new product listing/i,
+      });
+      await user.click(fabButton);
+
+      // Should show the verify prompt dialog, not the create product modal
+      await waitFor(() => {
+        expect(screen.getByText('Verification Required')).toBeInTheDocument();
+      });
+
+      // The create product modal should NOT be visible
+      expect(screen.queryByText('Add New Product')).not.toBeInTheDocument();
+    });
+
+    it('clicking FAB when fully verified opens create product modal', async () => {
+      vi.mocked(useAuthStore).mockReturnValue({
+        isAuthenticated: true,
+        user: {
+          id: '1',
+          name: 'Test User',
+          username: 'testuser',
+          email: 'test@example.com',
+          isVerified: true,
+          phone: '+359888123456',
+          isPhoneVerified: true,
+        },
+        token: 'mock-jwt-token',
+        isLoading: false,
+        login: vi.fn(),
+        logout: vi.fn(),
+        setUser: vi.fn(),
+        initializeAuth: vi.fn(),
+      });
+
+      const user = userEvent.setup();
+      renderFAB();
+
+      const fabButton = screen.getByRole('button', {
+        name: /create new product listing/i,
+      });
+      await user.click(fabButton);
+
+      // Should show the create product modal
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+      expect(screen.getByText('Add New Product')).toBeInTheDocument();
+
+      // The verify prompt should NOT be visible
+      expect(screen.queryByText('Verification Required')).not.toBeInTheDocument();
+    });
+  });
+
   describe('Modal interaction', () => {
     beforeEach(() => {
       vi.mocked(useAuthStore).mockReturnValue({
@@ -144,6 +224,8 @@ describe('CreateProductFAB', () => {
           username: 'testuser',
           email: 'test@example.com',
           isVerified: true,
+          phone: '+359888123456',
+          isPhoneVerified: true,
         },
         token: 'mock-jwt-token',
         isLoading: false,
@@ -305,6 +387,8 @@ describe('CreateProductFAB', () => {
           username: 'testuser',
           email: 'test@example.com',
           isVerified: true,
+          phone: '+359888123456',
+          isPhoneVerified: true,
         },
         token: 'mock-jwt-token',
         isLoading: false,
@@ -374,6 +458,8 @@ describe('CreateProductFAB', () => {
           username: 'testuser',
           email: 'test@example.com',
           isVerified: true,
+          phone: '+359888123456',
+          isPhoneVerified: true,
         },
         token: 'mock-jwt-token',
         isLoading: false,
@@ -474,6 +560,8 @@ describe('CreateProductFAB', () => {
           username: 'testuser',
           email: 'test@example.com',
           isVerified: true,
+          phone: '+359888123456',
+          isPhoneVerified: true,
         },
         token: 'mock-jwt-token',
         isLoading: false,

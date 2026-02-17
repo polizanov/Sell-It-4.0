@@ -1,4 +1,17 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+/**
+ * Helper to fill the phone number in the PhoneInput component.
+ * Selects Bulgaria (+359) from the country dropdown, then types the national number.
+ */
+async function fillPhone(page: Page, nationalNumber: string) {
+  // Click the phone input and type the full Bulgarian number character by character
+  // so that react-phone-number-input can detect the country and format it properly
+  const phoneInput = page.locator('.PhoneInputInput');
+  await phoneInput.click();
+  await phoneInput.fill('');
+  await phoneInput.pressSequentially(`+359${nationalNumber}`, { delay: 50 });
+}
 
 test.describe('Create Product', () => {
   test('unauthenticated user visiting /create-product is redirected to /login', async ({
@@ -26,6 +39,7 @@ test.describe('Create Product', () => {
     await page.getByLabel(/full name/i).fill('Test User');
     await page.getByLabel(/username/i).fill(`testuser${timestamp}`);
     await page.getByLabel(/email address/i).fill(testEmail);
+    await fillPhone(page, '888100001');
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
@@ -68,6 +82,7 @@ test.describe('Create Product', () => {
     await page.getByLabel(/full name/i).fill('Test User');
     await page.getByLabel(/username/i).fill(`testuser${timestamp}`);
     await page.getByLabel(/email address/i).fill(testEmail);
+    await fillPhone(page, '888100002');
     await page.getByLabel(/^password/i).fill(testPassword);
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
