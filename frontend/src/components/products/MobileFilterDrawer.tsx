@@ -8,6 +8,7 @@ interface MobileFilterDrawerProps {
   onSortChange: (sort: string) => void;
   selectedConditions: string[];
   onConditionsChange: (conditions: string[]) => void;
+  conditionCounts: Record<string, number>;
 }
 
 export const MobileFilterDrawer = ({
@@ -17,6 +18,7 @@ export const MobileFilterDrawer = ({
   onSortChange,
   selectedConditions,
   onConditionsChange,
+  conditionCounts,
 }: MobileFilterDrawerProps) => {
   // Lock body scroll when open
   useEffect(() => {
@@ -96,6 +98,7 @@ export const MobileFilterDrawer = ({
               onSortChange={onSortChange}
               selectedConditions={selectedConditions}
               onConditionsChange={onConditionsChange}
+              conditionCounts={conditionCounts}
             />
           </div>
         </div>

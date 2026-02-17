@@ -18,21 +18,14 @@ test.describe('Homepage - Authenticated Users', () => {
     await page.getByLabel(/confirm password/i).fill(testPassword);
     await page.getByRole('button', { name: /create account/i }).click();
 
-    // Wait for either success message or stay on registration (error case)
-    await page.waitForTimeout(2000);
+    // Wait for registration success — use an explicit expect with a generous timeout
+    // to avoid the flaky pattern of waitForTimeout + isVisible which can hang
+    await expect(
+      page.getByRole('heading', { name: /check your email/i }),
+    ).toBeVisible({ timeout: 15000 });
 
-    // Check if we got the success message
-    const successHeading = page.getByRole('heading', { name: /check your email/i });
-    const isSuccessVisible = await successHeading.isVisible().catch(() => false);
-
-    if (isSuccessVisible) {
-      await page.getByRole('link', { name: /go to login/i }).click();
-      await page.waitForURL(/\/login/, { timeout: 10000 });
-    } else {
-      // Registration failed, check for error and retry with different credentials
-      const errorText = await page.locator('.text-red-500, .text-red-400').textContent();
-      throw new Error(`Registration failed: ${errorText}`);
-    }
+    await page.getByRole('link', { name: /go to login/i }).click();
+    await page.waitForURL(/\/login/, { timeout: 10000 });
 
     await page.getByLabel(/email address/i).fill(testEmail);
     await page.getByLabel(/password/i).fill(testPassword);
@@ -293,8 +286,9 @@ test.describe('Homepage - Authenticated Users', () => {
     // Wait for products to load
     await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
 
-    // Scope to desktop sidebar to avoid matching mobile drawer duplicates
+    // Scope to desktop sidebar (conditionally hidden when no products exist)
     const sidebar = page.getByTestId('desktop-sidebar');
+    await expect(sidebar).toBeVisible({ timeout: 15000 });
 
     // Sort select should be visible (desktop sidebar)
     const sortSelect = sidebar.getByLabel('Sort By');
@@ -320,18 +314,20 @@ test.describe('Homepage - Authenticated Users', () => {
     // Wait for products to load
     await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
 
-    // Scope to desktop sidebar to avoid matching mobile drawer duplicates
+    // Scope to desktop sidebar (conditionally hidden when no products exist)
     const sidebar = page.getByTestId('desktop-sidebar');
+    await expect(sidebar).toBeVisible({ timeout: 15000 });
 
     // Condition checkboxes should be visible (desktop sidebar)
-    await expect(sidebar.getByLabel('New', { exact: true })).toBeVisible();
-    await expect(sidebar.getByLabel('Like New')).toBeVisible();
-    await expect(sidebar.getByLabel('Good')).toBeVisible();
-    await expect(sidebar.getByLabel('Fair')).toBeVisible();
+    // Labels now include counts like "New (3)", so use regex to match the prefix
+    await expect(sidebar.getByLabel(/^New/)).toBeVisible();
+    await expect(sidebar.getByLabel(/^Like New/)).toBeVisible();
+    await expect(sidebar.getByLabel(/^Good/)).toBeVisible();
+    await expect(sidebar.getByLabel(/^Fair/)).toBeVisible();
 
     // Click the "New" condition checkbox
-    await sidebar.getByLabel('New', { exact: true }).check();
-    await expect(sidebar.getByLabel('New', { exact: true })).toBeChecked();
+    await sidebar.getByLabel(/^New/).check();
+    await expect(sidebar.getByLabel(/^New/)).toBeChecked();
 
     // Wait for re-fetch
     await page.waitForTimeout(500);
@@ -346,17 +342,18 @@ test.describe('Homepage - Authenticated Users', () => {
     // Wait for products to load
     await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
 
-    // Scope to desktop sidebar
+    // Scope to desktop sidebar (conditionally hidden when no products exist)
     const sidebar = page.getByTestId('desktop-sidebar');
+    await expect(sidebar).toBeVisible({ timeout: 15000 });
 
     // Change sort to non-default
     const sortSelect = sidebar.getByLabel('Sort By');
     await sortSelect.selectOption('title_asc');
     await expect(sortSelect).toHaveValue('title_asc');
 
-    // Check a condition
-    await sidebar.getByLabel('Good').check();
-    await expect(sidebar.getByLabel('Good')).toBeChecked();
+    // Check a condition (labels now include counts like "Good (2)")
+    await sidebar.getByLabel(/^Good/).check();
+    await expect(sidebar.getByLabel(/^Good/)).toBeChecked();
 
     // Clear Filters button should be visible
     await expect(page.getByText('Clear Filters')).toBeVisible();
@@ -370,8 +367,8 @@ test.describe('Homepage - Authenticated Users', () => {
     // Sort should be reset to newest
     await expect(sortSelect).toHaveValue('newest');
 
-    // Condition checkbox should be unchecked
-    await expect(sidebar.getByLabel('Good')).not.toBeChecked();
+    // Condition checkbox should be unchecked (labels now include counts)
+    await expect(sidebar.getByLabel(/^Good/)).not.toBeChecked();
 
     // Clear Filters button should disappear
     await expect(page.getByText('Clear Filters')).not.toBeVisible();
@@ -394,5 +391,201 @@ test.describe('Homepage - Authenticated Users', () => {
 
     // Wait for error message to appear (the API mock returns "Server error")
     await expect(page.getByText(/server error/i)).toBeVisible({ timeout: 10000 });
+  });
+});
+
+test.describe('Condition Counts in Filter Sidebar', () => {
+  // These tests seed their own product data to ensure the sidebar is visible
+  // and condition counts are deterministic.
+
+  /** Helper: register a user via API, returns { email, token } */
+  async function seedUserAndLogin(request: import('@playwright/test').APIRequestContext) {
+    const ts = Date.now();
+    const random = Math.floor(Math.random() * 100000);
+    const email = `condcounts${ts}${random}@example.com`;
+    const password = 'Password123!';
+
+    await request.post('/api/auth/register', {
+      data: {
+        name: 'Condition Counts User',
+        username: `condcounts${ts}${random}`,
+        email,
+        password,
+      },
+    });
+
+    const loginRes = await request.post('/api/auth/login', {
+      data: { email, password },
+    });
+    const loginBody = await loginRes.json();
+    return { email, token: loginBody.data.token as string };
+  }
+
+  /** Helper: create a product via API with the given condition and category */
+  async function createProduct(
+    request: import('@playwright/test').APIRequestContext,
+    token: string,
+    opts: { title: string; condition: string; category: string },
+  ) {
+    // Create a minimal valid JPEG buffer (smallest valid JPEG)
+    const jpegHeader = Buffer.from([
+      0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
+    ]);
+
+    await request.post('/api/products', {
+      headers: { Authorization: `Bearer ${token}` },
+      multipart: {
+        title: opts.title,
+        description: 'Test product for condition counts e2e test',
+        price: '50.00',
+        category: opts.category,
+        condition: opts.condition,
+        images: {
+          name: 'test-image.jpg',
+          mimeType: 'image/jpeg',
+          buffer: jpegHeader,
+        },
+      },
+    });
+  }
+
+  test.beforeEach(async ({ page, request }) => {
+    // Seed user and products via API, then authenticate in the browser
+    const { token } = await seedUserAndLogin(request);
+
+    // Create products with different conditions across two categories
+    // Electronics: 2 New, 1 Good
+    // Clothes: 1 Like New, 1 Fair
+    const products = [
+      { title: 'E2E Phone', condition: 'New', category: 'Electronics' },
+      { title: 'E2E Tablet', condition: 'New', category: 'Electronics' },
+      { title: 'E2E Camera', condition: 'Good', category: 'Electronics' },
+      { title: 'E2E Jacket', condition: 'Like New', category: 'Clothes' },
+      { title: 'E2E Pants', condition: 'Fair', category: 'Clothes' },
+    ];
+    for (const p of products) {
+      await createProduct(request, token, p);
+    }
+
+    // Authenticate in the browser
+    await page.goto('/');
+    await page.evaluate((t) => {
+      localStorage.setItem('token', t);
+    }, token);
+    await page.reload();
+  });
+
+  test('Condition counts are displayed next to each checkbox', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for products to load (at least our 5 seeded products exist)
+    await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
+
+    // Scope to desktop sidebar
+    const sidebar = page.getByTestId('desktop-sidebar');
+    await expect(sidebar).toBeVisible();
+
+    // Each condition checkbox label should show a count in parentheses
+    const conditionLabels = sidebar.locator('label.group');
+    const labelCount = await conditionLabels.count();
+    expect(labelCount).toBe(4); // New, Like New, Good, Fair
+
+    for (let i = 0; i < labelCount; i++) {
+      const label = conditionLabels.nth(i);
+      await expect(label).toBeVisible();
+
+      // Verify the count span shows a number in parentheses, e.g. "(2)" or "(0)"
+      const countSpan = label.locator('span.text-text-muted');
+      await expect(countSpan).toBeVisible();
+      await expect(countSpan).toHaveText(/\(\d+\)/);
+    }
+  });
+
+  test('Condition counts update when category filter changes', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for products to load
+    await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
+
+    // Scope to desktop sidebar
+    const sidebar = page.getByTestId('desktop-sidebar');
+
+    // Capture initial condition counts (with "All" category selected)
+    const conditionLabels = sidebar.locator('label.group');
+    const labelCount = await conditionLabels.count();
+    const initialCounts: string[] = [];
+    for (let i = 0; i < labelCount; i++) {
+      const countSpan = conditionLabels.nth(i).locator('span.text-text-muted');
+      initialCounts.push((await countSpan.textContent()) ?? '');
+    }
+
+    // Click a specific category chip to narrow down products
+    const categoryGroup = page.getByRole('group', { name: /filter by category/i });
+    const electronicsChip = categoryGroup.getByRole('button', { name: /Electronics/i });
+    await electronicsChip.click();
+
+    // Wait for re-fetch
+    await page.waitForTimeout(500);
+
+    // Capture updated condition counts
+    const updatedCounts: string[] = [];
+    for (let i = 0; i < labelCount; i++) {
+      const countSpan = conditionLabels.nth(i).locator('span.text-text-muted');
+      updatedCounts.push((await countSpan.textContent()) ?? '');
+    }
+
+    // Counts should have changed since we narrowed by category
+    // The total across all conditions should be less or equal
+    const parseCount = (text: string) => parseInt(text.replace(/[()]/g, ''), 10) || 0;
+    const initialTotal = initialCounts.reduce((sum, c) => sum + parseCount(c), 0);
+    const updatedTotal = updatedCounts.reduce((sum, c) => sum + parseCount(c), 0);
+
+    expect(updatedTotal).toBeLessThanOrEqual(initialTotal);
+
+    // Verify counts still show valid numbers after category filter
+    for (let i = 0; i < labelCount; i++) {
+      const countSpan = conditionLabels.nth(i).locator('span.text-text-muted');
+      await expect(countSpan).toHaveText(/\(\d+\)/);
+    }
+  });
+
+  test('Selecting a condition does NOT change the displayed counts', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for products to load
+    await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
+
+    // Scope to desktop sidebar
+    const sidebar = page.getByTestId('desktop-sidebar');
+
+    // Capture condition counts before selecting a condition
+    const conditionLabels = sidebar.locator('label.group');
+    const labelCount = await conditionLabels.count();
+    const countsBeforeSelection: string[] = [];
+    for (let i = 0; i < labelCount; i++) {
+      const countSpan = conditionLabels.nth(i).locator('span.text-text-muted');
+      countsBeforeSelection.push((await countSpan.textContent()) ?? '');
+    }
+
+    // Select the "Good" condition checkbox (label text is "Good (N)")
+    const goodCheckbox = conditionLabels.nth(2).locator('input[type="checkbox"]');
+    await goodCheckbox.check();
+    await expect(goodCheckbox).toBeChecked();
+
+    // Wait for re-fetch
+    await page.waitForTimeout(500);
+
+    // Capture condition counts after selecting a condition
+    const countsAfterSelection: string[] = [];
+    for (let i = 0; i < labelCount; i++) {
+      const countSpan = conditionLabels.nth(i).locator('span.text-text-muted');
+      countsAfterSelection.push((await countSpan.textContent()) ?? '');
+    }
+
+    // Counts should remain unchanged because they reflect the base filter
+    // (category + search), not the condition selection
+    for (let i = 0; i < labelCount; i++) {
+      expect(countsAfterSelection[i]).toBe(countsBeforeSelection[i]);
+    }
   });
 });

@@ -133,8 +133,9 @@ test.describe('Homepage - Non-Authenticated Users', () => {
     // Wait for products to load
     await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
 
-    // Scope to desktop sidebar to avoid matching mobile drawer duplicates
+    // Scope to desktop sidebar (conditionally hidden when no products exist)
     const sidebar = page.getByTestId('desktop-sidebar');
+    await expect(sidebar).toBeVisible({ timeout: 15000 });
 
     // Sort select should be visible (desktop sidebar)
     const sortSelect = sidebar.getByLabel('Sort By');
@@ -160,18 +161,20 @@ test.describe('Homepage - Non-Authenticated Users', () => {
     // Wait for products to load
     await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
 
-    // Scope to desktop sidebar to avoid matching mobile drawer duplicates
+    // Scope to desktop sidebar (conditionally hidden when no products exist)
     const sidebar = page.getByTestId('desktop-sidebar');
+    await expect(sidebar).toBeVisible({ timeout: 15000 });
 
     // Condition checkboxes should be visible (desktop sidebar)
-    await expect(sidebar.getByLabel('New', { exact: true })).toBeVisible();
-    await expect(sidebar.getByLabel('Like New')).toBeVisible();
-    await expect(sidebar.getByLabel('Good')).toBeVisible();
-    await expect(sidebar.getByLabel('Fair')).toBeVisible();
+    // Labels now include counts like "New (3)", so use regex to match the prefix
+    await expect(sidebar.getByLabel(/^New/)).toBeVisible();
+    await expect(sidebar.getByLabel(/^Like New/)).toBeVisible();
+    await expect(sidebar.getByLabel(/^Good/)).toBeVisible();
+    await expect(sidebar.getByLabel(/^Fair/)).toBeVisible();
 
     // Click the "Like New" condition checkbox
-    await sidebar.getByLabel('Like New').check();
-    await expect(sidebar.getByLabel('Like New')).toBeChecked();
+    await sidebar.getByLabel(/^Like New/).check();
+    await expect(sidebar.getByLabel(/^Like New/)).toBeChecked();
 
     // Wait for re-fetch
     await page.waitForTimeout(500);
@@ -186,17 +189,18 @@ test.describe('Homepage - Non-Authenticated Users', () => {
     // Wait for products to load
     await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
 
-    // Scope to desktop sidebar
+    // Scope to desktop sidebar (conditionally hidden when no products exist)
     const sidebar = page.getByTestId('desktop-sidebar');
+    await expect(sidebar).toBeVisible({ timeout: 15000 });
 
     // Change sort to non-default
     const sortSelect = sidebar.getByLabel('Sort By');
     await sortSelect.selectOption('price_desc');
     await expect(sortSelect).toHaveValue('price_desc');
 
-    // Check a condition
-    await sidebar.getByLabel('Fair').check();
-    await expect(sidebar.getByLabel('Fair')).toBeChecked();
+    // Check a condition (labels now include counts like "Fair (1)")
+    await sidebar.getByLabel(/^Fair/).check();
+    await expect(sidebar.getByLabel(/^Fair/)).toBeChecked();
 
     // Clear Filters button should be visible
     await expect(page.getByText('Clear Filters')).toBeVisible();
@@ -210,8 +214,8 @@ test.describe('Homepage - Non-Authenticated Users', () => {
     // Sort should be reset to newest
     await expect(sortSelect).toHaveValue('newest');
 
-    // Condition checkbox should be unchecked
-    await expect(sidebar.getByLabel('Fair')).not.toBeChecked();
+    // Condition checkbox should be unchecked (labels now include counts)
+    await expect(sidebar.getByLabel(/^Fair/)).not.toBeChecked();
 
     // Clear Filters button should disappear
     await expect(page.getByText('Clear Filters')).not.toBeVisible();

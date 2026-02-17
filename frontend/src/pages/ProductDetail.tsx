@@ -278,7 +278,7 @@ const ProductDetail = () => {
             <Swiper
               modules={[Navigation, Thumbs, Keyboard]}
               navigation
-              thumbs={{ swiper: thumbsSwiper }}
+              thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
               keyboard={{ enabled: true }}
               className="rounded-lg overflow-hidden bg-dark-surface"
               spaceBetween={10}

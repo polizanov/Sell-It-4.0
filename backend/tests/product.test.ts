@@ -697,6 +697,55 @@ describe('Product Endpoints', () => {
       expect(res.body.data.products[0].seller).toHaveProperty('name', 'Product Test User');
       expect(res.body.data.products[0].seller).toHaveProperty('username', 'producttestuser');
     });
+
+    it('should include conditionCounts with correct counts for seeded data', async () => {
+      const res = await request(app).get('/api/products');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toHaveProperty('conditionCounts');
+      expect(res.body.data.conditionCounts).toEqual({
+        New: 5,
+        'Like New': 5,
+        Good: 4,
+        Fair: 1,
+      });
+    });
+
+    it('should return conditionCounts reflecting base filter, not condition filter', async () => {
+      const res = await request(app).get('/api/products?condition=New');
+
+      expect(res.status).toBe(200);
+      // Products returned should only be New
+      for (const product of res.body.data.products) {
+        expect(product.condition).toBe('New');
+      }
+      // But conditionCounts should still reflect ALL conditions (base filter = no condition)
+      expect(res.body.data.conditionCounts).toEqual({
+        New: 5,
+        'Like New': 5,
+        Good: 4,
+        Fair: 1,
+      });
+    });
+
+    it('should scope conditionCounts to category filter', async () => {
+      const res = await request(app).get('/api/products?category=Electronics');
+
+      expect(res.status).toBe(200);
+      // All returned products should be Electronics
+      for (const product of res.body.data.products) {
+        expect(product.category).toBe('Electronics');
+      }
+      // conditionCounts should only count Electronics products:
+      // New: Alpha Phone, Nu Keyboard = 2
+      // Like New: Beta Laptop, Omicron Camera = 2
+      // Good: Gamma Headphones = 1
+      expect(res.body.data.conditionCounts).toEqual({
+        New: 2,
+        'Like New': 2,
+        Good: 1,
+      });
+    });
   });
 
   // --------------------------------------------------------------------------

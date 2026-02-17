@@ -41,6 +41,7 @@ interface ProductResponse {
 interface ProductListResponseData {
   products: ProductResponseData[];
   pagination: PaginationInfo;
+  conditionCounts: Record<string, number>;
 }
 
 interface ProductListResponse {
@@ -87,7 +88,7 @@ function mapProductResponse(data: ProductResponseData): Product {
 export const productService = {
   getAll: async (
     params: ProductListParams = {},
-  ): Promise<{ products: Product[]; pagination: PaginationInfo }> => {
+  ): Promise<{ products: Product[]; pagination: PaginationInfo; conditionCounts: Record<string, number> }> => {
     const searchParams = new URLSearchParams();
     if (params.page) searchParams.set('page', String(params.page));
     if (params.limit) searchParams.set('limit', String(params.limit));
@@ -104,6 +105,7 @@ export const productService = {
     return {
       products: res.data.data.products.map(mapProductResponse),
       pagination: res.data.data.pagination,
+      conditionCounts: res.data.data.conditionCounts,
     };
   },
 

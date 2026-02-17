@@ -88,6 +88,9 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response): 
     filter.$text = { $search: search };
   }
 
+  // Capture base filter (category + search only) for condition counts aggregation
+  const baseFilter = { ...filter };
+
   const condition = req.query.condition as string | undefined;
   if (condition) {
     const conditions = condition.split(',').map((c) => c.trim());
@@ -101,10 +104,19 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response): 
   const sortOption = SORT_OPTIONS[sort] || SORT_OPTIONS.newest;
   const skip = (page - 1) * limit;
 
-  const [products, totalProducts] = await Promise.all([
+  const [products, totalProducts, conditionCountsAgg] = await Promise.all([
     Product.find(filter).sort(sortOption).skip(skip).limit(limit).populate('seller', 'name username'),
     Product.countDocuments(filter),
+    Product.aggregate([
+      { $match: baseFilter },
+      { $group: { _id: '$condition', count: { $sum: 1 } } },
+    ]),
   ]);
+
+  const conditionCounts: Record<string, number> = {};
+  for (const { _id, count } of conditionCountsAgg) {
+    conditionCounts[_id] = count;
+  }
 
   const totalPages = Math.ceil(totalProducts / limit);
 
@@ -120,6 +132,7 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response): 
         limit,
         hasMore: page < totalPages,
       },
+      conditionCounts,
     },
   });
 });

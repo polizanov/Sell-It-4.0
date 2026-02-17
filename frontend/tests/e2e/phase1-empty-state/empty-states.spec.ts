@@ -17,6 +17,19 @@ test.describe('Home (unauthenticated, no products)', () => {
       page.getByText('There are no products to display at the moment.'),
     ).toBeVisible();
   });
+
+  test('desktop sidebar is NOT visible when no products exist', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for page to finish loading (either shows "0 of 0" or "No products found")
+    await expect(
+      page.getByText(/Showing 0 of 0 products|No products found/),
+    ).toBeVisible({ timeout: 10000 });
+
+    // Desktop sidebar should not be rendered when there are no products and no active filters
+    const sidebar = page.getByTestId('desktop-sidebar');
+    await expect(sidebar).not.toBeVisible();
+  });
 });
 
 test.describe('Home (authenticated, no products)', () => {

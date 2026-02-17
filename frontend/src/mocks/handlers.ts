@@ -560,6 +560,12 @@ export const handlers = [
           p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q),
       );
     }
+    // Compute condition counts from base filter (before condition filter)
+    const conditionCounts: Record<string, number> = {};
+    for (const p of filtered) {
+      conditionCounts[p.condition] = (conditionCounts[p.condition] || 0) + 1;
+    }
+
     if (conditionParam) {
       const conditions = conditionParam.split(',').map((c) => c.trim());
       filtered = filtered.filter((p) => conditions.includes(p.condition));
@@ -611,6 +617,7 @@ export const handlers = [
           limit,
           hasMore: page < totalPages,
         },
+        conditionCounts,
       },
     });
   }),

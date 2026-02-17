@@ -56,6 +56,9 @@ const featuredProducts = [
   },
 ];
 
+/** Condition counts derived from featuredProducts (New=3, Like New=1) */
+const featuredConditionCounts: Record<string, number> = { New: 3, 'Like New': 1 };
+
 const renderHome = () => {
   return render(
     <MemoryRouter initialEntries={['/']}>
@@ -93,6 +96,7 @@ describe('Home Page — Product Listing', () => {
               limit: 12,
               hasMore: false,
             },
+            conditionCounts: featuredConditionCounts,
           },
         });
       }),
@@ -138,6 +142,7 @@ describe('Home Page — Product Listing', () => {
               limit: 12,
               hasMore: false,
             },
+            conditionCounts: featuredConditionCounts,
           },
         });
       }),
@@ -212,6 +217,7 @@ describe('Home Page — Product Listing', () => {
               limit: 12,
               hasMore: false,
             },
+            conditionCounts: featuredConditionCounts,
           },
         });
       }),
@@ -272,6 +278,7 @@ describe('Home Page — Product Listing', () => {
               limit: 12,
               hasMore: false,
             },
+            conditionCounts: featuredConditionCounts,
           },
         });
       }),
@@ -323,6 +330,7 @@ describe('Home Page — Product Listing', () => {
               limit: 12,
               hasMore: false,
             },
+            conditionCounts: featuredConditionCounts,
           },
         });
       }),
@@ -374,6 +382,7 @@ describe('Home Page — Product Listing', () => {
               limit: 12,
               hasMore: false,
             },
+            conditionCounts: featuredConditionCounts,
           },
         });
       }),
@@ -433,6 +442,7 @@ describe('Home Page — Sorting and Condition Filtering', () => {
               limit: 12,
               hasMore: false,
             },
+            conditionCounts: featuredConditionCounts,
           },
         });
       }),
@@ -506,11 +516,12 @@ describe('Home Page — Sorting and Condition Filtering', () => {
 
     // Both the desktop sidebar and mobile drawer render a FilterSidebar,
     // so there are two of each label. Verify at least one is present.
+    // Labels now include counts, e.g. "New (3)", so use getAllByRole with a name regex.
     expect(screen.getAllByText('Condition').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByLabelText('New').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByLabelText('Like New').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByLabelText('Good').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByLabelText('Fair').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('checkbox', { name: /^New/ }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('checkbox', { name: /Like New/ }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('checkbox', { name: /^Good/ }).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByRole('checkbox', { name: /^Fair/ }).length).toBeGreaterThanOrEqual(1);
   });
 
   it('changing sort triggers re-fetch', async () => {
@@ -531,6 +542,7 @@ describe('Home Page — Sorting and Condition Filtering', () => {
               limit: 12,
               hasMore: false,
             },
+            conditionCounts: featuredConditionCounts,
           },
         });
       }),
@@ -592,6 +604,7 @@ describe('Home Page — Sorting and Condition Filtering', () => {
               limit: 12,
               hasMore: false,
             },
+            conditionCounts: featuredConditionCounts,
           },
         });
       }),
@@ -624,8 +637,9 @@ describe('Home Page — Sorting and Condition Filtering', () => {
     });
 
     const user = userEvent.setup();
-    // Use getAllByLabelText because the mobile drawer also renders a FilterSidebar
-    const newCheckboxes = screen.getAllByLabelText('New');
+    // Use getAllByRole because the mobile drawer also renders a FilterSidebar.
+    // Labels now include counts, e.g. "New (3)", so use a name regex.
+    const newCheckboxes = screen.getAllByRole('checkbox', { name: /^New/ });
     await user.click(newCheckboxes[0]);
 
     await waitFor(() => {
@@ -648,8 +662,9 @@ describe('Home Page — Sorting and Condition Filtering', () => {
     const sortSelect = sortSelects[0];
     await user.selectOptions(sortSelect, 'price_desc');
 
-    // Check a condition — use getAllByLabelText for same reason
-    const newCheckboxes = screen.getAllByLabelText('New');
+    // Check a condition — use getAllByRole for same reason.
+    // Labels now include counts, e.g. "New (3)", so use a name regex.
+    const newCheckboxes = screen.getAllByRole('checkbox', { name: /^New/ });
     const newCheckbox = newCheckboxes[0];
     await user.click(newCheckbox);
 
@@ -671,5 +686,126 @@ describe('Home Page — Sorting and Condition Filtering', () => {
 
     // Clear Filters button should disappear
     expect(screen.queryByText('Clear Filters')).not.toBeInTheDocument();
+  });
+});
+
+describe('Home Page — Condition Counts and Sidebar Visibility', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useAuthStore.setState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
+  });
+
+  it('displays condition counts next to checkbox labels', async () => {
+    server.use(
+      http.get(`${API_BASE}/products`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Products retrieved successfully',
+          data: {
+            products: featuredProducts,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalProducts: 4,
+              limit: 12,
+              hasMore: false,
+            },
+            conditionCounts: { New: 3, 'Like New': 1, Good: 5, Fair: 0 },
+          },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: [
+            'Animals',
+            'Antiques',
+            'Books',
+            'Clothes',
+            'Electronics',
+            'Home and Garden',
+            'Makeups',
+            'Others',
+            'Properties',
+            'Toys',
+            'Vehicles',
+            'Work',
+          ],
+        });
+      }),
+    );
+
+    renderHome();
+
+    // Wait for products to load
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    // Condition counts should appear next to checkbox labels in the format "(N)"
+    // Both the desktop sidebar and mobile drawer render a FilterSidebar,
+    // so there are two of each. Verify at least one is present.
+    expect(screen.getAllByText('(3)').length).toBeGreaterThanOrEqual(1); // New (3)
+    expect(screen.getAllByText('(1)').length).toBeGreaterThanOrEqual(1); // Like New (1)
+    expect(screen.getAllByText('(5)').length).toBeGreaterThanOrEqual(1); // Good (5)
+    expect(screen.getAllByText('(0)').length).toBeGreaterThanOrEqual(1); // Fair (0)
+  });
+
+  it('hides sidebar when no products and no active filters', async () => {
+    server.use(
+      http.get(`${API_BASE}/products`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Products retrieved successfully',
+          data: {
+            products: [],
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalProducts: 0,
+              limit: 12,
+              hasMore: false,
+            },
+            conditionCounts: {},
+          },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: [
+            'Animals',
+            'Antiques',
+            'Books',
+            'Clothes',
+            'Electronics',
+            'Home and Garden',
+            'Makeups',
+            'Others',
+            'Properties',
+            'Toys',
+            'Vehicles',
+            'Work',
+          ],
+        });
+      }),
+    );
+
+    renderHome();
+
+    // Wait for loading to finish — "No Products Found" should appear
+    await waitFor(() => {
+      expect(screen.getByText('No Products Found')).toBeInTheDocument();
+    });
+
+    // The desktop sidebar should NOT be in the document
+    expect(screen.queryByTestId('desktop-sidebar')).not.toBeInTheDocument();
   });
 });

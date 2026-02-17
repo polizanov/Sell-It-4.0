@@ -5,6 +5,7 @@ interface FilterSidebarProps {
   onSortChange: (sort: string) => void;
   selectedConditions: string[];
   onConditionsChange: (conditions: string[]) => void;
+  conditionCounts: Record<string, number>;
 }
 
 export const FilterSidebar = ({
@@ -12,6 +13,7 @@ export const FilterSidebar = ({
   onSortChange,
   selectedConditions,
   onConditionsChange,
+  conditionCounts,
 }: FilterSidebarProps) => {
   const handleConditionToggle = (condition: string) => {
     if (selectedConditions.includes(condition)) {
@@ -63,6 +65,7 @@ export const FilterSidebar = ({
               />
               <span className="text-sm text-text-primary group-hover:text-orange transition-colors">
                 {condition}
+                <span className="text-text-muted ml-1">({conditionCounts[condition] ?? 0})</span>
               </span>
             </label>
           ))}
