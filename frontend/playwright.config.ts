@@ -7,6 +7,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
+  globalSetup: './tests/e2e/global-setup.ts',
   globalTeardown: './tests/e2e/global-teardown.ts',
   use: {
     baseURL: 'http://localhost:5173',
@@ -14,8 +15,21 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'phase1-empty-state',
+      testDir: './tests/e2e/phase1-empty-state',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'phase2-setup',
+      testDir: './tests/e2e/phase2-setup',
+      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['phase1-empty-state'],
+    },
+    {
+      name: 'phase3-with-data',
+      testDir: './tests/e2e/phase3-with-data',
+      use: { ...devices['Desktop Chrome'] },
+      dependencies: ['phase2-setup'],
     },
   ],
   webServer: [

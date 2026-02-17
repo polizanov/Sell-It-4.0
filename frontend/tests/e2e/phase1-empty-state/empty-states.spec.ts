@@ -1,0 +1,191 @@
+import { test, expect } from '@playwright/test';
+
+test.describe('Home (unauthenticated, no products)', () => {
+  test('shows empty product count', async ({ page }) => {
+    await page.goto('/');
+
+    await expect(
+      page.getByText(/Showing 0 of 0 products|No products found/),
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test('shows "No Products Found" in grid', async ({ page }) => {
+    await page.goto('/');
+
+    await expect(page.getByText('No Products Found')).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByText('There are no products to display at the moment.'),
+    ).toBeVisible();
+  });
+});
+
+test.describe('Home (authenticated, no products)', () => {
+  test('shows empty products for logged-in user', async ({ page }) => {
+    const ts = Date.now();
+    const email = `emptyauth${ts}@example.com`;
+    const password = 'Password123!';
+
+    // Register via API
+    await page.request.post('/api/auth/register', {
+      data: {
+        name: 'Empty Auth User',
+        username: `emptyauth${ts}`,
+        email,
+        password,
+      },
+    });
+
+    // Login via API
+    const loginRes = await page.request.post('/api/auth/login', {
+      data: { email, password },
+    });
+    const loginBody = await loginRes.json();
+    expect(loginBody.success).toBe(true);
+
+    // Set token in localStorage
+    await page.goto('/');
+    await page.evaluate((token) => {
+      localStorage.setItem('token', token);
+    }, loginBody.data.token);
+    await page.reload();
+
+    await expect(
+      page.getByText(/Showing 0 of 0 products|No products found/),
+    ).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('No Products Found')).toBeVisible();
+  });
+});
+
+test.describe('My Favourites (no favourites)', () => {
+  let token: string;
+
+  test.beforeEach(async ({ page }) => {
+    const ts = Date.now();
+    const email = `emptyfav${ts}@example.com`;
+    const password = 'Password123!';
+
+    await page.request.post('/api/auth/register', {
+      data: {
+        name: 'Empty Fav User',
+        username: `emptyfav${ts}`,
+        email,
+        password,
+      },
+    });
+
+    const loginRes = await page.request.post('/api/auth/login', {
+      data: { email, password },
+    });
+    const loginBody = await loginRes.json();
+    expect(loginBody.success).toBe(true);
+    token = loginBody.data.token;
+
+    await page.goto('/');
+    await page.evaluate((t) => {
+      localStorage.setItem('token', t);
+    }, token);
+    await page.reload();
+  });
+
+  test('shows empty favourites with heart icon', async ({ page }) => {
+    await page.goto('/favourites');
+
+    await expect(page.getByText('No favourites yet')).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByText('Browse products and tap the heart icon to save them here.'),
+    ).toBeVisible();
+  });
+
+  test('Browse Products button navigates to home', async ({ page }) => {
+    await page.goto('/favourites');
+
+    await expect(page.getByText('No favourites yet')).toBeVisible({ timeout: 10000 });
+
+    await page.getByRole('link', { name: /browse products/i }).click();
+
+    // /products redirects to /
+    await expect(page).toHaveURL('/');
+  });
+
+  test('shows "0 saved products" count', async ({ page }) => {
+    await page.goto('/favourites');
+
+    await expect(page.getByText('0 saved products')).toBeVisible({ timeout: 10000 });
+  });
+});
+
+test.describe('My Profile (no products)', () => {
+  test('shows "No Products Yet" for verified user', async ({ page }) => {
+    const ts = Date.now();
+    const email = `emptyprofile${ts}@example.com`;
+    const password = 'Password123!';
+
+    await page.request.post('/api/auth/register', {
+      data: {
+        name: 'Empty Profile User',
+        username: `emptyprofile${ts}`,
+        email,
+        password,
+      },
+    });
+
+    const loginRes = await page.request.post('/api/auth/login', {
+      data: { email, password },
+    });
+    const loginBody = await loginRes.json();
+    expect(loginBody.success).toBe(true);
+
+    await page.goto('/');
+    await page.evaluate((t) => {
+      localStorage.setItem('token', t);
+    }, loginBody.data.token);
+    await page.reload();
+
+    await page.goto('/profile');
+
+    await expect(page.getByText('No Products Yet')).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByText("You haven't listed any products yet"),
+    ).toBeVisible();
+    await expect(page.getByText('0 listings')).toBeVisible();
+  });
+
+  test('shows verify email prompt for unverified user', async ({ page }) => {
+    const ts = Date.now();
+    const email = `unverifiedprofile${ts}@example.com`;
+    const password = 'Password123!';
+
+    await page.request.post('/api/auth/register', {
+      data: {
+        name: 'Unverified Profile User',
+        username: `unverifiedprofile${ts}`,
+        email,
+        password,
+      },
+    });
+
+    // Set user as unverified
+    await page.request.post('/api/auth/test-set-verified', {
+      data: { email, isVerified: false },
+    });
+
+    const loginRes = await page.request.post('/api/auth/login', {
+      data: { email, password },
+    });
+    const loginBody = await loginRes.json();
+    expect(loginBody.success).toBe(true);
+
+    await page.goto('/');
+    await page.evaluate((t) => {
+      localStorage.setItem('token', t);
+    }, loginBody.data.token);
+    await page.reload();
+
+    await page.goto('/profile');
+
+    await expect(page.getByText('No Products Yet')).toBeVisible({ timeout: 10000 });
+    await expect(
+      page.getByText('Verify your email to start listing products.'),
+    ).toBeVisible();
+  });
+});
