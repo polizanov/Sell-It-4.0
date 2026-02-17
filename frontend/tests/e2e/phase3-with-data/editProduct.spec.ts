@@ -37,7 +37,7 @@ test.describe('Edit Product', () => {
     await page.getByLabel(/product title/i).fill('Original E2E Product');
     await page.getByLabel(/description/i).fill('This is the original product description for e2e test');
     await page.getByLabel(/price/i).fill('99.99');
-    await page.getByLabel(/category/i).fill('Electronics');
+    await page.getByLabel(/category/i).selectOption('Electronics');
     await page.getByLabel(/condition/i).selectOption('Good');
 
     // Upload an image

@@ -53,7 +53,7 @@ const defaultProducts: typeof products = [
     description: 'Limited edition leather jacket. Genuine leather, size M.',
     price: 399.99,
     images: ['https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=600&fit=crop'],
-    category: 'Clothing',
+    category: 'Clothes',
     condition: 'Like New',
     seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
     createdAt: '2024-01-20T10:30:00.000Z',
@@ -64,7 +64,7 @@ const defaultProducts: typeof products = [
     description: 'Professional mountain bike with 21-speed gears.',
     price: 550.0,
     images: ['https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=800&h=600&fit=crop'],
-    category: 'Sports',
+    category: 'Others',
     condition: 'Good',
     seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
     createdAt: '2024-01-22T10:30:00.000Z',
@@ -75,7 +75,7 @@ const defaultProducts: typeof products = [
     description: 'Beautiful acoustic guitar with rich tone.',
     price: 180.5,
     images: ['https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=800&h=600&fit=crop'],
-    category: 'Musical Instruments',
+    category: 'Antiques',
     condition: 'Good',
     seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis' },
     createdAt: '2024-01-25T10:30:00.000Z',
@@ -86,7 +86,7 @@ const defaultProducts: typeof products = [
     description: 'Sleek LED desk lamp with adjustable brightness.',
     price: 45.0,
     images: ['https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&h=600&fit=crop'],
-    category: 'Home & Garden',
+    category: 'Home and Garden',
     condition: 'Like New',
     seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
     createdAt: '2024-02-01T10:30:00.000Z',
@@ -108,7 +108,7 @@ const defaultProducts: typeof products = [
     description: 'High-performance running shoes, size 10.',
     price: 75.0,
     images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=600&fit=crop'],
-    category: 'Sports',
+    category: 'Others',
     condition: 'Like New',
     seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis' },
     createdAt: '2024-02-05T10:30:00.000Z',
@@ -119,7 +119,7 @@ const defaultProducts: typeof products = [
     description: 'Programmable coffee maker with thermal carafe.',
     price: 65.0,
     images: ['https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=800&h=600&fit=crop'],
-    category: 'Home & Garden',
+    category: 'Home and Garden',
     condition: 'Good',
     seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
     createdAt: '2024-02-08T10:30:00.000Z',
@@ -130,7 +130,7 @@ const defaultProducts: typeof products = [
     description: 'Professional skateboard deck with custom artwork.',
     price: 120.0,
     images: ['https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800&h=600&fit=crop'],
-    category: 'Sports',
+    category: 'Others',
     condition: 'Fair',
     seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
     createdAt: '2024-02-10T10:30:00.000Z',
@@ -152,7 +152,7 @@ const defaultProducts: typeof products = [
     description: 'Premium non-slip yoga mat, extra thick.',
     price: 35.0,
     images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=600&fit=crop'],
-    category: 'Sports',
+    category: 'Others',
     condition: 'New',
     seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
     createdAt: '2024-02-14T10:30:00.000Z',
@@ -163,7 +163,7 @@ const defaultProducts: typeof products = [
     description: 'Solid wood bookshelf with five shelves.',
     price: 150.0,
     images: ['https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800&h=600&fit=crop'],
-    category: 'Home & Garden',
+    category: 'Home and Garden',
     condition: 'Good',
     seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
     createdAt: '2024-02-16T10:30:00.000Z',
@@ -185,7 +185,7 @@ const defaultProducts: typeof products = [
     description: 'Warm waterproof winter jacket, size L.',
     price: 220.0,
     images: ['https://images.unsplash.com/photo-1544923246-77307dd270c3?w=800&h=600&fit=crop'],
-    category: 'Clothing',
+    category: 'Clothes',
     condition: 'Good',
     seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
     createdAt: '2024-02-20T10:30:00.000Z',
@@ -196,7 +196,7 @@ const defaultProducts: typeof products = [
     description: 'Collection of 5 popular board games.',
     price: 85.0,
     images: ['https://images.unsplash.com/photo-1611371805429-8b5c1b2c34ba?w=800&h=600&fit=crop'],
-    category: 'Toys & Games',
+    category: 'Toys',
     condition: 'Good',
     seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
     createdAt: '2024-02-22T10:30:00.000Z',
@@ -204,13 +204,18 @@ const defaultProducts: typeof products = [
 ];
 
 const defaultCategories = [
+  'Animals',
+  'Antiques',
   'Books',
-  'Clothing',
+  'Clothes',
   'Electronics',
-  'Home & Garden',
-  'Musical Instruments',
-  'Sports',
-  'Toys & Games',
+  'Home and Garden',
+  'Makeups',
+  'Others',
+  'Properties',
+  'Toys',
+  'Vehicles',
+  'Work',
 ];
 
 export const handlers = [
@@ -636,13 +641,10 @@ export const handlers = [
   }),
 
   http.get(`${API_BASE}/products/categories`, () => {
-    const productCategories = products.map((p) => p.category);
-    const allCategories = [...new Set([...defaultCategories, ...productCategories])].sort();
-
     return HttpResponse.json({
       success: true,
       message: 'Categories retrieved',
-      data: allCategories,
+      data: defaultCategories,
     });
   }),
 

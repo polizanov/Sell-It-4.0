@@ -111,12 +111,14 @@ test.describe('Homepage - Authenticated Users', () => {
     await page.getByText('Clear Filters').click();
     await expect(searchInput).toHaveValue('');
 
-    // Test category filter
-    const categorySelect = page.locator('select');
-    await expect(categorySelect).toBeVisible();
+    // Test category filter chips
+    const categoryGroup = page.getByRole('group', { name: /filter by category/i });
+    await expect(categoryGroup).toBeVisible();
 
-    // Verify "All Categories" is the default option
-    await expect(categorySelect).toHaveValue('');
+    // Verify "All" chip is the default active chip (has bg-orange class)
+    const allChip = categoryGroup.getByRole('button', { name: /^All$/i });
+    await expect(allChip).toBeVisible();
+    await expect(allChip).toHaveClass(/bg-orange/);
   });
 
   test('Infinite scroll loads more products', async ({ page }) => {
@@ -184,14 +186,16 @@ test.describe('Homepage - Authenticated Users', () => {
     const searchInput = page.getByPlaceholder('Search products...');
     await searchInput.fill('laptop');
 
-    const categorySelect = page.locator('select');
-    const options = await categorySelect.locator('option').allTextContents();
-    if (options.length > 1) {
-      await categorySelect.selectOption(options[1]);
-    }
+    // Click a category chip to apply category filter
+    const categoryGroup = page.getByRole('group', { name: /filter by category/i });
+    const electronicsChip = categoryGroup.getByRole('button', { name: /Electronics/i });
+    await electronicsChip.click();
 
     // Wait for debounce
     await page.waitForTimeout(400);
+
+    // Verify the Electronics chip is active
+    await expect(electronicsChip).toHaveClass(/bg-orange/);
 
     // Clear Filters button should be visible
     await expect(page.getByText('Clear Filters')).toBeVisible();
@@ -201,7 +205,10 @@ test.describe('Homepage - Authenticated Users', () => {
 
     // Verify both filters are cleared
     await expect(searchInput).toHaveValue('');
-    await expect(categorySelect).toHaveValue('');
+
+    // Verify "All" chip is active again (has bg-orange class)
+    const allChip = categoryGroup.getByRole('button', { name: /^All$/i });
+    await expect(allChip).toHaveClass(/bg-orange/);
 
     // Clear Filters button should disappear
     await expect(page.getByText('Clear Filters')).not.toBeVisible();

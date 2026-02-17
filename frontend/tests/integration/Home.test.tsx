@@ -26,7 +26,7 @@ const featuredProducts = [
     description: 'Limited edition sneakers.',
     price: 250.0,
     images: ['https://images.unsplash.com/photo-2.jpg'],
-    category: 'Clothing',
+    category: 'Clothes',
     condition: 'New',
     seller: { _id: 'seller-2', name: 'Bob' },
     createdAt: '2024-02-19T10:30:00.000Z',
@@ -37,7 +37,7 @@ const featuredProducts = [
     description: 'Professional acoustic guitar.',
     price: 450.0,
     images: ['https://images.unsplash.com/photo-3.jpg'],
-    category: 'Musical Instruments',
+    category: 'Antiques',
     condition: 'Like New',
     seller: { _id: 'seller-1', name: 'Alice' },
     createdAt: '2024-02-18T10:30:00.000Z',
@@ -48,7 +48,7 @@ const featuredProducts = [
     description: 'Modern LED desk lamp.',
     price: 89.99,
     images: ['https://images.unsplash.com/photo-4.jpg'],
-    category: 'Home & Garden',
+    category: 'Home and Garden',
     condition: 'New',
     seller: { _id: 'seller-3', name: 'Charlie' },
     createdAt: '2024-02-17T10:30:00.000Z',
@@ -99,7 +99,7 @@ describe('Home Page — Product Listing', () => {
         return HttpResponse.json({
           success: true,
           message: 'Categories retrieved successfully',
-          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+          data: ['Animals', 'Antiques', 'Books', 'Clothes', 'Electronics', 'Home and Garden', 'Makeups', 'Others', 'Properties', 'Toys', 'Vehicles', 'Work'],
         });
       }),
     );
@@ -144,7 +144,7 @@ describe('Home Page — Product Listing', () => {
         return HttpResponse.json({
           success: true,
           message: 'Categories retrieved successfully',
-          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+          data: ['Animals', 'Antiques', 'Books', 'Clothes', 'Electronics', 'Home and Garden', 'Makeups', 'Others', 'Properties', 'Toys', 'Vehicles', 'Work'],
         });
       }),
     );
@@ -177,7 +177,7 @@ describe('Home Page — Product Listing', () => {
         return HttpResponse.json({
           success: true,
           message: 'Categories retrieved successfully',
-          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+          data: ['Animals', 'Antiques', 'Books', 'Clothes', 'Electronics', 'Home and Garden', 'Makeups', 'Others', 'Properties', 'Toys', 'Vehicles', 'Work'],
         });
       }),
     );
@@ -218,7 +218,7 @@ describe('Home Page — Product Listing', () => {
         return HttpResponse.json({
           success: true,
           message: 'Categories retrieved successfully',
-          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+          data: ['Animals', 'Antiques', 'Books', 'Clothes', 'Electronics', 'Home and Garden', 'Makeups', 'Others', 'Properties', 'Toys', 'Vehicles', 'Work'],
         });
       }),
     );
@@ -278,7 +278,7 @@ describe('Home Page — Product Listing', () => {
         return HttpResponse.json({
           success: true,
           message: 'Categories retrieved successfully',
-          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+          data: ['Animals', 'Antiques', 'Books', 'Clothes', 'Electronics', 'Home and Garden', 'Makeups', 'Others', 'Properties', 'Toys', 'Vehicles', 'Work'],
         });
       }),
     );
@@ -329,7 +329,7 @@ describe('Home Page — Product Listing', () => {
         return HttpResponse.json({
           success: true,
           message: 'Categories retrieved successfully',
-          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+          data: ['Animals', 'Antiques', 'Books', 'Clothes', 'Electronics', 'Home and Garden', 'Makeups', 'Others', 'Properties', 'Toys', 'Vehicles', 'Work'],
         });
       }),
     );
@@ -380,7 +380,7 @@ describe('Home Page — Product Listing', () => {
         return HttpResponse.json({
           success: true,
           message: 'Categories retrieved successfully',
-          data: ['Electronics', 'Clothing', 'Musical Instruments', 'Home & Garden'],
+          data: ['Animals', 'Antiques', 'Books', 'Clothes', 'Electronics', 'Home and Garden', 'Makeups', 'Others', 'Properties', 'Toys', 'Vehicles', 'Work'],
         });
       }),
     );

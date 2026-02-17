@@ -6,6 +6,7 @@ import { Button } from '../components/common/Button';
 import { ProductGrid } from '../components/products/ProductGrid';
 import { MouseFollowGradient } from '../components/common/MouseFollowGradient';
 import { productService } from '../services/productService';
+import { CATEGORIES, CATEGORY_ICONS } from '../constants/categories';
 import type { Product, PaginationInfo } from '../types';
 
 /** Skeleton placeholder for the product grid while loading */
@@ -48,7 +49,6 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [categories, setCategories] = useState<string[]>([]);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -59,13 +59,6 @@ const Home = () => {
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
-  // Fetch categories on mount
-  useEffect(() => {
-    productService.getCategories().then((res) => {
-      setCategories(res.data.data);
-    });
-  }, []);
 
   // Fetch products — resets to page 1 when filters change
   useEffect(() => {
@@ -275,51 +268,65 @@ const Home = () => {
             )}
 
             <div className="space-y-8">
-              {/* Search and Filter Bar */}
-              <div className="flex flex-col sm:flex-row gap-4">
-                {/* Search Input */}
-                <div className="flex-1">
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="Search products..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full px-4 py-3 pl-12 bg-dark-elevated border border-dark-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent transition-all duration-200"
-                    />
-                    <svg
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </div>
-                </div>
+              {/* Search Bar */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-4 py-3 pl-12 bg-dark-elevated border border-dark-border rounded-lg text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent transition-all duration-200"
+                />
+                <svg
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
 
-                {/* Category Filter */}
-                <div className="sm:w-64">
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className={`w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent transition-all duration-200 ${
-                      !selectedCategory ? 'text-text-muted' : ''
+              {/* Category Chips Slider */}
+              <div
+                className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
+                role="group"
+                aria-label="Filter by category"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('')}
+                  className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    !selectedCategory
+                      ? 'bg-orange text-white shadow-md'
+                      : 'bg-dark-elevated border border-dark-border text-text-secondary hover:border-orange/50'
+                  }`}
+                >
+                  All
+                </button>
+                {CATEGORIES.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() =>
+                      setSelectedCategory(selectedCategory === category ? '' : category)
+                    }
+                    className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      selectedCategory === category
+                        ? 'bg-orange text-white shadow-md'
+                        : 'bg-dark-elevated border border-dark-border text-text-secondary hover:border-orange/50'
                     }`}
                   >
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category} value={category} className="text-text-primary">
-                        {category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <span className="mr-1.5">{CATEGORY_ICONS[category]}</span>
+                    {category}
+                  </button>
+                ))}
               </div>
 
               {/* Results Count & Clear Filters */}

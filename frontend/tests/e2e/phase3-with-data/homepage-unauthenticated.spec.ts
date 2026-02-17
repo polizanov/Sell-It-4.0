@@ -108,19 +108,23 @@ test.describe('Homepage - Non-Authenticated Users', () => {
     await page.getByText('Clear Filters').click();
     await expect(searchInput).toHaveValue('');
 
-    // Test category filter
-    const categorySelect = page.locator('select');
-    await expect(categorySelect).toBeVisible();
+    // Test category filter chips
+    const categoryGroup = page.getByRole('group', { name: /filter by category/i });
+    await expect(categoryGroup).toBeVisible();
 
-    // Get first available category option (skip "All Categories")
-    const options = await categorySelect.locator('option').allTextContents();
-    if (options.length > 1) {
-      const firstCategory = options[1];
-      await categorySelect.selectOption(firstCategory);
+    // Verify "All" chip is active by default
+    const allChip = categoryGroup.getByRole('button', { name: /^All$/i });
+    await expect(allChip).toHaveClass(/bg-orange/);
 
-      // Verify filter has been applied
-      await expect(page.getByText('Clear Filters')).toBeVisible();
-    }
+    // Click a category chip (e.g., Electronics)
+    const electronicsChip = categoryGroup.getByRole('button', { name: /Electronics/i });
+    await electronicsChip.click();
+
+    // Verify the Electronics chip is now active
+    await expect(electronicsChip).toHaveClass(/bg-orange/);
+
+    // Verify filter has been applied
+    await expect(page.getByText('Clear Filters')).toBeVisible();
   });
 
   test('Infinite scroll loads more products when scrolling down', async ({ page }) => {

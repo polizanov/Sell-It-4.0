@@ -80,7 +80,7 @@ describe('Product Endpoints', () => {
   // GET /api/products/categories (when no products exist)
   // --------------------------------------------------------------------------
   describe('GET /api/products/categories (empty)', () => {
-    it('should return empty array when no products exist', async () => {
+    it('should return all 12 static categories even when no products exist', async () => {
       // Ensure no products exist
       await Product.deleteMany({});
 
@@ -88,7 +88,12 @@ describe('Product Endpoints', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data).toEqual([]);
+      expect(res.body.data).toEqual([
+        'Animals', 'Antiques', 'Books', 'Clothes', 'Electronics',
+        'Home and Garden', 'Makeups', 'Others', 'Properties', 'Toys',
+        'Vehicles', 'Work',
+      ]);
+      expect(res.body.data).toHaveLength(12);
     });
   });
 
@@ -293,6 +298,21 @@ describe('Product Endpoints', () => {
       expect(res.body.success).toBe(false);
       expect(res.body.message).toContain('Too many files');
     });
+
+    it('should return 400 when category is not in the allowed enum', async () => {
+      const res = await request(app)
+        .post('/api/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .field('title', 'Invalid Category Product')
+        .field('description', 'This product has an invalid category value')
+        .field('price', '29.99')
+        .field('category', 'InvalidCategory')
+        .field('condition', 'New')
+        .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
   });
 
   // --------------------------------------------------------------------------
@@ -312,19 +332,18 @@ describe('Product Endpoints', () => {
         .attach('images', testImageBuffer, { filename: 'test2.jpg', contentType: 'image/jpeg' });
     });
 
-    it('should return distinct categories sorted alphabetically', async () => {
+    it('should return all 12 static categories sorted alphabetically', async () => {
       const res = await request(app).get('/api/products/categories');
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.data)).toBe(true);
-      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
-      // Categories should be sorted alphabetically: Books before Electronics
-      expect(res.body.data).toEqual(
-        [...res.body.data].sort((a: string, b: string) => a.localeCompare(b)),
-      );
-      expect(res.body.data).toContain('Books');
-      expect(res.body.data).toContain('Electronics');
+      expect(res.body.data).toHaveLength(12);
+      expect(res.body.data).toEqual([
+        'Animals', 'Antiques', 'Books', 'Clothes', 'Electronics',
+        'Home and Garden', 'Makeups', 'Others', 'Properties', 'Toys',
+        'Vehicles', 'Work',
+      ]);
     });
   });
 
@@ -446,17 +465,17 @@ describe('Product Endpoints', () => {
         { title: 'Alpha Phone', description: 'A great smartphone for everyone', price: 100, category: 'Electronics', condition: 'New' },
         { title: 'Beta Laptop', description: 'Powerful laptop for work and play', price: 200, category: 'Electronics', condition: 'Like New' },
         { title: 'Gamma Headphones', description: 'Wireless headphones with noise cancelling', price: 50, category: 'Electronics', condition: 'Good' },
-        { title: 'Delta Jacket', description: 'Warm winter jacket for cold weather', price: 120, category: 'Clothing', condition: 'New' },
-        { title: 'Epsilon Sneakers', description: 'Running shoes for daily training', price: 80, category: 'Clothing', condition: 'Like New' },
+        { title: 'Delta Jacket', description: 'Warm winter jacket for cold weather', price: 120, category: 'Clothes', condition: 'New' },
+        { title: 'Epsilon Sneakers', description: 'Running shoes for daily training', price: 80, category: 'Clothes', condition: 'Like New' },
         { title: 'Zeta Novel', description: 'Bestselling fiction novel of the year', price: 15, category: 'Books', condition: 'Good' },
         { title: 'Eta Cookbook', description: 'Delicious recipes from around the world', price: 25, category: 'Books', condition: 'New' },
-        { title: 'Theta Yoga Mat', description: 'Premium non-slip yoga mat extra thick', price: 35, category: 'Sports', condition: 'New' },
-        { title: 'Iota Basketball', description: 'Official size basketball for outdoor courts', price: 30, category: 'Sports', condition: 'Good' },
-        { title: 'Kappa Desk Lamp', description: 'Adjustable LED desk lamp with brightness control', price: 45, category: 'Home & Garden', condition: 'Like New' },
-        { title: 'Lambda Bookshelf', description: 'Solid wood bookshelf with five shelves', price: 150, category: 'Home & Garden', condition: 'Fair' },
-        { title: 'Mu Guitar', description: 'Acoustic guitar with beautiful warm tone', price: 300, category: 'Musical Instruments', condition: 'Good' },
+        { title: 'Theta Yoga Mat', description: 'Premium non-slip yoga mat extra thick', price: 35, category: 'Others', condition: 'New' },
+        { title: 'Iota Basketball', description: 'Official size basketball for outdoor courts', price: 30, category: 'Others', condition: 'Good' },
+        { title: 'Kappa Desk Lamp', description: 'Adjustable LED desk lamp with brightness control', price: 45, category: 'Home and Garden', condition: 'Like New' },
+        { title: 'Lambda Bookshelf', description: 'Solid wood bookshelf with five shelves', price: 150, category: 'Home and Garden', condition: 'Fair' },
+        { title: 'Mu Guitar', description: 'Acoustic guitar with beautiful warm tone', price: 300, category: 'Antiques', condition: 'Good' },
         { title: 'Nu Keyboard', description: 'Mechanical keyboard with RGB backlight', price: 95, category: 'Electronics', condition: 'New' },
-        { title: 'Xi Board Game', description: 'Fun board game for the whole family', price: 40, category: 'Toys & Games', condition: 'Like New' },
+        { title: 'Xi Board Game', description: 'Fun board game for the whole family', price: 40, category: 'Toys', condition: 'Like New' },
         { title: 'Omicron Camera', description: 'Professional DSLR camera body only', price: 500, category: 'Electronics', condition: 'Like New' },
       ];
 
@@ -634,7 +653,7 @@ describe('Product Endpoints', () => {
           description: `Description for user product number ${i}`,
           price: 10 + i,
           images: ['https://res.cloudinary.com/test/image/upload/test-image.jpg'],
-          category: i % 2 === 0 ? 'Electronics' : 'Clothing',
+          category: i % 2 === 0 ? 'Electronics' : 'Clothes',
           condition: 'New',
           seller: user!._id,
           createdAt: new Date(Date.now() - (15 - i) * 1000),
@@ -739,7 +758,7 @@ describe('Product Endpoints', () => {
       await Product.deleteMany({});
 
       const user = await User.findOne({ email: 'productuser@example.com' });
-      const categories = ['Electronics', 'Clothing', 'Books', 'Sports', 'Home & Garden'];
+      const categories = ['Electronics', 'Clothes', 'Books', 'Others', 'Home and Garden'];
       const conditions: Array<'New' | 'Like New' | 'Good' | 'Fair'> = ['New', 'Like New', 'Good', 'Fair'];
 
       const bulkOps = [];
@@ -822,7 +841,7 @@ describe('Product Endpoints', () => {
         .field('title', 'Seller Test Product')
         .field('description', 'Testing that seller comes from JWT not body')
         .field('price', '19.99')
-        .field('category', 'Clothing')
+        .field('category', 'Clothes')
         .field('condition', 'Like New')
         .field('seller', fakeObjectId)
         .attach('images', testImageBuffer, { filename: 'test.jpg', contentType: 'image/jpeg' });
@@ -867,7 +886,7 @@ describe('Product Endpoints', () => {
         .field('title', 'Updated Product')
         .field('description', 'Updated description for the product')
         .field('price', '150.00')
-        .field('category', 'Clothing')
+        .field('category', 'Clothes')
         .field('condition', 'Like New')
         .field('existingImages', JSON.stringify([productImageUrl]))
         .attach('images', testImageBuffer, { filename: 'new.jpg', contentType: 'image/jpeg' });
@@ -878,7 +897,7 @@ describe('Product Endpoints', () => {
       expect(res.body.data.title).toBe('Updated Product');
       expect(res.body.data.description).toBe('Updated description for the product');
       expect(res.body.data.price).toBe(150);
-      expect(res.body.data.category).toBe('Clothing');
+      expect(res.body.data.category).toBe('Clothes');
       expect(res.body.data.condition).toBe('Like New');
       expect(res.body.data.images).toHaveLength(2);
       expect(res.body.data.images[0]).toBe(productImageUrl);

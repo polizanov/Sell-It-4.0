@@ -142,13 +142,18 @@ describe('productService', () => {
             success: true,
             message: 'Categories retrieved',
             data: [
+              'Animals',
+              'Antiques',
               'Books',
-              'Clothing',
+              'Clothes',
               'Electronics',
-              'Home & Garden',
-              'Musical Instruments',
-              'Sports',
-              'Toys & Games',
+              'Home and Garden',
+              'Makeups',
+              'Others',
+              'Properties',
+              'Toys',
+              'Vehicles',
+              'Work',
             ],
           });
         }),
@@ -159,33 +164,42 @@ describe('productService', () => {
       expect(response.data.success).toBe(true);
       expect(response.data.message).toBe('Categories retrieved');
       expect(response.data.data).toEqual([
+        'Animals',
+        'Antiques',
         'Books',
-        'Clothing',
+        'Clothes',
         'Electronics',
-        'Home & Garden',
-        'Musical Instruments',
-        'Sports',
-        'Toys & Games',
+        'Home and Garden',
+        'Makeups',
+        'Others',
+        'Properties',
+        'Toys',
+        'Vehicles',
+        'Work',
       ]);
-      expect(response.data.data).toHaveLength(7);
+      expect(response.data.data).toHaveLength(12);
     });
 
-    it('returns empty array when no categories exist', async () => {
-      server.use(
-        http.get(`${API_BASE}/products/categories`, () => {
-          return HttpResponse.json({
-            success: true,
-            message: 'Categories retrieved',
-            data: [],
-          });
-        }),
-      );
-
+    it('always returns 12 static categories', async () => {
+      // Backend now always returns the static 12-category list
       const response = await productService.getCategories();
 
       expect(response.data.success).toBe(true);
-      expect(response.data.data).toEqual([]);
-      expect(response.data.data).toHaveLength(0);
+      expect(response.data.data).toHaveLength(12);
+      expect(response.data.data).toEqual([
+        'Animals',
+        'Antiques',
+        'Books',
+        'Clothes',
+        'Electronics',
+        'Home and Garden',
+        'Makeups',
+        'Others',
+        'Properties',
+        'Toys',
+        'Vehicles',
+        'Work',
+      ]);
     });
   });
 
@@ -215,7 +229,7 @@ describe('productService', () => {
                   description: 'Another product for testing',
                   price: 99.99,
                   images: ['https://images.unsplash.com/photo-2.jpg'],
-                  category: 'Clothing',
+                  category: 'Clothes',
                   condition: 'Good',
                   seller: { _id: 'seller-2', name: 'Jane Doe', username: 'janedoe' },
                   createdAt: '2024-02-20T10:30:00.000Z',

@@ -1,11 +1,12 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { PRODUCT_CATEGORIES, ProductCategory } from '../constants/categories';
 
 export interface IProduct extends Document {
   title: string;
   description: string;
   price: number;
   images: string[];
-  category: string;
+  category: ProductCategory;
   condition: 'New' | 'Like New' | 'Good' | 'Fair';
   seller: mongoose.Types.ObjectId;
   createdAt: Date;
@@ -45,7 +46,10 @@ const productSchema = new Schema<IProduct>(
       type: String,
       required: [true, 'Category is required'],
       trim: true,
-      maxlength: [50, 'Category cannot exceed 50 characters'],
+      enum: {
+        values: PRODUCT_CATEGORIES,
+        message: `Category must be one of: ${PRODUCT_CATEGORIES.join(', ')}`,
+      },
     },
     condition: {
       type: String,

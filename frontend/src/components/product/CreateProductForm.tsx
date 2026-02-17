@@ -2,7 +2,7 @@ import { useState, FormEvent } from 'react';
 import { AxiosError } from 'axios';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
-import { CategoryAutocomplete } from '../common/CategoryAutocomplete';
+import { CATEGORIES } from '../../constants/categories';
 import { ImageUpload } from '../common/ImageUpload';
 import { productService } from '../../services/productService';
 import type { ApiError } from '../../types';
@@ -169,13 +169,34 @@ export const CreateProductForm = ({ onSuccess, onCancel }: CreateProductFormProp
         variant="light"
       />
 
-      <CategoryAutocomplete
-        value={formData.category}
-        onChange={(value) => setFormData({ ...formData, category: value })}
-        error={errors.category}
-        required
-        variant="light"
-      />
+      <div className="w-full">
+        <label
+          htmlFor="modal-category"
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
+          Category
+          <span className="text-orange ml-1">*</span>
+        </label>
+        <select
+          id="modal-category"
+          className={`w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent transition-all duration-200 ${
+            errors.category ? 'border-red-500 focus:ring-red-500' : ''
+          } ${!formData.category ? 'text-gray-400' : ''}`}
+          value={formData.category}
+          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+          required
+        >
+          <option value="">Select category</option>
+          {CATEGORIES.map((category) => (
+            <option key={category} value={category} className="text-gray-900">
+              {category}
+            </option>
+          ))}
+        </select>
+        {errors.category && (
+          <p className="mt-2 text-sm text-red-500">{errors.category}</p>
+        )}
+      </div>
 
       <div className="w-full">
         <label

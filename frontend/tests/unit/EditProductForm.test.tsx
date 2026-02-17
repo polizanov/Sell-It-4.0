@@ -31,7 +31,20 @@ const categoriesHandler = http.get(`${API_BASE}/products/categories`, () => {
   return HttpResponse.json({
     success: true,
     message: 'Categories retrieved',
-    data: ['Books', 'Clothing', 'Electronics', 'Home & Garden', 'Sports'],
+    data: [
+      'Animals',
+      'Antiques',
+      'Books',
+      'Clothes',
+      'Electronics',
+      'Home and Garden',
+      'Makeups',
+      'Others',
+      'Properties',
+      'Toys',
+      'Vehicles',
+      'Work',
+    ],
   });
 });
 
@@ -78,7 +91,7 @@ describe('EditProductForm', () => {
       const priceInput = screen.getByLabelText(/price/i) as HTMLInputElement;
       expect(priceInput.value).toBe('249.99');
 
-      const categoryInput = screen.getByLabelText(/category/i) as HTMLInputElement;
+      const categoryInput = screen.getByLabelText(/category/i) as HTMLSelectElement;
       expect(categoryInput.value).toBe('Electronics');
 
       const conditionSelect = screen.getByLabelText(/condition/i) as HTMLSelectElement;
@@ -174,8 +187,8 @@ describe('EditProductForm', () => {
       const user = userEvent.setup();
       render(<EditProductForm {...defaultProps} />);
 
-      const categoryInput = screen.getByLabelText(/category/i);
-      await user.clear(categoryInput);
+      const categoryInput = screen.getByLabelText(/category/i) as HTMLSelectElement;
+      await user.selectOptions(categoryInput, '');
 
       submitForm();
 

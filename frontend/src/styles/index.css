@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide scrollbar for category slider */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Swiper Custom Styles for Dark Theme */
 .swiper-button-next,
 .swiper-button-prev {

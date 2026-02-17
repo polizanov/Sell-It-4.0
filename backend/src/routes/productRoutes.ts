@@ -4,6 +4,7 @@ import { createProduct, deleteProduct, getAllProducts, getCategories, getProduct
 import { validate } from '../middleware/validate';
 import { protect, requireVerified } from '../middleware/authMiddleware';
 import { upload } from '../middleware/upload';
+import { PRODUCT_CATEGORIES } from '../constants/categories';
 
 const router = Router();
 
@@ -13,7 +14,9 @@ const createProductSchema = z.object({
   price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: 'Price must be a positive number',
   }),
-  category: z.string().min(1, 'Category is required').max(50, 'Category cannot exceed 50 characters'),
+  category: z.enum(PRODUCT_CATEGORIES, {
+    errorMap: () => ({ message: 'Invalid category' }),
+  }),
   condition: z.enum(['New', 'Like New', 'Good', 'Fair'], {
     errorMap: () => ({ message: 'Condition must be one of: New, Like New, Good, Fair' }),
   }),
@@ -25,7 +28,9 @@ const updateProductSchema = z.object({
   price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: 'Price must be a positive number',
   }),
-  category: z.string().min(1, 'Category is required').max(50, 'Category cannot exceed 50 characters'),
+  category: z.enum(PRODUCT_CATEGORIES, {
+    errorMap: () => ({ message: 'Invalid category' }),
+  }),
   condition: z.enum(['New', 'Like New', 'Good', 'Fair'], {
     errorMap: () => ({ message: 'Condition must be one of: New, Like New, Good, Fair' }),
   }),

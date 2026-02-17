@@ -35,7 +35,7 @@ test.describe('Delete Product', () => {
     await page.getByLabel(/product title/i).fill('Product To Delete E2E');
     await page.getByLabel(/description/i).fill('This product will be deleted in the e2e test');
     await page.getByLabel(/price/i).fill('49.99');
-    await page.getByLabel(/category/i).fill('Electronics');
+    await page.getByLabel(/category/i).selectOption('Electronics');
     await page.getByLabel(/condition/i).selectOption('Good');
 
     const fileInput = page.locator('input[type="file"]');
@@ -92,7 +92,7 @@ test.describe('Delete Product', () => {
     await page.getByLabel(/product title/i).fill('Owner Only Product');
     await page.getByLabel(/description/i).fill('This product belongs to the owner');
     await page.getByLabel(/price/i).fill('99.99');
-    await page.getByLabel(/category/i).fill('Electronics');
+    await page.getByLabel(/category/i).selectOption('Electronics');
     await page.getByLabel(/condition/i).selectOption('New');
 
     const fileInput = page.locator('input[type="file"]');

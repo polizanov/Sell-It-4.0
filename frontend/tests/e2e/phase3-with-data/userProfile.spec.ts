@@ -34,7 +34,7 @@ test.describe('User Profile', () => {
     await page.getByLabel(/product title/i).fill('Test Profile Product');
     await page.getByLabel(/description/i).fill('A product for testing the seller profile link');
     await page.getByLabel(/price/i).fill('99.99');
-    await page.getByLabel(/category/i).fill('Electronics');
+    await page.getByLabel(/category/i).selectOption('Electronics');
     await page.getByLabel(/condition/i).selectOption('New');
 
     // Upload a test image

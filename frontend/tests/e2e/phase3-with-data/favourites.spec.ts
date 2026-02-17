@@ -33,7 +33,7 @@ test.describe('Favourites', () => {
     await page.getByLabel(/product title/i).fill('Fav Test Product');
     await page.getByLabel(/description/i).fill('This is a product for the favourites E2E test');
     await page.getByLabel(/price/i).fill('79.99');
-    await page.getByLabel(/category/i).fill('Electronics');
+    await page.getByLabel(/category/i).selectOption('Electronics');
     await page.getByLabel(/condition/i).selectOption('New');
 
     const fileInput = page.locator('input[type="file"]');
@@ -134,7 +134,7 @@ test.describe('Favourites', () => {
     await page.getByLabel(/product title/i).fill('Unfav Test Product');
     await page.getByLabel(/description/i).fill('This is a product for the unfavourite E2E test');
     await page.getByLabel(/price/i).fill('59.99');
-    await page.getByLabel(/category/i).fill('Electronics');
+    await page.getByLabel(/category/i).selectOption('Electronics');
     await page.getByLabel(/condition/i).selectOption('Good');
 
     const fileInput = page.locator('input[type="file"]');
@@ -228,7 +228,7 @@ test.describe('Favourites', () => {
     await page.getByLabel(/product title/i).fill('Owner Product');
     await page.getByLabel(/description/i).fill('This is the owners own product for testing');
     await page.getByLabel(/price/i).fill('39.99');
-    await page.getByLabel(/category/i).fill('Electronics');
+    await page.getByLabel(/category/i).selectOption('Electronics');
     await page.getByLabel(/condition/i).selectOption('New');
 
     const fileInput = page.locator('input[type="file"]');

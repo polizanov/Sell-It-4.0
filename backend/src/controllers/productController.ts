@@ -8,6 +8,7 @@ import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../types';
 import { User } from '../models/User';
 import { mapProductToResponse } from '../utils/productHelpers';
+import { PRODUCT_CATEGORIES } from '../constants/categories';
 
 const SORT_OPTIONS: Record<string, Record<string, 1 | -1>> = {
   newest: { createdAt: -1 },
@@ -15,10 +16,6 @@ const SORT_OPTIONS: Record<string, Record<string, 1 | -1>> = {
   price_asc: { price: 1 },
   price_desc: { price: -1 },
 };
-
-// Categories cache with TTL
-let categoriesCache: { data: string[], timestamp: number } | null = null;
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 /**
  * Get all products with pagination and filtering
@@ -186,31 +183,12 @@ export const createProduct = asyncHandler(async (req: AuthRequest, res: Response
 });
 
 export const getCategories = asyncHandler(async (_req: AuthRequest, res: Response): Promise<void> => {
-  const now = Date.now();
-  const isTestEnv = process.env.NODE_ENV === 'test';
-
-  // Skip cache in test environment to avoid stale data between tests
-  if (!isTestEnv && categoriesCache && (now - categoriesCache.timestamp) < CACHE_TTL) {
-    res.json({
-      success: true,
-      message: 'Categories retrieved successfully',
-      data: categoriesCache.data
-    });
-    return;
-  }
-
-  // Refresh cache
-  const categories = await Product.distinct('category');
-  categories.sort((a: string, b: string) => a.localeCompare(b));
-
-  if (!isTestEnv) {
-    categoriesCache = { data: categories, timestamp: now };
-  }
+  const sorted = [...PRODUCT_CATEGORIES].sort((a, b) => a.localeCompare(b));
 
   res.json({
     success: true,
     message: 'Categories retrieved successfully',
-    data: categories,
+    data: sorted,
   });
 });
 

@@ -33,7 +33,7 @@ test.describe('Product Detail Page', () => {
     await page.getByLabel(/product title/i).fill('E2E Detail Test Product');
     await page.getByLabel(/description/i).fill('This is a product for the E2E detail page test');
     await page.getByLabel(/price/i).fill('99.99');
-    await page.getByLabel(/category/i).fill('Electronics');
+    await page.getByLabel(/category/i).selectOption('Electronics');
     await page.getByLabel(/condition/i).selectOption('New');
 
     // Upload a test image

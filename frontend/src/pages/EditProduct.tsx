@@ -5,7 +5,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
-import { CategoryAutocomplete } from '../components/common/CategoryAutocomplete';
+import { CATEGORIES } from '../constants/categories';
 import { EditImageManager } from '../components/common/EditImageManager';
 import { productService } from '../services/productService';
 import { useAuthStore } from '../store/authStore';
@@ -317,12 +317,34 @@ const EditProduct = () => {
               step="0.01"
             />
 
-            <CategoryAutocomplete
-              value={formData.category}
-              onChange={(value) => setFormData({ ...formData, category: value })}
-              error={errors.category}
-              required
-            />
+            <div className="w-full">
+              <label
+                htmlFor="category"
+                className="block text-sm font-medium text-text-secondary mb-2"
+              >
+                Category
+                <span className="text-orange ml-1">*</span>
+              </label>
+              <select
+                id="category"
+                className={`w-full px-4 py-3 bg-dark-elevated border border-dark-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-orange focus:border-transparent transition-all duration-200 ${
+                  errors.category ? 'border-red-500 focus:ring-red-500' : ''
+                } ${!formData.category ? 'text-text-muted' : ''}`}
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                required
+              >
+                <option value="">Select category</option>
+                {CATEGORIES.map((category) => (
+                  <option key={category} value={category} className="text-text-primary">
+                    {category}
+                  </option>
+                ))}
+              </select>
+              {errors.category && (
+                <p className="mt-2 text-sm text-red-500">{errors.category}</p>
+              )}
+            </div>
 
             <div className="w-full">
               <label

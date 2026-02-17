@@ -34,7 +34,20 @@ const categoriesHandler = http.get(`${API_BASE}/products/categories`, () => {
   return HttpResponse.json({
     success: true,
     message: 'Categories retrieved',
-    data: ['Books', 'Clothing', 'Electronics', 'Home & Garden', 'Sports'],
+    data: [
+      'Animals',
+      'Antiques',
+      'Books',
+      'Clothes',
+      'Electronics',
+      'Home and Garden',
+      'Makeups',
+      'Others',
+      'Properties',
+      'Toys',
+      'Vehicles',
+      'Work',
+    ],
   });
 });
 
