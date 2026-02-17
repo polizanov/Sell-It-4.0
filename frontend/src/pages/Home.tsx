@@ -57,6 +57,34 @@ const Home = () => {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
+
+  const handleSliderMouseDown = useCallback((e: React.MouseEvent) => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    isDragging.current = false;
+    dragStartX.current = e.clientX;
+    scrollStartX.current = slider.scrollLeft;
+    slider.style.cursor = 'grabbing';
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - dragStartX.current;
+      if (Math.abs(dx) > 3) isDragging.current = true;
+      slider.scrollLeft = scrollStartX.current - dx;
+    };
+
+    const handleMouseUp = () => {
+      slider.style.cursor = '';
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  }, []);
 
   // Debounce search input (300ms)
   useEffect(() => {
@@ -267,7 +295,7 @@ const Home = () => {
       )}
 
       {/* Full Product Listing - ALWAYS VISIBLE */}
-      <section className="relative bg-dark-bg overflow-hidden min-h-screen flex flex-col">
+      <section className="relative bg-dark-bg overflow-clip min-h-screen flex flex-col">
         <MouseFollowGradient
           activationMode="always"
           gradientColor="rgba(255, 87, 34, 0.12)"
@@ -302,14 +330,16 @@ const Home = () => {
 
               {/* Category Chips Slider */}
               <div
-                className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide"
+                ref={sliderRef}
+                className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide cursor-grab select-none"
                 role="group"
                 aria-label="Filter by category"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                onMouseDown={handleSliderMouseDown}
               >
                 <button
                   type="button"
-                  onClick={() => setSelectedCategory('')}
+                  onClick={() => { if (!isDragging.current) setSelectedCategory(''); }}
                   className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     !selectedCategory
                       ? 'bg-orange text-white shadow-md'
@@ -322,9 +352,10 @@ const Home = () => {
                   <button
                     key={category}
                     type="button"
-                    onClick={() =>
-                      setSelectedCategory(selectedCategory === category ? '' : category)
-                    }
+                    onClick={() => {
+                      if (!isDragging.current)
+                        setSelectedCategory(selectedCategory === category ? '' : category);
+                    }}
                     className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 whitespace-nowrap ${
                       selectedCategory === category
                         ? 'bg-orange text-white shadow-md'
