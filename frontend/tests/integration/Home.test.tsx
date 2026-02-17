@@ -808,4 +808,92 @@ describe('Home Page — Condition Counts and Sidebar Visibility', () => {
     // The desktop sidebar should NOT be in the document
     expect(screen.queryByTestId('desktop-sidebar')).not.toBeInTheDocument();
   });
+
+  it('hides sidebar when category filter yields 0 results', async () => {
+    server.use(
+      http.get(`${API_BASE}/products`, ({ request }) => {
+        const url = new URL(request.url);
+        const category = url.searchParams.get('category');
+
+        // When "Toys" category is requested, return 0 products
+        if (category === 'Toys') {
+          return HttpResponse.json({
+            success: true,
+            message: 'Products retrieved successfully',
+            data: {
+              products: [],
+              pagination: {
+                currentPage: 1,
+                totalPages: 1,
+                totalProducts: 0,
+                limit: 12,
+                hasMore: false,
+              },
+              conditionCounts: {},
+            },
+          });
+        }
+
+        // Otherwise return the standard featured products
+        return HttpResponse.json({
+          success: true,
+          message: 'Products retrieved successfully',
+          data: {
+            products: featuredProducts,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalProducts: 4,
+              limit: 12,
+              hasMore: false,
+            },
+            conditionCounts: featuredConditionCounts,
+          },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: [
+            'Animals',
+            'Antiques',
+            'Books',
+            'Clothes',
+            'Electronics',
+            'Home and Garden',
+            'Makeups',
+            'Others',
+            'Properties',
+            'Toys',
+            'Vehicles',
+            'Work',
+          ],
+        });
+      }),
+    );
+
+    renderHome();
+
+    // Wait for products to load initially
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    // Sidebar should be visible initially (products exist)
+    expect(screen.getByTestId('desktop-sidebar')).toBeInTheDocument();
+
+    // Click the "Toys" category chip to trigger a re-fetch with 0 results
+    const user = userEvent.setup();
+    const toysButton = screen.getByRole('button', { name: /Toys/i });
+    await user.click(toysButton);
+
+    // Wait for the sidebar to disappear (0 products returned)
+    await waitFor(() => {
+      expect(screen.queryByTestId('desktop-sidebar')).not.toBeInTheDocument();
+    });
+
+    // "Clear Filters" should still be visible because a category is selected
+    expect(screen.getByText('Clear Filters')).toBeInTheDocument();
+  });
 });

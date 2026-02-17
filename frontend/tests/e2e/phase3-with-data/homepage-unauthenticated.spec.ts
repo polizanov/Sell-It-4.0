@@ -330,4 +330,47 @@ test.describe('Homepage - Non-Authenticated Users', () => {
     // Should navigate to login page
     await expect(page).toHaveURL('/login');
   });
+
+  test('Sidebar hides when selecting a category with no products', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for products to load so the sidebar is initially visible
+    await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
+
+    const sidebar = page.getByTestId('desktop-sidebar');
+    await expect(sidebar).toBeVisible({ timeout: 15000 });
+
+    // Select a category unlikely to have seed data (e.g., "Toys")
+    const categoryGroup = page.getByRole('group', { name: /filter by category/i });
+    const toysChip = categoryGroup.getByRole('button', { name: /Toys/i });
+    await toysChip.click();
+
+    // Wait for re-fetch to complete — either "Showing 0 of 0" or "No products found"
+    await page.waitForTimeout(1000);
+
+    // If the category yields 0 products, the sidebar should hide
+    const countText = await page.getByText(/showing \d+ of \d+ products/i).textContent().catch(() => null);
+    const match = countText?.match(/showing (\d+) of (\d+)/i);
+    const totalProducts = match ? parseInt(match[2]) : 0;
+
+    if (totalProducts === 0) {
+      // Sidebar should NOT be visible when there are 0 products
+      await expect(sidebar).not.toBeVisible();
+
+      // "Clear Filters" should still be visible (category is selected)
+      await expect(page.getByText('Clear Filters')).toBeVisible();
+
+      // Click "Clear Filters" to reset
+      await page.getByText('Clear Filters').click();
+
+      // Wait for products to reload
+      await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
+
+      // Sidebar should reappear after clearing filters (products are back)
+      await expect(sidebar).toBeVisible({ timeout: 15000 });
+    } else {
+      // If Toys does have products in this environment, the sidebar stays visible
+      await expect(sidebar).toBeVisible();
+    }
+  });
 });

@@ -172,10 +172,8 @@ const Home = () => {
     return () => observer.disconnect();
   }, [loadMore]);
 
-  const hasActiveFilters =
-    !!debouncedSearch || !!selectedCategory || selectedSort !== 'newest' || selectedConditions.length > 0;
   const showFilters =
-    isLoading || (pagination !== null && pagination.totalProducts > 0) || hasActiveFilters;
+    isLoading || (pagination !== null && pagination.totalProducts > 0);
 
   return (
     <div className="min-h-screen">
