@@ -287,6 +287,96 @@ test.describe('Homepage - Authenticated Users', () => {
     }
   });
 
+  test('Sort select is visible and can be changed', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for products to load
+    await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
+
+    // Scope to desktop sidebar to avoid matching mobile drawer duplicates
+    const sidebar = page.getByTestId('desktop-sidebar');
+
+    // Sort select should be visible (desktop sidebar)
+    const sortSelect = sidebar.getByLabel('Sort By');
+    await expect(sortSelect).toBeVisible();
+
+    // Verify default value is "newest"
+    await expect(sortSelect).toHaveValue('newest');
+
+    // Change sort to price ascending
+    await sortSelect.selectOption('price_asc');
+    await expect(sortSelect).toHaveValue('price_asc');
+
+    // Wait for re-fetch
+    await page.waitForTimeout(500);
+
+    // Verify products are still displayed after sort change
+    await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible();
+  });
+
+  test('Condition checkboxes are visible and can be clicked', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for products to load
+    await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
+
+    // Scope to desktop sidebar to avoid matching mobile drawer duplicates
+    const sidebar = page.getByTestId('desktop-sidebar');
+
+    // Condition checkboxes should be visible (desktop sidebar)
+    await expect(sidebar.getByLabel('New', { exact: true })).toBeVisible();
+    await expect(sidebar.getByLabel('Like New')).toBeVisible();
+    await expect(sidebar.getByLabel('Good')).toBeVisible();
+    await expect(sidebar.getByLabel('Fair')).toBeVisible();
+
+    // Click the "New" condition checkbox
+    await sidebar.getByLabel('New', { exact: true }).check();
+    await expect(sidebar.getByLabel('New', { exact: true })).toBeChecked();
+
+    // Wait for re-fetch
+    await page.waitForTimeout(500);
+
+    // Products should still be displayed
+    await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible();
+  });
+
+  test('Clear Filters resets sort and conditions', async ({ page }) => {
+    await page.goto('/');
+
+    // Wait for products to load
+    await expect(page.getByText(/showing \d+ of \d+ products/i)).toBeVisible({ timeout: 10000 });
+
+    // Scope to desktop sidebar
+    const sidebar = page.getByTestId('desktop-sidebar');
+
+    // Change sort to non-default
+    const sortSelect = sidebar.getByLabel('Sort By');
+    await sortSelect.selectOption('title_asc');
+    await expect(sortSelect).toHaveValue('title_asc');
+
+    // Check a condition
+    await sidebar.getByLabel('Good').check();
+    await expect(sidebar.getByLabel('Good')).toBeChecked();
+
+    // Clear Filters button should be visible
+    await expect(page.getByText('Clear Filters')).toBeVisible();
+
+    // Click Clear Filters
+    await page.getByText('Clear Filters').click();
+
+    // Wait for reset
+    await page.waitForTimeout(500);
+
+    // Sort should be reset to newest
+    await expect(sortSelect).toHaveValue('newest');
+
+    // Condition checkbox should be unchecked
+    await expect(sidebar.getByLabel('Good')).not.toBeChecked();
+
+    // Clear Filters button should disappear
+    await expect(page.getByText('Clear Filters')).not.toBeVisible();
+  });
+
   test('Error state displays error message', async ({ page }) => {
     // Intercept API call and return error
     await page.route('**/api/products**', async (route) => {

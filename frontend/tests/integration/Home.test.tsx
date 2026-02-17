@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { http, HttpResponse } from 'msw';
 import Home from '../../src/pages/Home';
@@ -403,5 +404,272 @@ describe('Home Page — Product Listing', () => {
 
     // Product listing should still be visible (search bar present)
     expect(screen.getByPlaceholderText(/search products/i)).toBeInTheDocument();
+  });
+});
+
+describe('Home Page — Sorting and Condition Filtering', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useAuthStore.setState({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
+  });
+
+  const setupProductHandler = () => {
+    server.use(
+      http.get(`${API_BASE}/products`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Products retrieved successfully',
+          data: {
+            products: featuredProducts,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalProducts: 4,
+              limit: 12,
+              hasMore: false,
+            },
+          },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: [
+            'Animals',
+            'Antiques',
+            'Books',
+            'Clothes',
+            'Electronics',
+            'Home and Garden',
+            'Makeups',
+            'Others',
+            'Properties',
+            'Toys',
+            'Vehicles',
+            'Work',
+          ],
+        });
+      }),
+    );
+  };
+
+  it('renders sort select with 6 options', async () => {
+    setupProductHandler();
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    // Use getAllByLabelText because the mobile drawer also renders a FilterSidebar
+    const sortSelects = screen.getAllByLabelText('Sort By');
+    expect(sortSelects.length).toBeGreaterThanOrEqual(1);
+    const sortSelect = sortSelects[0];
+
+    const options = sortSelect.querySelectorAll('option');
+    expect(options).toHaveLength(6);
+
+    const optionValues = Array.from(options).map((opt) => (opt as HTMLOptionElement).value);
+    expect(optionValues).toEqual([
+      'newest',
+      'oldest',
+      'title_asc',
+      'title_desc',
+      'price_asc',
+      'price_desc',
+    ]);
+
+    const optionLabels = Array.from(options).map((opt) => opt.textContent);
+    expect(optionLabels).toEqual([
+      'Newest',
+      'Oldest',
+      'A-Z',
+      'Z-A',
+      'Price: Low to High',
+      'Price: High to Low',
+    ]);
+  });
+
+  it('renders condition checkboxes (New, Like New, Good, Fair)', async () => {
+    setupProductHandler();
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    // Both the desktop sidebar and mobile drawer render a FilterSidebar,
+    // so there are two of each label. Verify at least one is present.
+    expect(screen.getAllByText('Condition').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByLabelText('New').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByLabelText('Like New').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByLabelText('Good').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByLabelText('Fair').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('changing sort triggers re-fetch', async () => {
+    const fetchCalls: string[] = [];
+
+    server.use(
+      http.get(`${API_BASE}/products`, ({ request }) => {
+        fetchCalls.push(new URL(request.url).searchParams.get('sort') || 'newest');
+        return HttpResponse.json({
+          success: true,
+          message: 'Products retrieved successfully',
+          data: {
+            products: featuredProducts,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalProducts: 4,
+              limit: 12,
+              hasMore: false,
+            },
+          },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: [
+            'Animals',
+            'Antiques',
+            'Books',
+            'Clothes',
+            'Electronics',
+            'Home and Garden',
+            'Makeups',
+            'Others',
+            'Properties',
+            'Toys',
+            'Vehicles',
+            'Work',
+          ],
+        });
+      }),
+    );
+
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    const sortSelects = screen.getAllByLabelText('Sort By');
+    const sortSelect = sortSelects[0];
+    const user = userEvent.setup();
+    await user.selectOptions(sortSelect, 'price_asc');
+
+    await waitFor(() => {
+      expect(fetchCalls.some((s) => s === 'price_asc')).toBe(true);
+    });
+  });
+
+  it('checking a condition triggers re-fetch', async () => {
+    const fetchCalls: string[] = [];
+
+    server.use(
+      http.get(`${API_BASE}/products`, ({ request }) => {
+        fetchCalls.push(
+          new URL(request.url).searchParams.get('condition') || '',
+        );
+        return HttpResponse.json({
+          success: true,
+          message: 'Products retrieved successfully',
+          data: {
+            products: featuredProducts,
+            pagination: {
+              currentPage: 1,
+              totalPages: 1,
+              totalProducts: 4,
+              limit: 12,
+              hasMore: false,
+            },
+          },
+        });
+      }),
+      http.get(`${API_BASE}/products/categories`, () => {
+        return HttpResponse.json({
+          success: true,
+          message: 'Categories retrieved successfully',
+          data: [
+            'Animals',
+            'Antiques',
+            'Books',
+            'Clothes',
+            'Electronics',
+            'Home and Garden',
+            'Makeups',
+            'Others',
+            'Properties',
+            'Toys',
+            'Vehicles',
+            'Work',
+          ],
+        });
+      }),
+    );
+
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    const user = userEvent.setup();
+    // Use getAllByLabelText because the mobile drawer also renders a FilterSidebar
+    const newCheckboxes = screen.getAllByLabelText('New');
+    await user.click(newCheckboxes[0]);
+
+    await waitFor(() => {
+      expect(fetchCalls.some((c) => c === 'New')).toBe(true);
+    });
+  });
+
+  it('Clear Filters resets sort and conditions', async () => {
+    setupProductHandler();
+    renderHome();
+
+    await waitFor(() => {
+      expect(screen.getByText('Featured Camera')).toBeInTheDocument();
+    });
+
+    const user = userEvent.setup();
+
+    // Change sort to non-default — use getAllByLabelText because the mobile drawer also renders one
+    const sortSelects = screen.getAllByLabelText('Sort By');
+    const sortSelect = sortSelects[0];
+    await user.selectOptions(sortSelect, 'price_desc');
+
+    // Check a condition — use getAllByLabelText for same reason
+    const newCheckboxes = screen.getAllByLabelText('New');
+    const newCheckbox = newCheckboxes[0];
+    await user.click(newCheckbox);
+
+    // Clear Filters should now be visible
+    await waitFor(() => {
+      expect(screen.getByText('Clear Filters')).toBeInTheDocument();
+    });
+
+    // Click Clear Filters
+    await user.click(screen.getByText('Clear Filters'));
+
+    // Sort should reset to newest
+    await waitFor(() => {
+      expect(sortSelect).toHaveValue('newest');
+    });
+
+    // Condition checkboxes should be unchecked
+    expect(newCheckbox).not.toBeChecked();
+
+    // Clear Filters button should disappear
+    expect(screen.queryByText('Clear Filters')).not.toBeInTheDocument();
   });
 });

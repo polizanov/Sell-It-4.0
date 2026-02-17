@@ -598,6 +598,68 @@ describe('Product Endpoints', () => {
       }
     });
 
+    it('should sort title_asc: titles in A-Z order', async () => {
+      const res = await request(app).get('/api/products?sort=title_asc&limit=15');
+
+      expect(res.status).toBe(200);
+      const titles = res.body.data.products.map((p: { title: string }) => p.title);
+      for (let i = 1; i < titles.length; i++) {
+        expect(titles[i].localeCompare(titles[i - 1])).toBeGreaterThanOrEqual(0);
+      }
+    });
+
+    it('should sort title_desc: titles in Z-A order', async () => {
+      const res = await request(app).get('/api/products?sort=title_desc&limit=15');
+
+      expect(res.status).toBe(200);
+      const titles = res.body.data.products.map((p: { title: string }) => p.title);
+      for (let i = 1; i < titles.length; i++) {
+        expect(titles[i].localeCompare(titles[i - 1])).toBeLessThanOrEqual(0);
+      }
+    });
+
+    it('should filter by single condition: ?condition=New returns only New products', async () => {
+      const res = await request(app).get('/api/products?condition=New&limit=50');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products.length).toBeGreaterThan(0);
+      for (const product of res.body.data.products) {
+        expect(product.condition).toBe('New');
+      }
+    });
+
+    it('should filter by multiple conditions: ?condition=New,Like New returns matching products', async () => {
+      const res = await request(app).get('/api/products?condition=New,Like%20New&limit=50');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products.length).toBeGreaterThan(0);
+      for (const product of res.body.data.products) {
+        expect(['New', 'Like New']).toContain(product.condition);
+      }
+      // Verify we get products of both conditions
+      const conditions = new Set(res.body.data.products.map((p: { condition: string }) => p.condition));
+      expect(conditions.size).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should combine condition + category filter correctly', async () => {
+      const res = await request(app).get('/api/products?condition=New&category=Electronics&limit=50');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.products.length).toBeGreaterThan(0);
+      for (const product of res.body.data.products) {
+        expect(product.condition).toBe('New');
+        expect(product.category).toBe('Electronics');
+      }
+    });
+
+    it('should ignore invalid condition values and still return products', async () => {
+      const res = await request(app).get('/api/products?condition=InvalidCondition&limit=50');
+
+      expect(res.status).toBe(200);
+      // Invalid conditions are filtered out; no valid condition remains, so no condition filter is applied
+      expect(res.body.data.pagination.totalProducts).toBe(15);
+    });
+
     it('should return empty results for non-matching category with totalProducts=0', async () => {
       const res = await request(app).get('/api/products?category=NonExistentCategory');
 

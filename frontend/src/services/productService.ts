@@ -94,6 +94,9 @@ export const productService = {
     if (params.category) searchParams.set('category', params.category);
     if (params.search) searchParams.set('search', params.search);
     if (params.sort) searchParams.set('sort', params.sort);
+    if (params.condition && params.condition.length > 0) {
+      searchParams.set('condition', params.condition.join(','));
+    }
 
     const query = searchParams.toString();
     const url = `/products${query ? `?${query}` : ''}`;

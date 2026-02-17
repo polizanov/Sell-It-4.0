@@ -30,7 +30,7 @@ test.describe('Navigation - Desktop and Mobile', () => {
       await openButton.click();
 
       // Menu should slide in (not have -translate-x-full class)
-      const menuPanel = page.locator('div.fixed.top-0.left-0.bottom-0');
+      const menuPanel = page.locator('div.fixed.top-0.left-0.bottom-0:not([data-testid="filter-drawer"])');
       await expect(menuPanel).toBeVisible();
       await expect(menuPanel).not.toHaveClass(/-translate-x-full/);
 
@@ -50,7 +50,7 @@ test.describe('Navigation - Desktop and Mobile', () => {
       await menuButton.click();
 
       // Wait for menu to slide in
-      const menuPanel = page.locator('div.fixed.top-0.left-0.bottom-0');
+      const menuPanel = page.locator('div.fixed.top-0.left-0.bottom-0:not([data-testid="filter-drawer"])');
       await expect(menuPanel).toBeVisible();
       await expect(menuPanel).not.toHaveClass(/-translate-x-full/);
 
@@ -94,7 +94,7 @@ test.describe('Navigation - Desktop and Mobile', () => {
       const menuButton = page.locator('button[aria-label="Open menu"]');
       await menuButton.click();
 
-      const menuPanel = page.locator('div.fixed.top-0.left-0.bottom-0');
+      const menuPanel = page.locator('div.fixed.top-0.left-0.bottom-0:not([data-testid="filter-drawer"])');
       await expect(menuPanel).toBeVisible();
 
       // Verify Login link has active styling in mobile menu

@@ -542,6 +542,8 @@ export const handlers = [
     const limit = parseInt(url.searchParams.get('limit') || '12', 10);
     const category = url.searchParams.get('category') || '';
     const search = url.searchParams.get('search') || '';
+    const sortParam = url.searchParams.get('sort') || 'newest';
+    const conditionParam = url.searchParams.get('condition') || '';
 
     // Combine user-created products with default mock products
     const allProducts = [...products, ...defaultProducts];
@@ -558,12 +560,44 @@ export const handlers = [
           p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q),
       );
     }
+    if (conditionParam) {
+      const conditions = conditionParam.split(',').map((c) => c.trim());
+      filtered = filtered.filter((p) => conditions.includes(p.condition));
+    }
+
+    // Sort
+    const sorted = [...filtered];
+    switch (sortParam) {
+      case 'oldest':
+        sorted.sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+        break;
+      case 'title_asc':
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case 'title_desc':
+        sorted.sort((a, b) => b.title.localeCompare(a.title));
+        break;
+      case 'price_asc':
+        sorted.sort((a, b) => a.price - b.price);
+        break;
+      case 'price_desc':
+        sorted.sort((a, b) => b.price - a.price);
+        break;
+      case 'newest':
+      default:
+        sorted.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+        break;
+    }
 
     // Paginate
-    const totalProducts = filtered.length;
+    const totalProducts = sorted.length;
     const totalPages = Math.max(1, Math.ceil(totalProducts / limit));
     const start = (page - 1) * limit;
-    const paged = filtered.slice(start, start + limit);
+    const paged = sorted.slice(start, start + limit);
 
     return HttpResponse.json({
       success: true,

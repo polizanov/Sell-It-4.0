@@ -13,6 +13,8 @@ import { PRODUCT_CATEGORIES } from '../constants/categories';
 const SORT_OPTIONS: Record<string, Record<string, 1 | -1>> = {
   newest: { createdAt: -1 },
   oldest: { createdAt: 1 },
+  title_asc: { title: 1 },
+  title_desc: { title: -1 },
   price_asc: { price: 1 },
   price_desc: { price: -1 },
 };
@@ -84,6 +86,16 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response): 
   if (search) {
     // Use text index for better performance and security (prevents ReDoS)
     filter.$text = { $search: search };
+  }
+
+  const condition = req.query.condition as string | undefined;
+  if (condition) {
+    const conditions = condition.split(',').map((c) => c.trim());
+    const validConditions = ['New', 'Like New', 'Good', 'Fair'];
+    const filtered = conditions.filter((c) => validConditions.includes(c));
+    if (filtered.length > 0) {
+      filter.condition = { $in: filtered };
+    }
   }
 
   const sortOption = SORT_OPTIONS[sort] || SORT_OPTIONS.newest;

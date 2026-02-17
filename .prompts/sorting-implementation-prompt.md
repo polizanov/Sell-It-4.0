@@ -1,0 +1,1 @@
+Itegrate advanced sorting functionality. From the left side of the products listing we need select element were user can choose the sorting of the listings(A-Z, Z-A, price-low, price-heighst), under the select we need checkboxes for the conditions. 

@@ -4,14 +4,16 @@ import { useAuthStore } from '../store/authStore';
 import { PageContainer } from '../components/layout/PageContainer';
 import { Button } from '../components/common/Button';
 import { ProductGrid } from '../components/products/ProductGrid';
+import { FilterSidebar } from '../components/products/FilterSidebar';
+import { MobileFilterDrawer } from '../components/products/MobileFilterDrawer';
 import { MouseFollowGradient } from '../components/common/MouseFollowGradient';
 import { productService } from '../services/productService';
 import { CATEGORIES, CATEGORY_ICONS } from '../constants/categories';
-import type { Product, PaginationInfo } from '../types';
+import type { Product, PaginationInfo, ProductListParams } from '../types';
 
 /** Skeleton placeholder for the product grid while loading */
 const ProductGridSkeleton = () => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
     {Array.from({ length: 8 }).map((_, i) => (
       <div
         key={i}
@@ -49,6 +51,9 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSort, setSelectedSort] = useState('newest');
+  const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -71,6 +76,8 @@ const Home = () => {
         page: 1,
         category: selectedCategory || undefined,
         search: debouncedSearch || undefined,
+        sort: selectedSort as ProductListParams['sort'],
+        condition: selectedConditions.length > 0 ? selectedConditions : undefined,
       })
       .then((res) => {
         if (!cancelled) {
@@ -90,7 +97,7 @@ const Home = () => {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, selectedCategory]);
+  }, [debouncedSearch, selectedCategory, selectedSort, selectedConditions]);
 
   // Load more products (next page)
   const loadMore = useCallback(() => {
@@ -102,6 +109,8 @@ const Home = () => {
         page: pagination.currentPage + 1,
         category: selectedCategory || undefined,
         search: debouncedSearch || undefined,
+        sort: selectedSort as ProductListParams['sort'],
+        condition: selectedConditions.length > 0 ? selectedConditions : undefined,
       })
       .then((res) => {
         setProducts((prev) => [...prev, ...res.products]);
@@ -113,7 +122,7 @@ const Home = () => {
       .finally(() => {
         setIsLoadingMore(false);
       });
-  }, [pagination, isLoadingMore, selectedCategory, debouncedSearch]);
+  }, [pagination, isLoadingMore, selectedCategory, debouncedSearch, selectedSort, selectedConditions]);
 
   // IntersectionObserver for infinite scroll
   useEffect(() => {
@@ -315,26 +324,67 @@ const Home = () => {
                         : 'bg-dark-elevated border border-dark-border text-text-secondary hover:border-orange/50'
                     }`}
                   >
-                    <span className="mr-1.5">{CATEGORY_ICONS[category]}</span>
+                    {(() => {
+                      const Icon = CATEGORY_ICONS[category];
+                      return <Icon className="w-4 h-4 inline-block mr-1.5 -mt-0.5" />;
+                    })()}
                     {category}
                   </button>
                 ))}
               </div>
 
-              {/* Results Count & Clear Filters */}
+              {/* Mobile Filters Button + Results Count & Clear Filters */}
               <div className="flex items-center justify-between">
-                <p className="text-text-secondary">
-                  {isLoading
-                    ? 'Loading products...'
-                    : pagination
-                      ? `Showing ${products.length} of ${pagination.totalProducts} products`
-                      : 'No products found'}
-                </p>
-                {(searchQuery || selectedCategory) && (
+                <div className="flex items-center gap-3">
+                  {/* Mobile Filters Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsFilterDrawerOpen(true)}
+                    className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 bg-dark-elevated border border-dark-border rounded-lg text-sm text-text-secondary hover:border-orange/50 transition-all duration-200"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                      />
+                    </svg>
+                    Filters
+                    {(() => {
+                      const activeCount =
+                        (selectedSort !== 'newest' ? 1 : 0) + selectedConditions.length;
+                      return activeCount > 0 ? (
+                        <span className="ml-1 px-1.5 py-0.5 bg-orange text-white text-xs font-bold rounded-full">
+                          {activeCount}
+                        </span>
+                      ) : null;
+                    })()}
+                  </button>
+
+                  <p className="text-text-secondary">
+                    {isLoading
+                      ? 'Loading products...'
+                      : pagination
+                        ? `Showing ${products.length} of ${pagination.totalProducts} products`
+                        : 'No products found'}
+                  </p>
+                </div>
+                {(searchQuery ||
+                  selectedCategory ||
+                  selectedSort !== 'newest' ||
+                  selectedConditions.length > 0) && (
                   <button
                     onClick={() => {
                       setSearchQuery('');
                       setSelectedCategory('');
+                      setSelectedSort('newest');
+                      setSelectedConditions([]);
                     }}
                     className="text-orange hover:text-orange-hover text-sm font-medium transition-colors"
                   >
@@ -350,41 +400,68 @@ const Home = () => {
                 </div>
               )}
 
-              {/* Products Grid */}
-              {isLoading ? <ProductGridSkeleton /> : <ProductGrid products={products} />}
-
-              {/* Infinite Scroll Sentinel */}
-              <div ref={sentinelRef} />
-
-              {/* Loading More Spinner */}
-              {isLoadingMore && (
-                <div className="flex justify-center py-8">
-                  <svg
-                    className="animate-spin h-8 w-8 text-orange"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
+              {/* Sidebar + Product Grid Layout */}
+              <div className="flex gap-6">
+                {/* Desktop Sidebar */}
+                <div data-testid="desktop-sidebar" className="hidden lg:block w-60 shrink-0">
+                  <div className="sticky top-28">
+                    <FilterSidebar
+                      sort={selectedSort}
+                      onSortChange={setSelectedSort}
+                      selectedConditions={selectedConditions}
+                      onConditionsChange={setSelectedConditions}
                     />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
+                  </div>
                 </div>
-              )}
+
+                {/* Product Grid + Sentinel + Spinner */}
+                <div className="flex-1 min-w-0">
+                  {isLoading ? <ProductGridSkeleton /> : <ProductGrid products={products} />}
+
+                  {/* Infinite Scroll Sentinel */}
+                  <div ref={sentinelRef} />
+
+                  {/* Loading More Spinner */}
+                  {isLoadingMore && (
+                    <div className="flex justify-center py-8">
+                      <svg
+                        className="animate-spin h-8 w-8 text-orange"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </PageContainer>
         </MouseFollowGradient>
       </section>
+
+      {/* Mobile Filter Drawer */}
+      <MobileFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        sort={selectedSort}
+        onSortChange={setSelectedSort}
+        selectedConditions={selectedConditions}
+        onConditionsChange={setSelectedConditions}
+      />
     </div>
   );
 };
