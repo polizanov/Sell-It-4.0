@@ -3,9 +3,12 @@ import { useAuthStore } from '../store/authStore';
 import { PageContainer } from '../components/layout/PageContainer';
 import { MouseFollowGradient } from '../components/common/MouseFollowGradient';
 import { Card } from '../components/common/Card';
-import { Button } from '../components/common/Button';
 import { ProductGrid } from '../components/products/ProductGrid';
 import { productService } from '../services/productService';
+import { ProfileSettingsMenu } from '../components/auth/ProfileSettingsMenu';
+import { ChangePasswordModal } from '../components/auth/ChangePasswordModal';
+import { ProfilePhotoModal } from '../components/auth/ProfilePhotoModal';
+import { DeleteAccountModal } from '../components/auth/DeleteAccountModal';
 import type { Product, PaginationInfo } from '../types';
 
 const ProductGridSkeleton = () => (
@@ -34,6 +37,10 @@ const MyProfile = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState('');
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isProfilePhotoOpen, setIsProfilePhotoOpen] = useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -135,26 +142,35 @@ const MyProfile = () => {
         {/* User Information Card */}
         <Card>
           <div className="flex items-start gap-6 flex-col sm:flex-row">
-            <div className="w-24 h-24 rounded-full bg-orange flex items-center justify-center flex-shrink-0">
-              <span className="text-3xl font-bold text-white">{initials}</span>
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-orange flex items-center justify-center flex-shrink-0">
+              {user.profilePhoto ? (
+                <img
+                  src={user.profilePhoto}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-3xl font-bold text-white">{initials}</span>
+              )}
             </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-text-primary mb-1">
-                {user.name}
-              </h2>
-              <p className="text-text-secondary mb-1">
-                @{user.username}
-              </p>
-              <p className="text-text-secondary mb-4">
-                {user.email}
-              </p>
-              <div className="flex gap-3">
-                <Button variant="primary" size="sm">
-                  Edit Profile
-                </Button>
-                <Button variant="secondary" size="sm">
-                  Change Password
-                </Button>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-2xl font-bold text-text-primary mb-1">
+                    {user.name}
+                  </h2>
+                  <p className="text-text-secondary mb-1">
+                    @{user.username}
+                  </p>
+                  <p className="text-text-secondary mb-4">
+                    {user.email}
+                  </p>
+                </div>
+                <ProfileSettingsMenu
+                  onChangePhoto={() => setIsProfilePhotoOpen(true)}
+                  onChangePassword={() => setIsChangePasswordOpen(true)}
+                  onDeleteAccount={() => setIsDeleteAccountOpen(true)}
+                />
               </div>
             </div>
           </div>
@@ -247,6 +263,20 @@ const MyProfile = () => {
       </div>
     </PageContainer>
       </MouseFollowGradient>
+
+      {/* Modals */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
+      <ProfilePhotoModal
+        isOpen={isProfilePhotoOpen}
+        onClose={() => setIsProfilePhotoOpen(false)}
+      />
+      <DeleteAccountModal
+        isOpen={isDeleteAccountOpen}
+        onClose={() => setIsDeleteAccountOpen(false)}
+      />
     </div>
   );
 };

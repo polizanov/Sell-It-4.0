@@ -13,6 +13,7 @@ export interface IUser extends Document {
   verificationTokenExpiry?: Date;
   phoneVerificationCode?: string;
   phoneVerificationExpiry?: Date;
+  profilePhoto?: string;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -74,6 +75,9 @@ const userSchema = new Schema<IUser>(
     },
     phoneVerificationExpiry: {
       type: Date,
+    },
+    profilePhoto: {
+      type: String,
     },
   },
   {

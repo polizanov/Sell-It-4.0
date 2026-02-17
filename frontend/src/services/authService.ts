@@ -32,4 +32,25 @@ export const authService = {
 
   verifyPhone: (code: string) =>
     api.post<{ success: boolean; message: string }>('/auth/verify-phone', { code }),
+
+  changePassword: (data: {
+    currentPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
+  }) => api.post<{ success: boolean; message: string }>('/auth/change-password', data),
+
+  deleteAccount: (data: { password: string }) =>
+    api.delete<{ success: boolean; message: string }>('/auth/account', { data }),
+
+  uploadProfilePhoto: (file: File) => {
+    const formData = new FormData();
+    formData.append('photo', file);
+    return api.post<{
+      success: boolean;
+      message: string;
+      data: { profilePhoto: string };
+    }>('/auth/profile-photo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };

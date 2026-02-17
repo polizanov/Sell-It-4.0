@@ -3,9 +3,12 @@ import asyncHandler from 'express-async-handler';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { User } from '../models/User';
+import { Product } from '../models/Product';
+import { Favourite } from '../models/Favourite';
 import { env } from '../config/environment';
 import { sendVerificationEmail } from '../services/emailService';
 import { generateOTP, sendVerificationSMS } from '../services/smsService';
+import { uploadToCloudinary } from '../middleware/upload';
 import { AppError } from '../middleware/errorHandler';
 import { AuthRequest } from '../types';
 
@@ -183,6 +186,7 @@ export const login = asyncHandler(async (req: AuthRequest, res: Response): Promi
       phone: user.phone,
       isVerified: user.isVerified,
       isPhoneVerified: user.isPhoneVerified,
+      profilePhoto: user.profilePhoto,
       token,
     },
   });
@@ -205,6 +209,7 @@ export const getMe = asyncHandler(async (req: AuthRequest, res: Response): Promi
       phone: user.phone,
       isVerified: user.isVerified,
       isPhoneVerified: user.isPhoneVerified,
+      profilePhoto: user.profilePhoto,
     },
   });
 });
@@ -334,6 +339,128 @@ export const resendVerificationEmail = asyncHandler(async (req: AuthRequest, res
 
   res.json({
     success: true,
-    message: 'Verification email sent successfully'
+    message: 'Verification email sent successfully',
   });
 });
+
+/**
+ * Change the authenticated user's password
+ *
+ * @route POST /api/auth/change-password
+ * @access Protected - Requires authentication
+ * @param {string} currentPassword - The user's current password
+ * @param {string} newPassword - The new password (min 8 chars, 1 uppercase, 1 number, 1 special char)
+ * @param {string} confirmNewPassword - Must match newPassword
+ *
+ * @returns {Object} response
+ * @returns {boolean} response.success - Operation success status
+ * @returns {string} response.message - Response message
+ *
+ * @throws {400} Current password is incorrect
+ */
+export const changePassword = asyncHandler(
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.user!.userId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      throw new AppError('Current password is incorrect', 400);
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully',
+    });
+  },
+);
+
+/**
+ * Delete the authenticated user's account and all associated data
+ *
+ * @route DELETE /api/auth/account
+ * @access Protected - Requires authentication
+ * @param {string} password - The user's password for confirmation
+ *
+ * @returns {Object} response
+ * @returns {boolean} response.success - Operation success status
+ * @returns {string} response.message - Response message
+ *
+ * @throws {400} Password is incorrect
+ */
+export const deleteAccount = asyncHandler(
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const { password } = req.body;
+
+    const user = await User.findById(req.user!.userId);
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      throw new AppError('Password is incorrect', 400);
+    }
+
+    // Cascade delete: favourites, products, then user
+    await Favourite.deleteMany({ user: user._id });
+    await Product.deleteMany({ seller: user._id });
+    await User.findByIdAndDelete(user._id);
+
+    res.json({
+      success: true,
+      message: 'Account deleted successfully',
+    });
+  },
+);
+
+/**
+ * Upload or update the authenticated user's profile photo
+ *
+ * @route POST /api/auth/profile-photo
+ * @access Protected - Requires authentication
+ * @param {File} photo - Single image file (multipart/form-data)
+ *
+ * @returns {Object} response
+ * @returns {boolean} response.success - Operation success status
+ * @returns {string} response.message - Response message
+ * @returns {Object} response.data - Updated profile photo data
+ * @returns {string} response.data.profilePhoto - Cloudinary URL of the uploaded photo
+ *
+ * @throws {400} No image file provided
+ */
+export const uploadProfilePhoto = asyncHandler(
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const file = req.file;
+    if (!file) {
+      throw new AppError('No image file provided', 400);
+    }
+
+    const photoUrl = await uploadToCloudinary(file.buffer, 'profile-photos');
+
+    const user = await User.findByIdAndUpdate(
+      req.user!.userId,
+      { profilePhoto: photoUrl },
+      { new: true },
+    );
+
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile photo updated successfully',
+      data: {
+        profilePhoto: user.profilePhoto,
+      },
+    });
+  },
+);

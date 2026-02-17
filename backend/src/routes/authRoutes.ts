@@ -10,9 +10,13 @@ import {
   resendVerificationEmail,
   sendPhoneVerification,
   verifyPhone,
+  changePassword,
+  deleteAccount,
+  uploadProfilePhoto,
 } from '../controllers/authController';
 import { validate } from '../middleware/validate';
 import { protect } from '../middleware/authMiddleware';
+import { upload } from '../middleware/upload';
 import { User } from '../models/User';
 
 const router = Router();
@@ -51,6 +55,28 @@ const verifyPhoneSchema = z.object({
     .regex(/^\d{6}$/, 'Code must be numeric'),
 });
 
+const passwordValidation = z
+  .string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+  .regex(/[0-9]/, 'Password must contain at least one number')
+  .regex(/[^a-zA-Z0-9]/, 'Password must contain at least one special character');
+
+const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: passwordValidation,
+    confirmNewPassword: z.string().min(1, 'Password confirmation is required'),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmNewPassword'],
+  });
+
+const deleteAccountSchema = z.object({
+  password: z.string().min(1, 'Password is required'),
+});
+
 // Rate limiter for resend verification (5 requests per 15 minutes)
 const resendLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -72,6 +98,30 @@ const phoneVerificationLimiter = rateLimit({
   },
 });
 
+// Rate limiter for change password (5 requests per 15 minutes)
+const changePasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many password change requests, please try again later',
+  },
+});
+
+// Rate limiter for delete account (3 requests per 15 minutes)
+const deleteAccountLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many account deletion requests, please try again later',
+  },
+});
+
 router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
 router.post(
@@ -84,6 +134,21 @@ router.get('/verify-email/:token', verifyEmail);
 router.get('/me', protect, getMe);
 router.post('/send-phone-verification', phoneVerificationLimiter, protect, sendPhoneVerification);
 router.post('/verify-phone', protect, validate(verifyPhoneSchema), verifyPhone);
+router.post(
+  '/change-password',
+  changePasswordLimiter,
+  protect,
+  validate(changePasswordSchema),
+  changePassword,
+);
+router.delete(
+  '/account',
+  deleteAccountLimiter,
+  protect,
+  validate(deleteAccountSchema),
+  deleteAccount,
+);
+router.post('/profile-photo', protect, upload.single('photo'), uploadProfilePhoto);
 
 // Test-only: set user verification status (for E2E tests)
 if (process.env.NODE_ENV === 'test') {

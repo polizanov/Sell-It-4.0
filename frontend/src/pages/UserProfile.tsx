@@ -185,8 +185,16 @@ const UserProfile = () => {
             {/* User Information Card */}
             <Card>
               <div className="flex items-start gap-6 flex-col sm:flex-row">
-                <div className="w-24 h-24 rounded-full bg-orange flex items-center justify-center flex-shrink-0">
-                  <span className="text-3xl font-bold text-white">{initials}</span>
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-orange flex items-center justify-center flex-shrink-0">
+                  {userInfo.profilePhoto ? (
+                    <img
+                      src={userInfo.profilePhoto}
+                      alt={userInfo.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl font-bold text-white">{initials}</span>
+                  )}
                 </div>
                 <div className="flex-1">
                   <h2 className="text-2xl font-bold text-text-primary mb-1">

@@ -6,6 +6,7 @@ export interface User {
   isVerified?: boolean;
   phone?: string;
   isPhoneVerified?: boolean;
+  profilePhoto?: string;
 }
 
 export interface AuthResponse {
@@ -19,6 +20,7 @@ export interface AuthResponse {
     isVerified?: boolean;
     phone?: string;
     isPhoneVerified?: boolean;
+    profilePhoto?: string;
     token?: string;
   };
 }
@@ -46,6 +48,7 @@ export interface UserProfileInfo {
   name: string;
   username: string;
   memberSince: string;
+  profilePhoto?: string;
 }
 
 export interface NavLink {

@@ -370,6 +370,7 @@ export const handlers = [
             isVerified: user.isVerified,
             phone: user.phone,
             isPhoneVerified: user.isPhoneVerified,
+            profilePhoto: null,
           },
         });
       }
@@ -389,6 +390,7 @@ export const handlers = [
             isVerified: user.isVerified,
             phone: user.phone,
             isPhoneVerified: user.isPhoneVerified,
+            profilePhoto: null,
           },
         });
       }
@@ -462,6 +464,76 @@ export const handlers = [
     return HttpResponse.json({
       success: true,
       message: 'Phone number verified successfully',
+    });
+  }),
+
+  http.post(`${API_BASE}/auth/change-password`, async ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const body = (await request.json()) as {
+      currentPassword: string;
+      newPassword: string;
+      confirmNewPassword: string;
+    };
+
+    if (!body.currentPassword || !body.newPassword || !body.confirmNewPassword) {
+      return HttpResponse.json(
+        { success: false, message: 'All fields are required' },
+        { status: 400 },
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Password changed successfully',
+    });
+  }),
+
+  http.delete(`${API_BASE}/auth/account`, async ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    const body = (await request.json()) as { password: string };
+
+    if (!body.password) {
+      return HttpResponse.json(
+        { success: false, message: 'Password is required' },
+        { status: 400 },
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Account deleted successfully',
+    });
+  }),
+
+  http.post(`${API_BASE}/auth/profile-photo`, ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return HttpResponse.json(
+        { success: false, message: 'Not authorized' },
+        { status: 401 },
+      );
+    }
+
+    return HttpResponse.json({
+      success: true,
+      message: 'Profile photo updated successfully',
+      data: {
+        profilePhoto: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop',
+      },
     });
   }),
 

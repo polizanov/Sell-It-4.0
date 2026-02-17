@@ -339,7 +339,9 @@ export const getUserProducts = asyncHandler(async (req: Request, res: Response):
   const limit = Math.min(Math.max(Number(req.query.limit) || 12, 1), 50);
   const skip = (page - 1) * limit;
 
-  const user = await User.findOne({ username: username.toLowerCase() }).select('name username createdAt');
+  const user = await User.findOne({ username: username.toLowerCase() }).select(
+    'name username createdAt profilePhoto',
+  );
 
   if (!user) {
     throw new AppError('User not found', 404);
@@ -364,6 +366,7 @@ export const getUserProducts = asyncHandler(async (req: Request, res: Response):
         name: user.name,
         username: user.username,
         memberSince: user.createdAt,
+        profilePhoto: user.profilePhoto,
       },
       products: products.map(mapProductToResponse),
       pagination: {
