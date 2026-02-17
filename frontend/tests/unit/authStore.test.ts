@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { useAuthStore } from '../../src/store/authStore';
 import { server } from '../../src/mocks/server';
@@ -6,6 +6,8 @@ import { server } from '../../src/mocks/server';
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 describe('authStore', () => {
+  const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
   beforeEach(() => {
     localStorage.clear();
     useAuthStore.setState({
@@ -14,6 +16,10 @@ describe('authStore', () => {
       isAuthenticated: false,
       isLoading: false,
     });
+  });
+
+  afterEach(() => {
+    consoleSpy.mockClear();
   });
 
   describe('login', () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../src/mocks/server';
 import { useFavouritesStore } from '../../src/store/favouritesStore';
@@ -56,6 +56,7 @@ describe('favouritesStore', () => {
     });
 
     it('sets isLoaded to true even on API error', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       localStorage.setItem('token', 'mock-jwt-token');
 
       server.use(
@@ -72,6 +73,7 @@ describe('favouritesStore', () => {
       const state = useFavouritesStore.getState();
       expect(state.isLoaded).toBe(true);
       expect(state.favouriteIds.size).toBe(0);
+      consoleSpy.mockRestore();
     });
   });
 
@@ -121,6 +123,7 @@ describe('favouritesStore', () => {
     });
 
     it('reverts optimistic add on API error', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       localStorage.setItem('token', 'mock-jwt-token');
 
       server.use(
@@ -136,9 +139,11 @@ describe('favouritesStore', () => {
 
       const state = useFavouritesStore.getState();
       expect(state.favouriteIds.has('prod-1')).toBe(false);
+      consoleSpy.mockRestore();
     });
 
     it('reverts optimistic remove on API error', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       localStorage.setItem('token', 'mock-jwt-token');
       useFavouritesStore.setState({
         favouriteIds: new Set(['prod-1']),
@@ -158,6 +163,7 @@ describe('favouritesStore', () => {
 
       const state = useFavouritesStore.getState();
       expect(state.favouriteIds.has('prod-1')).toBe(true);
+      consoleSpy.mockRestore();
     });
   });
 

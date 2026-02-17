@@ -401,7 +401,7 @@ describe('Home Page — Product Listing', () => {
     expect(screen.queryByText('Secure Trading')).not.toBeInTheDocument();
     expect(screen.queryByText('Growing Community')).not.toBeInTheDocument();
 
-    // Product listing should still be visible
-    expect(screen.getByText('All Products')).toBeInTheDocument();
+    // Product listing should still be visible (search bar present)
+    expect(screen.getByPlaceholderText(/search products/i)).toBeInTheDocument();
   });
 });

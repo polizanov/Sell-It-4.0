@@ -259,14 +259,6 @@ const Home = () => {
           className="flex-1"
         >
           <PageContainer className="py-20 md:py-32 relative z-10">
-            {/* Page header for authenticated users only */}
-            {isAuthenticated && (
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-text-primary mb-2">All Products</h1>
-                <p className="text-text-secondary">Browse all available listings</p>
-              </div>
-            )}
-
             <div className="space-y-8">
               {/* Search Bar */}
               <div className="relative">

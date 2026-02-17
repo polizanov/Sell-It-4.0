@@ -79,14 +79,15 @@ test.describe('Homepage - Authenticated Users', () => {
     await expect(heroSection).not.toBeVisible();
   });
 
-  test('"All Products" page header is visible', async ({ page }) => {
+  test('Products section is visible with search and category chips', async ({ page }) => {
     await page.goto('/');
 
-    // "All Products" heading should be visible for authenticated users
-    await expect(page.getByRole('heading', { name: /^all products$/i })).toBeVisible();
+    // Search bar should be visible for authenticated users
+    await expect(page.getByPlaceholder(/search products/i)).toBeVisible();
 
-    // Subtitle should also be visible
-    await expect(page.getByText(/browse all available listings/i)).toBeVisible();
+    // Category chips should be visible
+    const categoryGroup = page.getByRole('group', { name: /filter by category/i });
+    await expect(categoryGroup).toBeVisible();
   });
 
   test('Search and filter functionality works', async ({ page }) => {
@@ -156,8 +157,8 @@ test.describe('Homepage - Authenticated Users', () => {
     // Should be redirected to home
     await expect(page).toHaveURL('/');
 
-    // Verify "All Products" header is visible (authenticated view)
-    await expect(page.getByRole('heading', { name: /^all products$/i })).toBeVisible();
+    // Verify products section is visible (authenticated view)
+    await expect(page.getByPlaceholder(/search products/i)).toBeVisible();
 
     // Hero section should NOT be visible
     const heroSection = page.locator('section.relative.bg-gradient-hero');
