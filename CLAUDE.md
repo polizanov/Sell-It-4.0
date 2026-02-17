@@ -1,4 +1,4 @@
--# CLAUDE.md
+# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -55,11 +55,15 @@ Express.js REST API with TypeScript and MongoDB (Mongoose).
 
 **Request flow:** Routes → Middleware (validate, auth) → Controllers → Services → Models
 
-- **Config** (`src/config/`): Environment validation via Zod (`environment.ts`), MongoDB connection (`database.ts`), Cloudinary SDK (`cloudinary.ts`)
+- **Config** (`src/config/`): Environment validation via Zod (`environment.ts`), MongoDB connection (`database.ts`), Cloudinary SDK (`cloudinary.ts`). Always access env vars via `import { env } from './config/environment'` — never use `process.env` directly.
 - **Middleware** (`src/middleware/`): JWT auth via `protect` middleware (`authMiddleware.ts`), Zod request body validation (`validate.ts`), global error handler with `AppError` class (`errorHandler.ts`), Multer+Cloudinary file upload (`upload.ts`)
-- **Routes** (`src/routes/`): Aggregated in `index.ts`, mounted at `/api`. Zod validation schemas are defined inline in route files (e.g., `authRoutes.ts`), not in a separate directory.
+- **Routes** (`src/routes/`): Aggregated in `index.ts`, mounted at `/api`. Three route groups: `/api/auth`, `/api/products`, `/api/favourites`. Zod validation schemas are defined inline in route files (e.g., `authRoutes.ts`), not in a separate directory.
+- **Services** (`src/services/`): `emailService.ts` (Nodemailer/Gmail), `smsService.ts` (Twilio)
+- **Models** (`src/models/`): `User`, `Product`, `Favourite`
 - **Types** (`src/types/`): `AuthRequest` extends Express `Request` with `user?: JwtPayload`; `ApiResponse<T>` is the standard response envelope
 - **Tests** (`tests/`): Jest + Supertest. Tests live in `backend/tests/` (not `src/`). Setup in `tests/setup.ts` handles MongoDB connection cleanup.
+
+Rate limiting and the global limiter are disabled when `NODE_ENV=test`.
 
 Env vars are validated at startup with Zod in `config/environment.ts` — the app exits if validation fails. Refer to `backend/.env.example` for required variables.
 
@@ -67,17 +71,19 @@ Env vars are validated at startup with Zod in `config/environment.ts` — the ap
 
 React 19 SPA with TypeScript, Vite, Tailwind CSS, Zustand, and React Router v7.
 
-- **State management**: Zustand store (`src/store/authStore.ts`) — handles auth state, persists JWT token in localStorage
-- **API client**: Axios instance (`src/services/api.ts`) with request interceptor (attaches Bearer token) and response interceptor (auto-logout on 401)
-- **Routing**: BrowserRouter in `App.tsx`. Protected routes use `ProtectedRoute` wrapper component.
+- **State management**: Zustand stores in `src/store/` — `authStore.ts` (auth state, JWT in localStorage) and `favouritesStore.ts`
+- **API client**: Axios instance (`src/services/api.ts`) with request interceptor (attaches Bearer token) and response interceptor (auto-logout on 401). Service files (`authService.ts`, `productService.ts`, `favouriteService.ts`) wrap API calls.
+- **Routing**: BrowserRouter in `App.tsx`. Two route guards: `ProtectedRoute` (requires login) and `VerifiedRoute` (requires email verification; accepts `requirePhone` prop for phone verification).
+- **Components**: Organized by domain — `auth/` (route guards, modals), `common/` (reusable UI), `layout/` (nav, footer), `product/` (create/edit forms), `products/` (grid, cards, filters). `common/` and `layout/` have barrel exports via `index.ts`.
 - **Styling**: Tailwind CSS with custom dark theme. Color tokens defined in `tailwind.config.js`: `dark-*` (backgrounds/surfaces), `orange-*` (primary CTA), `text-*` (typography)
-- **Testing**: Tests live in `frontend/tests/` — `unit/`, `integration/`, and `e2e/` subdirectories. Vitest + Testing Library for unit/integration; Playwright for E2E. All Vitest tests use MSW (Mock Service Worker) — handlers in `src/mocks/handlers.ts`, setup in `tests/setup.ts` starts/resets/closes the MSW server.
+- **Testing**: Tests live in `frontend/tests/` — `unit/`, `integration/`, and `e2e/` subdirectories. Vitest + Testing Library for unit/integration; Playwright for E2E. All Vitest tests use MSW (Mock Service Worker) — handlers in `src/mocks/handlers.ts`, setup in `tests/setup.ts` starts/resets/closes the MSW server. E2E tests are phased: `phase1-empty-state`, `phase2-setup`, `phase3-with-data`.
 - **Path alias**: `@` maps to `./src` (configured in `vite.config.ts`)
 - **Dev proxy**: Vite proxies `/api` requests to the backend (port read from `BACKEND_PORT` env var, default 5000)
 
 ### Shared Patterns
 
 - Both workspaces define types in `src/types/index.ts`
+- Both use `libphonenumber-js` for phone number validation
 - Backend API responses follow `{ success: boolean, message: string, data?: T }` envelope
 - Backend uses `express-async-handler` for async route handlers and `AppError` for operational errors
 - Frontend env vars must be prefixed with `VITE_` (Vite convention)
