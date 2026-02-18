@@ -68,7 +68,7 @@ describe('ProductDetail Page', () => {
             ],
             category: 'Electronics',
             condition: 'Good',
-            seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith' },
+            seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith', phone: '+14155551234' },
             createdAt: '2024-01-15T10:30:00.000Z',
           },
         });
@@ -152,7 +152,7 @@ describe('ProductDetail Page', () => {
     expect(backLink).toHaveAttribute('href', '/products');
   });
 
-  it('Contact Seller button links to seller profile', async () => {
+  it('See Profile button links to seller profile', async () => {
     server.use(
       http.get(`${API_BASE}/products/:id`, () => {
         return HttpResponse.json({
@@ -166,7 +166,7 @@ describe('ProductDetail Page', () => {
             images: ['https://images.unsplash.com/photo-1.jpg'],
             category: 'Electronics',
             condition: 'New',
-            seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith' },
+            seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith', phone: '+14155551234' },
             createdAt: '2024-01-15T10:30:00.000Z',
           },
         });
@@ -179,9 +179,117 @@ describe('ProductDetail Page', () => {
       expect(screen.getByText('Test Product')).toBeInTheDocument();
     });
 
-    const contactButton = screen.getByText('Contact Seller');
-    const link = contactButton.closest('a');
+    const seeProfileButton = screen.getByText('See Profile');
+    const link = seeProfileButton.closest('a');
     expect(link).toHaveAttribute('href', '/profile/johnsmith');
+  });
+
+  // --------------------------------------------------------------------------
+  // Phone Number Display Tests
+  // --------------------------------------------------------------------------
+  describe('Seller phone display', () => {
+    const phoneProductData = {
+      id: '507f1f77bcf86cd799439011',
+      title: 'Phone Test Product',
+      description: 'A product to test phone mask/reveal.',
+      price: 129.99,
+      images: ['https://images.unsplash.com/photo-1.jpg'],
+      category: 'Electronics',
+      condition: 'New',
+      seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith', phone: '+14155551234' },
+      createdAt: '2024-01-15T10:30:00.000Z',
+    };
+
+    beforeEach(() => {
+      server.use(
+        http.get(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'Product retrieved successfully',
+            data: phoneProductData,
+          });
+        }),
+      );
+    });
+
+    it('shows phone number masked by default with a Show button', async () => {
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Phone Test Product')).toBeInTheDocument();
+      });
+
+      // Phone should be masked: last 4 digits visible, rest replaced with bullets
+      expect(screen.getByText(/••••••1234/)).toBeInTheDocument();
+      expect(screen.getByText('Show')).toBeInTheDocument();
+      // Full phone number should NOT be visible
+      expect(screen.queryByText('+14155551234')).not.toBeInTheDocument();
+    });
+
+    it('reveals full phone number when Show is clicked', async () => {
+      const user = userEvent.setup();
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Phone Test Product')).toBeInTheDocument();
+      });
+
+      // Click "Show" to reveal the phone number
+      await user.click(screen.getByText('Show'));
+
+      // Full phone number should now be visible
+      expect(screen.getByText('+14155551234')).toBeInTheDocument();
+      // Button should now say "Hide"
+      expect(screen.getByText('Hide')).toBeInTheDocument();
+      expect(screen.queryByText('Show')).not.toBeInTheDocument();
+    });
+
+    it('re-masks phone number when Hide is clicked', async () => {
+      const user = userEvent.setup();
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Phone Test Product')).toBeInTheDocument();
+      });
+
+      // Reveal phone
+      await user.click(screen.getByText('Show'));
+      expect(screen.getByText('+14155551234')).toBeInTheDocument();
+
+      // Hide phone again
+      await user.click(screen.getByText('Hide'));
+
+      // Phone should be masked again
+      expect(screen.getByText(/••••••1234/)).toBeInTheDocument();
+      expect(screen.getByText('Show')).toBeInTheDocument();
+      expect(screen.queryByText('+14155551234')).not.toBeInTheDocument();
+    });
+
+    it('does not show phone section when seller has no phone', async () => {
+      server.use(
+        http.get(`${API_BASE}/products/:id`, () => {
+          return HttpResponse.json({
+            success: true,
+            message: 'Product retrieved successfully',
+            data: {
+              ...phoneProductData,
+              seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith' },
+            },
+          });
+        }),
+      );
+
+      renderProductDetail('507f1f77bcf86cd799439011');
+
+      await waitFor(() => {
+        expect(screen.getByText('Phone Test Product')).toBeInTheDocument();
+      });
+
+      // No Show button should be present
+      expect(screen.queryByText('Show')).not.toBeInTheDocument();
+      // No masked phone should be present
+      expect(screen.queryByText(/••••••/)).not.toBeInTheDocument();
+    });
   });
 
   // --------------------------------------------------------------------------
@@ -196,7 +304,7 @@ describe('ProductDetail Page', () => {
       images: ['https://images.unsplash.com/photo-1.jpg'],
       category: 'Electronics',
       condition: 'Good',
-      seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith' },
+      seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith', phone: '+14155551234' },
       createdAt: '2024-01-15T10:30:00.000Z',
     };
 
@@ -490,7 +598,7 @@ describe('ProductDetail Page', () => {
       images: ['https://images.unsplash.com/photo-1.jpg'],
       category: 'Electronics',
       condition: 'Good',
-      seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith' },
+      seller: { _id: 'seller-001', name: 'John Smith', username: 'johnsmith', phone: '+14155551234' },
       createdAt: '2024-01-15T10:30:00.000Z',
     };
 
@@ -630,7 +738,7 @@ describe('ProductDetail Page', () => {
       images: ['https://images.unsplash.com/photo-1.jpg'],
       category: 'Electronics',
       condition: 'Good',
-      seller: { _id: 'owner-001', name: 'Product Owner', username: 'productowner' },
+      seller: { _id: 'owner-001', name: 'Product Owner', username: 'productowner', phone: '+14155559999' },
       createdAt: '2024-01-15T10:30:00.000Z',
     };
 

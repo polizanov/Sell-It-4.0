@@ -220,7 +220,7 @@ describe('productService', () => {
                   images: ['https://images.unsplash.com/photo-1.jpg'],
                   category: 'Electronics',
                   condition: 'New',
-                  seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
+                  seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith', phone: '+14155551234' },
                   createdAt: '2024-01-15T10:30:00.000Z',
                 },
                 {
@@ -231,7 +231,7 @@ describe('productService', () => {
                   images: ['https://images.unsplash.com/photo-2.jpg'],
                   category: 'Clothes',
                   condition: 'Good',
-                  seller: { _id: 'seller-2', name: 'Jane Doe', username: 'janedoe' },
+                  seller: { _id: 'seller-2', name: 'Jane Doe', username: 'janedoe', phone: '+14155555678' },
                   createdAt: '2024-02-20T10:30:00.000Z',
                 },
               ],
@@ -265,6 +265,7 @@ describe('productService', () => {
       expect(first.sellerId).toBe('seller-1');
       expect(first.sellerName).toBe('John Smith');
       expect(first.sellerUsername).toBe('johnsmith');
+      expect(first.sellerPhone).toBe('+14155551234');
       expect((first as unknown as Record<string, unknown>).seller).toBeUndefined();
 
       const second = result.products[1];
@@ -272,6 +273,7 @@ describe('productService', () => {
       expect(second.sellerId).toBe('seller-2');
       expect(second.sellerName).toBe('Jane Doe');
       expect(second.sellerUsername).toBe('janedoe');
+      expect(second.sellerPhone).toBe('+14155555678');
     });
 
     it('sends query parameters correctly', async () => {
@@ -359,7 +361,7 @@ describe('productService', () => {
               ],
               category: 'Electronics',
               condition: 'Good',
-              seller: { _id: 'seller-id-456', name: 'Jane Doe', username: 'janedoe' },
+              seller: { _id: 'seller-id-456', name: 'Jane Doe', username: 'janedoe', phone: '+14155559876' },
               createdAt: '2024-06-15T10:30:00.000Z',
             },
           });
@@ -382,6 +384,7 @@ describe('productService', () => {
       expect(product.sellerId).toBe('seller-id-456');
       expect(product.sellerName).toBe('Jane Doe');
       expect(product.sellerUsername).toBe('janedoe');
+      expect(product.sellerPhone).toBe('+14155559876');
       expect(product.createdAt).toBe('2024-06-15T10:30:00.000Z');
       // Ensure there is no nested seller property on the returned Product
       expect((product as unknown as Record<string, unknown>).seller).toBeUndefined();
@@ -557,7 +560,7 @@ describe('productService', () => {
                   images: ['https://images.unsplash.com/photo-1.jpg'],
                   category: 'Electronics',
                   condition: 'New',
-                  seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
+                  seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith', phone: '+14155551234' },
                   createdAt: '2024-01-15T10:30:00.000Z',
                 },
               ],
@@ -582,6 +585,7 @@ describe('productService', () => {
       expect(result.products[0].sellerId).toBe('seller-1');
       expect(result.products[0].sellerName).toBe('John Smith');
       expect(result.products[0].sellerUsername).toBe('johnsmith');
+      expect(result.products[0].sellerPhone).toBe('+14155551234');
       expect(result.pagination.totalProducts).toBe(1);
     });
 

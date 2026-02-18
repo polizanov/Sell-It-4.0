@@ -33,7 +33,7 @@ const products: Array<{
   images: string[];
   category: string;
   condition: string;
-  seller: { _id: string; name: string; username: string };
+  seller: { _id: string; name: string; username: string; phone?: string };
   createdAt: string;
 }> = [];
 
@@ -47,7 +47,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=800&h=600&fit=crop'],
     category: 'Electronics',
     condition: 'Good',
-    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith', phone: '+14155551001' },
     createdAt: '2024-01-15T10:30:00.000Z',
   },
   {
@@ -58,7 +58,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=600&fit=crop'],
     category: 'Clothes',
     condition: 'Like New',
-    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
+    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson', phone: '+14155551002' },
     createdAt: '2024-01-20T10:30:00.000Z',
   },
   {
@@ -69,7 +69,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1576435728678-68d0fbf94e91?w=800&h=600&fit=crop'],
     category: 'Others',
     condition: 'Good',
-    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith', phone: '+14155551001' },
     createdAt: '2024-01-22T10:30:00.000Z',
   },
   {
@@ -80,7 +80,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=800&h=600&fit=crop'],
     category: 'Antiques',
     condition: 'Good',
-    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis' },
+    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis', phone: '+14155551003' },
     createdAt: '2024-01-25T10:30:00.000Z',
   },
   {
@@ -91,7 +91,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&h=600&fit=crop'],
     category: 'Home and Garden',
     condition: 'Like New',
-    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
+    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson', phone: '+14155551002' },
     createdAt: '2024-02-01T10:30:00.000Z',
   },
   {
@@ -102,7 +102,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1599669454699-248893623440?w=800&h=600&fit=crop'],
     category: 'Electronics',
     condition: 'New',
-    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith', phone: '+14155551001' },
     createdAt: '2024-02-03T10:30:00.000Z',
   },
   {
@@ -113,7 +113,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&h=600&fit=crop'],
     category: 'Others',
     condition: 'Like New',
-    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis' },
+    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis', phone: '+14155551003' },
     createdAt: '2024-02-05T10:30:00.000Z',
   },
   {
@@ -124,7 +124,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=800&h=600&fit=crop'],
     category: 'Home and Garden',
     condition: 'Good',
-    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
+    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson', phone: '+14155551002' },
     createdAt: '2024-02-08T10:30:00.000Z',
   },
   {
@@ -135,7 +135,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800&h=600&fit=crop'],
     category: 'Others',
     condition: 'Fair',
-    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith', phone: '+14155551001' },
     createdAt: '2024-02-10T10:30:00.000Z',
   },
   {
@@ -146,7 +146,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&h=600&fit=crop'],
     category: 'Electronics',
     condition: 'New',
-    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis' },
+    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis', phone: '+14155551003' },
     createdAt: '2024-02-12T10:30:00.000Z',
   },
   {
@@ -157,7 +157,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&h=600&fit=crop'],
     category: 'Others',
     condition: 'New',
-    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
+    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson', phone: '+14155551002' },
     createdAt: '2024-02-14T10:30:00.000Z',
   },
   {
@@ -168,7 +168,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1507842217343-583bb7270b66?w=800&h=600&fit=crop'],
     category: 'Home and Garden',
     condition: 'Good',
-    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith', phone: '+14155551001' },
     createdAt: '2024-02-16T10:30:00.000Z',
   },
   {
@@ -179,7 +179,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=600&fit=crop'],
     category: 'Electronics',
     condition: 'Like New',
-    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis' },
+    seller: { _id: 'seller-3', name: 'Mike Davis', username: 'mikedavis', phone: '+14155551003' },
     createdAt: '2024-02-18T10:30:00.000Z',
   },
   {
@@ -190,7 +190,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1544923246-77307dd270c3?w=800&h=600&fit=crop'],
     category: 'Clothes',
     condition: 'Good',
-    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson' },
+    seller: { _id: 'seller-2', name: 'Sarah Johnson', username: 'sarahjohnson', phone: '+14155551002' },
     createdAt: '2024-02-20T10:30:00.000Z',
   },
   {
@@ -201,7 +201,7 @@ const defaultProducts: typeof products = [
     images: ['https://images.unsplash.com/photo-1611371805429-8b5c1b2c34ba?w=800&h=600&fit=crop'],
     category: 'Toys',
     condition: 'Good',
-    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith' },
+    seller: { _id: 'seller-1', name: 'John Smith', username: 'johnsmith', phone: '+14155551001' },
     createdAt: '2024-02-22T10:30:00.000Z',
   },
 ];
@@ -829,7 +829,7 @@ export const handlers = [
       ],
       category,
       condition,
-      seller: { _id: seller.id, name: seller.name, username: (seller as { username?: string }).username || 'mockuser' },
+      seller: { _id: seller.id, name: seller.name, username: (seller as { username?: string }).username || 'mockuser', phone: (seller as { phone?: string }).phone || '+14155550000' },
       createdAt: new Date().toISOString(),
     };
     products.push(product);
@@ -987,7 +987,7 @@ export const handlers = [
       category,
       condition,
       images: allImages.length > 0 ? allImages : existingProduct.images,
-      seller: { _id: seller.id, name: seller.name, username: (seller as { username?: string }).username || 'mockuser' },
+      seller: { _id: seller.id, name: seller.name, username: (seller as { username?: string }).username || 'mockuser', phone: (seller as { phone?: string }).phone || '+14155550000' },
     };
 
     if (productIndex !== -1) {
@@ -1110,7 +1110,7 @@ export const handlers = [
         ],
         category: 'Electronics',
         condition: 'Good',
-        seller: { _id: '507f1f77bcf86cd799439011', name: 'John Smith', username: 'johnsmith' },
+        seller: { _id: '507f1f77bcf86cd799439011', name: 'John Smith', username: 'johnsmith', phone: '+14155551001' },
         createdAt: '2024-01-15T10:30:00.000Z',
       },
     });

@@ -105,7 +105,7 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response): 
   const skip = (page - 1) * limit;
 
   const [products, totalProducts, conditionCountsAgg] = await Promise.all([
-    Product.find(filter).sort(sortOption).skip(skip).limit(limit).populate('seller', 'name username'),
+    Product.find(filter).sort(sortOption).skip(skip).limit(limit).populate('seller', 'name username phone'),
     Product.countDocuments(filter),
     Product.aggregate([
       { $match: baseFilter },
@@ -198,7 +198,7 @@ export const createProduct = asyncHandler(async (req: AuthRequest, res: Response
     seller: req.user!.userId,
   });
 
-  await product.populate('seller', 'name username');
+  await product.populate('seller', 'name username phone');
 
   res.status(201).json({
     success: true,
@@ -258,7 +258,7 @@ export const getProductById = asyncHandler(async (req: Request, res: Response): 
     throw new AppError('Invalid product ID', 400);
   }
 
-  const product = await Product.findById(id).populate('seller', 'name username');
+  const product = await Product.findById(id).populate('seller', 'name username phone');
 
   if (!product) {
     throw new AppError('Product not found', 404);
@@ -324,7 +324,7 @@ export const updateProduct = asyncHandler(async (req: AuthRequest, res: Response
   product.images = allImages;
 
   await product.save();
-  await product.populate('seller', 'name username');
+  await product.populate('seller', 'name username phone');
 
   res.json({
     success: true,
@@ -352,7 +352,7 @@ export const getUserProducts = asyncHandler(async (req: Request, res: Response):
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate('seller', 'name username'),
+      .populate('seller', 'name username phone'),
     Product.countDocuments({ seller: user._id }),
   ]);
 

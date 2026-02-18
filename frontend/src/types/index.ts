@@ -41,6 +41,7 @@ export interface Product {
   sellerId: string;
   sellerName: string;
   sellerUsername: string;
+  sellerPhone?: string;
   createdAt: string;
 }
 

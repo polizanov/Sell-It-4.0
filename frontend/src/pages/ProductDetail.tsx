@@ -107,6 +107,7 @@ const ProductDetail = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [showPhone, setShowPhone] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -117,6 +118,7 @@ const ProductDetail = () => {
     }
 
     let cancelled = false;
+    setShowPhone(false);
 
     const fetchProduct = async () => {
       setIsLoading(true);
@@ -242,7 +244,7 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-bg relative overflow-hidden">
+    <div className="min-h-screen bg-dark-bg relative overflow-hidden flex flex-col">
       <MouseFollowGradient
         activationMode="always"
         gradientColor="rgba(255, 87, 34, 0.12)"
@@ -492,9 +494,39 @@ const ProductDetail = () => {
                     </p>
                   </div>
                 </div>
+                {product.sellerPhone && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 mb-4 text-text-secondary">
+                      <svg
+                        className="w-5 h-5 text-text-muted"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"
+                        />
+                      </svg>
+                      <span>
+                        {showPhone
+                          ? product.sellerPhone
+                          : `••••••${product.sellerPhone.slice(-4)}`}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setShowPhone(!showPhone)}
+                      className="text-sm font-medium mb-4 text-orange-500 hover:text-orange-400 transition-colors"
+                    >
+                      {showPhone ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                )}
                 <Link to={`/profile/${product.sellerUsername}`}>
                   <Button variant="primary" fullWidth>
-                    Contact Seller
+                    See Profile
                   </Button>
                 </Link>
               </div>

@@ -28,7 +28,7 @@ interface ProductResponseData {
   images: string[];
   category: string;
   condition: string;
-  seller: { _id: string; name: string; username: string };
+  seller: { _id: string; name: string; username: string; phone?: string };
   createdAt: string;
 }
 
@@ -81,6 +81,7 @@ function mapProductResponse(data: ProductResponseData): Product {
     sellerId: data.seller._id,
     sellerName: data.seller.name,
     sellerUsername: data.seller.username,
+    sellerPhone: data.seller.phone,
     createdAt: data.createdAt,
   };
 }

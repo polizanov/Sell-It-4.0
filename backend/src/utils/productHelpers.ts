@@ -14,6 +14,7 @@ export interface ProductResponse {
     name: string;
     username: string;
     email: string;
+    phone?: string;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -37,6 +38,7 @@ export const mapProductToResponse = (product: IProduct): ProductResponse => {
       name: seller.name,
       username: seller.username,
       email: seller.email,
+      phone: seller.phone,
     },
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,

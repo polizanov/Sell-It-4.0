@@ -131,6 +131,7 @@ describe('Product Endpoints', () => {
       expect(res.body.data.condition).toBe('New');
       expect(res.body.data.seller).toHaveProperty('name', 'Product Test User');
       expect(res.body.data.seller).toHaveProperty('username', 'producttestuser');
+      expect(res.body.data.seller).toHaveProperty('phone', '+14155554001');
       expect(res.body.data).toHaveProperty('createdAt');
     });
 
@@ -388,10 +389,11 @@ describe('Product Endpoints', () => {
       expect(res.body.data.images).toHaveLength(1);
       expect(res.body.data.category).toBe('Electronics');
       expect(res.body.data.condition).toBe('Like New');
-      // Seller should be populated with name
+      // Seller should be populated with name, username, and phone
       expect(res.body.data.seller).toHaveProperty('_id', testUserId);
       expect(res.body.data.seller).toHaveProperty('name', 'Product Test User');
       expect(res.body.data.seller).toHaveProperty('username', 'producttestuser');
+      expect(res.body.data.seller).toHaveProperty('phone', '+14155554001');
       expect(res.body.data).toHaveProperty('createdAt');
     });
 
@@ -703,6 +705,7 @@ describe('Product Endpoints', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.products[0].seller).toHaveProperty('name', 'Product Test User');
       expect(res.body.data.products[0].seller).toHaveProperty('username', 'producttestuser');
+      expect(res.body.data.products[0].seller).toHaveProperty('phone', '+14155554001');
     });
 
     it('should include conditionCounts with correct counts for seeded data', async () => {
@@ -842,13 +845,14 @@ describe('Product Endpoints', () => {
       expect(res.body.data.user).toHaveProperty('username', 'producttestuser');
     });
 
-    it('should populate seller with name and username', async () => {
+    it('should populate seller with name, username, and phone', async () => {
       const res = await request(app).get('/api/products/user/producttestuser');
 
       expect(res.status).toBe(200);
       const product = res.body.data.products[0];
       expect(product.seller).toHaveProperty('name', 'Product Test User');
       expect(product.seller).toHaveProperty('username', 'producttestuser');
+      expect(product.seller).toHaveProperty('phone', '+14155554001');
     });
 
     it('should be a public endpoint (no auth required)', async () => {

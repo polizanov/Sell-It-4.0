@@ -11,7 +11,7 @@ async function fillPhone(page: Page, nationalNumber: string) {
 }
 
 test.describe('User Profile', () => {
-  test('Contact Seller navigates to seller profile', async ({ page }) => {
+  test('See Profile navigates to seller profile', async ({ page }) => {
     // Register and log in a test user
     await page.goto('/register');
 
@@ -61,8 +61,8 @@ test.describe('User Profile', () => {
     // Wait for redirect to product detail page
     await page.waitForURL(/\/products\//, { timeout: 10000 });
 
-    // Click Contact Seller
-    await page.getByRole('button', { name: /contact seller/i }).click();
+    // Click See Profile
+    await page.getByRole('button', { name: /see profile/i }).click();
 
     // Should navigate to seller profile
     await expect(page).toHaveURL(new RegExp(`/profile/${testUsername}`));
